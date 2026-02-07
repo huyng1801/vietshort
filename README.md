@@ -1,6 +1,6 @@
 # VietShort - Nền tảng phát trực tuyến video hiện đại 🎬
 
-Ứng dụng phát trực tuyến video hiện đại với hệ thống hoa hồng tiếp thị liên kết, quản lý VIP và thanh toán trong ứng dụng. Hỗ trợ đa nền tảng: Web, Android, iOS.
+VietShort là nền tảng phát trực tuyến video hiện đại, kết hợp hệ thống hoa hồng tiếp thị liên kết, quản lý VIP và thanh toán trong ứng dụng. Hỗ trợ đa nền tảng Web, Android, iOS với trải nghiệm nhất quán, tối ưu hiệu suất và khả năng mở rộng cho quy mô lớn.
 
 ---
 
@@ -11,10 +11,10 @@
   - [🌐 Nền tảng Web](#-nền-tảng-web)
   - [📱 Ứng dụng di động](#-ứng-dụng-di-động)
   - [🎛️ Admin CMS](#️-admin-cms)
+  - [🤝 CTV Portal](#-ctv-portal)
 - [Công nghệ sử dụng](#công-nghệ-sử-dụng)
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
 - [Lộ trình triển khai](#lộ-trình-triển-khai)
-- [Cấu trúc dự án](#cấu-trúc-dự-án)
 
 ---
 
@@ -22,13 +22,36 @@
 
 **VietShort** là nền tảng phát trực tuyến phim toàn diện với:
 - **Mục tiêu**: 10.000 người dùng/ngày có khả năng mở rộng cao
-- **Doanh thu đa dạng**: Mua hàng trong ứng dụng, đăng ký VIP, quảng cáo, hoa hồng tiếp thị liên kết
+- **Doanh thu đa dạng**: Mua hàng trong ứng dụng, đăng ký VIP, quảng cáo, hoa hồng cộng tác viên
 - **Công nghệ hiện đại**: Phụ đề tự động AI, phát trực tuyến HLS, đa nền tảng
 - **Trải nghiệm linh hoạt**: Hỗ trợ cả thành viên đã đăng ký và khách vãng lai
-- **Hệ thống phức tạp**: Xử lý thanh toán, mở khóa video, quản lý tiếp thị liên kết
+- **Hệ thống phức tạp**: Xử lý thanh toán, mở khóa video, quản lý cộng tác viên
 - **Giữ chân khách thông minh**: Sử dụng AI với giá động & khuyến mại
 - **Thanh toán Việt Nam**: Tích hợp toàn diện với VNPay, Momo cho thị trường địa phương
-- **Admin nâng cao**: CMS toàn diện với mã trao đổi, quản lý CTV, phân tích chi tiết
+- **Quản trị nâng cao**: CMS toàn diện với mã trao đổi, quản lý CTV, phân tích chi tiết
+- **Cổng đối tác**: Portal riêng cho CTV với báo cáo, rút tiền và tài liệu marketing
+
+### 🚨 Yêu cầu triển khai sản xuất quan trọng (10.000 người dùng/ngày)**
+
+⚠️ **Bảo mật & Tài chính:**
+- **Bảo mật thanh toán**: Xác minh chữ ký cho webhook VNPay/Momo
+- **Tính toàn vẹn giao dịch**: Giao dịch ACID cho tiền tệ ảo
+- **Giới hạn tốc độ**: Bảo vệ API chống brute force
+- **Xác thực đầu vào**: Bảo vệ tiềm SQL & XSS
+- **Xác thực**: JWT + token refresh + quản lý phiên
+
+⚠️ **Khả năng mở rộng & Hiệu suất:**
+- **Cơ sở dữ liệu**: Sao chép MySQL Master-Slave + indexing thích hợp
+- **Bộ nhớ đệm**: Cụm Redis cho phiên và bộ nhớ đệm API
+- **Cân bằng tải**: Nginx với nhiều instance backend
+- **CDN**: Cloudflare R2 với tỷ lệ cache hit 95%+
+- **Xử lý video**: Worker mã hóa riêng với cơ chế thử lại
+
+⚠️ **Giám sát & Độ tin cậy:**
+- **Theo dõi lỗi**: Tích hợp Sentry với cảnh báo
+- **Giám sát hiệu suất**: APM cho hiệu suất cơ sở dữ liệu & API
+- **Chiến lược sao lưu**: Sao lưu cơ sở dữ liệu tự động + phục hồi sau thảm họa
+- **Kiểm tra sức khỏe**: Giám sát endpoint & tự động mở rộng
 
 ---
 
@@ -42,6 +65,10 @@
 - ✅ **Chế độ khách**: Truy cập ẩn danh để xem nội dung giới hạn & nạp vàng; tài khoản khách được định danh bằng device_id, cho phép lưu lịch sử xem và số vàng.
 - ✅ **Quên mật khẩu**: Đặt lại mật khẩu dựa trên email với mã thông báo an toàn
 - ✅ **Liên kết tài khoản**: Liên kết tài khoản khách với tài khoản xã hội/email
+- ✅ **Chỉnh sửa profile**: Thay đổi ảnh đại diện, biệt danh, thông tin cá nhân trong settings
+- ✅ **Chuyển đổi tài khoản**: Nâng cấp từ guest mode sang tài khoản chính thức
+- ✅ **Nhập mã giới thiệu**: Form nhập mã CTV khi đăng ký hoặc trong profile settings
+- ✅ **Tracking giới thiệu**: Tự động detect và lưu mã CTV từ URL tham số ?ref=xxx
 
 #### **🏠 Trang chủ & Khám phá**
 - 🎭 **Banner nổi bật**: Banner cuộn, có thể cấu hình nhảy đến phim hoặc link ngoài.
@@ -54,7 +81,7 @@
 #### **🎬 Xem & Trình phát**
 - 📱 **Thiết kế Responsive**: Giao diện thích ứng hoàn hảo từ điện thoại đến máy tính để bàn
 - 📺 **Trình phát HLS hiện đại**: Phát trực tuyến thích ứng (540p→1080P), chất lượng tự động, buffer thông minh
-- 🎮 **Điều khiển cảm ứng & Gesture**:
+- 🎮 **Điều khiển cảm ứng & Cử chỉ**:
   - 👆 **Vuốt**: Thay đổi tập phim (phải/trái), âm lượng (trên/dưới bên phải)
   - 🎯 **Nhấn đôi**: Tua nhanh/lùi 10 giây
   - 📌 **Nhấn giữ**: Xem trước tốc độ 2x
@@ -76,14 +103,41 @@
   - 💬 **Bình luận**: Chuỗi trả lời
   - 🚀 **Chia sẻ nhanh**: Facebook, Zalo, TikTok, và sao chép link.
 
-#### **💰 Thanh toán & VIP**
-- 🪙 **Tiền tệ ảo**: Hệ thống đồng vàng
-- 🔓 **Mở khóa**: Từng tập/chuỗi bằng vàng hoặc quảng cáo
-- 💎 **Gói VIP**:
-  - **VIP FreeAds**: Xem phim không quảng cáo
-  - **VIP Gold**: Không quảng cáo, mở khóa chất lượng 1080p, xem các phim độc quyền dành cho VIP
-- 💳 **Phương thức thanh toán**: VNPay, Momo
-- 🎁 **Khuyến mại**: Chiết khấu lần đầu, bán hàng theo mùa
+#### **💰 Thanh toán & VIP** ⚠️ **[Bảo mật quan trọng]**
+- 🪙 **Tiền tệ ảo**: Hệ thống đồng vàng với lịch sử giao dịch chi tiết
+  - **Bắt buộc**: Giao dịch ACID cho tất cả các hành động vàng
+  - **Bắt buộc**: Ghi nhật ký kiểm toán cho các điều chỉnh vàng quản trị
+  - **Bắt buộc**: Các mẫu phát hiện gian lận cho chi tiêu bất thường
+  - **Bắt buộc**: Bảo vệ điều kiện chạy cho chi tiêu đồng thời
+- 🔓 **Mở khóa linh hoạt**: 
+  - Từng tập bằng vàng hoặc xem quảng cáo reward
+  - Mở khóa toàn bộ phim/series với giá ưu đãi
+  - Combo unlock nhiều tập với discount
+  - **BẢO MẬT**: Tính idempotency giao dịch để tránh tính phí kép
+- 💎 **Gói VIP rõ ràng**:
+  - **VIP FreeAds**:
+    - 19k/tháng
+    - 49k/3 tháng (tiết kiệm 14%)
+    - 179k/1 năm (tiết kiệm 22%)
+    - Xem phim không quảng cáo
+  - **VIP Gold**:
+    - 49k/tháng
+    - 129k/3 tháng (tiết kiệm 12%)
+    - 469k/1 năm (tiết kiệm 20%)
+    - Không quảng cáo, mở khóa chất lượng 1080p, xem các phim độc quyền dành cho VIP, ưu tiên hỗ trợ
+- 💳 **Phương thức thanh toán**: ⚠️ **[Bảo mật tài chính quan trọng]**
+  - VNPay (thẻ nội địa, QR code) - **Phải có**: Xác minh chữ ký
+  - Momo (ví điện tử, QR code) - **Phải có**: Bảo mật webhook
+  - **Bắt buộc**: Xác minh gọi lại IPN với bảo mật thích hợp
+  - **Bắt buộc**: Hệ thống đối sánh thanh toán
+  - **Bắt buộc**: Cơ chế thử lại giao dịch thất bại
+  - **Bắt buộc**: Phát hiện gian lận cho các giao dịch có nghi ngờ
+- 🎁 **Khuyến mại thông minh**: 
+  - Chiết khấu lần đầu (30% off gói đầu tiên)
+  - Bán hàng theo mùa (Tết, Black Friday)
+  - Popup động khi user xem giá nhưng chưa thanh toán
+  - Gói combo tiết kiệm (3 tháng, 1 năm)
+- 🏆 **Hiển thị lợi ích VIP**: So sánh rõ ràng các gói, calculator tiết kiệm tiền
 
 #### **🎮 Phần thưởng & Giữ chân khách**
 - ☀️ **Điểm danh hàng ngày**: Chu kỳ 7 ngày có thể cấu hình với phần thưởng
@@ -91,9 +145,14 @@
 - 📺 **Xem quảng cáo**: Kiếm 2x vàng
 - 🏅 **Thành tích**: Nhận huy hiệu khi hoàn thành các mốc như: theo dõi mạng xã hội, bình luận lần đầu, xem đủ số tập/phút, chia sẻ phim
 - 🎯 **Giữ chân khách thông minh**:
-  - 💡 Popup chiết khấu khi xem giá mà chưa thanh toán
-  - ⏱️ Đếm ngược 2 phút
-  - 🔔 Thông báo thông minh để tái tương tác
+  - 💡 **Popup giảm giá động**: Trigger tự động khi user xem bảng giá > 30s mà chưa thanh toán
+  - ⏱️ **Đếm ngược áp lực**: Timer 2 phút với offer giới hạn, tạo urgency
+  - 🔔 **Push notification thông minh**: 
+    - Nhắc nhở xem phim dang dở sau 24h
+    - Thông báo tập mới của phim đã xem
+    - Khuyến mại cá nhân hóa dựa trên hành vi
+    - Deep linking trực tiếp đến nội dung
+  - 📊 **Retargeting behavior**: Phân tích pattern để tối ưu timing notification
   - 🎁 Các ưu đãi dựa trên hành vi xem
 
 ---
@@ -128,7 +187,7 @@
   - 📚 **Quản lý phim nhiều tập**: 
     - Tải phim có 70-80 tập dưới dạng file nhỏ (segment), tự động gom nhóm theo chuỗi
     - Tạo danh sách tập tự động hoặc chỉnh sửa thủ công (tên tập, thứ tự, mô tả)
-  - 🎞️ **Quy trình mã hóa**: Đa độ phân giải (480P, 540p, 720P, 1080P), phân đoạn HLS, tạo hình nhỏ, cấu hình chất lượng
+  - 🎞️ **Quy trình mã hóa**: Đa độ phân giải (540p, 720P, 1080P), phân đoạn HLS, tạo hình nhỏ, cấu hình chất lượng
   - 📝 **Tải phụ đề**: Hỗ trợ tải file phụ đề (srt) hàng loạt, ánh xạ phụ đề với tập phim
 
 - **Quản lý và tổ chức phim**:
@@ -148,7 +207,7 @@
 #### **🏠 Quản lý Trang chủ & Khám phá**
 - 🎭 **Quản lý Banner**: 
   - Thêm, sửa, xóa banner nổi bật, cấu hình cuộn tự động, thiết lập nhảy đến phim hoặc link ngoài
-  - Đặt lịch hiển thị, cấu hình target khách hàng (theo loại thành viên, geo, v.v.)
+  - Đặt lịch hiển thị, cấu hình target khách hàng (theo loại thành viên)
 - 📊 **Quản lý Xếp hạng & Danh mục**: 
   - Cấu hình trang chủ: phim Mới nhất, Phim hot, Được đánh giá cao, Xu hướng hôm nay
   - Quản lý danh mục phim hiển thị trên khám phá
@@ -187,14 +246,21 @@
   - Điều chỉnh giá trị phần thưởng linh hoạt theo chiến lược
 
 #### **🎛️ Quản lý hệ thống**
-- 📂 **Quản lý phân loại**: 
-  - Cấu hình mã ngôn ngữ hệ thống
-  - Quản lý danh mục phim (Tiên hiệp, Xuyên không, Trọng sinh, Lãng mạn, v.v.)
+- 📂 **Quản lý phân loại & Ngôn ngữ**: 
+  - 🌍 **Cấu hình đa ngôn ngữ**: Thiết lập mã ngôn ngữ hệ thống (vi, en, zh-CN)
+  - 🏷️ **Quản lý danh mục**: CRUD categories (Tiên hiệp, Xuyên không, Trọng sinh, Lãng mạn, v.v.)
+  - 🎬 **Metadata template**: Template mô tả phim theo từng thể loại
+  - 🔗 **Đồng bộ danh mục**: Tự động đổi chỗ danh mục giữa web/di động
+- 🗂️ **Quản lý Menu & Navigation**:
+  - 📱 **Cấu hình menu**: Thiết lập cấu trúc menu cho web/mobile
+  - 🔗 **Quy tắc định tuyến**: Quản lý URL routing, deep linking
+  - 📍 **Menu động**: Hiển thị menu dựa trên role user (guest/user/vip)
+  - 🎯 **A/B test menu**: Test các layout menu khác nhau
 - 🔐 **Quản lý quyền hạn**:
   - ➕ **Quản trị viên**: Thêm, sửa, xóa quản trị viên hệ thống
   - 📋 **Nhật ký quản trị viên**: Hiển thị nhật ký thao tác của admin
   - 👥 **Nhóm vai trò**: Thêm, sửa, xóa nhóm vai trò & phân quyền
-  - 🗂️ **Quy tắc menu**: Hiển thị tên định tuyến menu hệ thống
+  - 🛡️ **Permission matrix**: Ma trận quyền chi tiết cho từng tính năng
 
 #### **🤖 Hệ thống phụ đề tự động**
 - 🎵 **Xử lý âm thanh**: 
@@ -216,7 +282,7 @@
   - 📈 **Lịch sử giao dịch**: Theo dõi chi tiết chuyển động vàng theo người dùng
   - 📊 **Nhật ký sử dụng**: Lịch sử mở khóa tập phim (vàng vs quảng cáo)
 - 🎖️ **Quản lý thành viên**:
-  - ✏️ **Sửa tiền vàng**: Hỗ trợ sửa số dư tiền vàng của người dùng
+  - ✏️ **Sửa số dư vang**: Hỗ trợ sửa số dư vang của người dùng
   - 👑 **Sửa thành miên**: Hỗ trợ bù cấp thành viên VIP
   - 👥 **Xem thành viên đội**: Hỗ trợ xem người dùng trực tiếp, gián tiếp
   - 📁 **Phân tổ thành viên**: Cấu hình phân nhóm:
@@ -231,22 +297,45 @@
   - 🔄 **Nhật ký thay đổi**: Xem nhật ký thay đổi thông tin thành viên, thời hạn
 
 #### **💼 Hệ thống tiếp thị liên kết (CTV)**
-- 🔗 **Quản lý CTV**: 
+- 🔗 **Quản lý CTV Admin Panel**: 
   - ➕ **Tạo tài khoản**: Thêm đối tác liên kết mới với cấu hình tùy chỉnh
-  - ✏️ **Quản lý hồ sơ**: Chỉnh sửa thông tin công ty, tên thật, tỷ lệ hoa hồng
+  - ✏️ **Quản lý hồ sơ**: Chỉnh sửa thông tin công ty, tên thật, tỷ lệ hoa hồng, trạng thái hoạt động
   - 🔗 **Tạo mã & link giới thiệu**: Mỗi CTV được cấp một mã giới thiệu riêng và một link giới thiệu cá nhân (ví dụ: https://vietshort.vn/?ref=ctv123).
     - Khách hàng có thể nhập mã giới thiệu này khi đăng ký tài khoản hoặc khi nạp tiền để ghi nhận nguồn giới thiệu.
-    - Hoặc khách hàng chỉ cần truy cập vào link giới thiệu, hệ thống sẽ tự động ghi nhận mã CTV qua ref trên link.
+    - Hoặc khách hàng chỉ cần truy cập vào link giới thiệu, hệ thống sẽ tự động ghi nhận mã CTV qua ref trên link và lưu cookie tracking.
     - Mọi hành động như đăng ký, nạp tiền, xem phim... đều được ghi nhận là do CTV đó giới thiệu, giúp tính hoa hồng và thống kê hiệu quả.
-- 📊 **Dữ liệu CTV**: 
-  - 🔎 **Xem thông tin**: Mã CTV, công ty, tên thật, tài khoản, tỷ lệ hoa hồng (%)
-  - 📈 **Số liệu thực tế**: Số link, lượt click, đăng ký, người nạp, doanh thu
-  - 💹 **Theo dõi hoa hồng**: Hoa hồng, chờ rút, trạng thái
-- 📈 **Bảng điều khiển hiệu suất**: 
-  - 💹 **Số liệu thời gian thực**: Tỷ lệ click, chuyển đổi đăng ký, phân bổ doanh thu
-  - 📅 **Báo cáo theo thời gian**: Phân tích hiệu suất hàng ngày, hàng tuần, hàng tháng
-  - 🏆 **Top performer**: Bảng xếp hạng và công nhận thành tích
-  - 💰 **Máy tính hoa hồng**: Tỷ lệ phần trăm có thể cấu hình cho mỗi đối tác
+  - 💰 **Quản lý thanh toán CTV**: Duyệt yêu cầu rút hoa hồng, lịch sử thanh toán, cấu hình chu kỳ thanh toán
+- 📊 **Dữ liệu CTV trong Admin**: 
+  - 🔎 **Xem thông tin**: Mã CTV, công ty, tên thật, tài khoản, tỷ lệ hoa hồng (%), trạng thái
+  - 📈 **Số liệu thực tế**: Số link, lượt click, đăng ký, người nạp, doanh thu, hoa hồng tích lũy
+  - 💹 **Theo dõi hoa hồng**: Hoa hồng chờ duyệt, đã thanh toán, tạm khóa
+- 📈 **Bảng điều khiển hiệu suất Admin**: 
+  - 💹 **Số liệu thời gian thực**: Tỷ lệ click, chuyển đổi đăng ký, phân bổ doanh thu theo CTV
+  - 📅 **Báo cáo theo thời gian**: Phân tích hiệu suất hàng ngày, hàng tuần, hàng tháng của từng CTV
+  - 🏆 **Top performer**: Bảng xếp hạng và công nhận thành tích, thưởng bonus
+  - 💰 **Máy tính hoa hồng**: Tỷ lệ phần trăm có thể cấu hình cho mỗi đối tác, các mức hoa hồng theo doanh số
+
+- 🎛️ **Portal CTV riêng biệt (ctv.domain.com)**:
+  - 🔐 **Đăng nhập riêng**: Đăng nhập CTV với tài khoản riêng để xem bảng điều khiển cá nhân
+  - 📊 **Bảng điều khiển CTV**: Xem số liệu cá nhân (nhẪsn, chuyển đổi, hoa hồng)
+- 🎛️ **Quản lý link định cao cấp**: 
+    - Tạo link định theo dõi cho các chiến dịch khác nhau (Facebook, TikTok, Instagram)
+    - Các tham số UTM tự động (nguồn, trung bình, chiến dịch)
+    - Các URL ngắn với miền tự định
+    - Mã QR cho tính năng tiếp thị hưởng cêtn đất
+    - Phân tích link chi tiết (bản đồ, thiết bị, thời gian)
+  - 💰 **Hệ thống rút tiền**:
+    - **Ngưỡng tối thiểu**: 500k VND để rút hoa hồng
+    - **Chu kỳ thanh toán**: Weekly/Monthly tùy chọn
+    - **Phương thức**: Bank transfer, Momo, VNPay
+    - **Trạng thái theo dõi**: Chờ duyệt → Đã duyệt → Đã chuyển
+  - 👥 **Quản lý lưu hàngđế xuất thảo**:
+    - **Danh sách người dùng được giới thiệu**: Chi tiết từng lưu hàng xuất thảo với dòng thời gian
+    - **Theo dõi chuyển đổi**: Theo dõi hành trình từ nhẪsn → đăng ký → thanh toán
+    - **Chi tiết căn cứ**: Chi tiết hoa hồng từ mỗi người dùng
+    - **Hiệu suất theo nguồn**: Phân tích hiệu quả theo từng kênh tiếp thị
+  - 📈 **Báo cáo chi tiết**: Xem báo cáo chi tiết theo ngày/tháng, export CSV/PDF
+  - 🎁 **Tài liệu marketing**: Download banner, poster, video quảng cáo với tracking links
 
 #### **🎟️ Quản lý mã trao đổi**
 
@@ -275,84 +364,134 @@
 
 ---
 
-## 🛠️ Công nghệ sử dụng
+### 🤝 **CTV Portal** (Cổng đối tác)
 
-### **🌐 Frontend Web (Khách hàng)**
-```
-Framework: Next.js 15+ (React 18)
-Styling: TailwindCSS
-Video Player: HLS.js + Video.js
-State Management: Zustand + React Query v5
-Authentication: JWT backend là duy nhất
-SEO: next-seo + structured data
-i18n: next-intl (Việt, English, 中文)
-UI Components: Shadcn/ui
-Animations: Framer Motion
-CDN: Cloudflare (Tối ưu hóa hình ảnh + video)
-Deployment: Cloudflare Pages
-```
+Portal riêng biệt dành cho đối tác CTV tiếp thị liên kết, tối ưu hóa hiệu suất và quản lý doanh thu hoa hồng một cách chuyên nghiệp.
 
-### **🎛️ Admin CMS Dashboard**
-```
-Framework: Next.js 15 (Portal quản trị)
-UI Library: Ant Design
-Charts: Recharts
-Editor: Monaco Editor (chỉnh sửa phụ đề)
-File Upload: Uppy.js (kéo & thả)
-Real-time: Socket.io (theo dõi tiến độ)
-Deployment: Cloudflare Pages riêng biệt
-```
+#### **🔑 Hệ thống xác thực & bảo mật**
+- 🔐 **Đăng nhập riêng biệt**: Tài khoản CTV độc lập với backend riêng
+- 🛡️ **Phân quyền theo vai trò**: CTV thường, CTV cao cấp, Quản lý vùng
+- 📱 **Xác thực hai yếu tố**: SMS/Email OTP cho bảo mật cao
+- 🔄 **Phiên làm việc tự động gia hạn**: Không phải đăng nhập lại liên tục
 
-### **🔧 Backend API & Services**
-```
-Runtime: Node.js 20+ LTS
-Framework: NestJS 10+
-Database: MySQL 8.0+ (chính) + Redis 7+ (cache)
-ORM: Prisma (type-safe)
-Queue System: BullMQ + Redis
-Authentication: JWT + Refresh Tokens
-File Storage: Cloudflare R2 + signed URLs
-Payment Integration: 
-  - Quốc tế: IAP Validation (iOS App Store / Google Play)
-  - Việt Nam: VNPay + Momo
-Email Services: Resend
-Push Notifications: Firebase Cloud Messaging
-Video Processing: FFmpeg
-CDN: Cloudflare R2 + Cloudflare CDN
-Deployment: Docker + Ubuntu VPS + Nginx
-```
+#### **📊 Bảng điều khiển thống kê**
+- 📈 **Số liệu thời gian thực**: Lượt click, tỷ lệ chuyển đổi, doanh thu theo giờ
+- 📅 **Biểu đồ xu hướng**: Theo ngày, tuần, tháng với khả năng so sánh kỳ trước
+- 🎯 **Phân tích nguồn truy cập**: Facebook, TikTok, Instagram, Website, Email
+- 💹 **Dự báo doanh thu**: Ước tính hoa hồng cuối tháng dựa trên xu hướng
+- 🏆 **Bảng xếp hạng**: So sánh hiệu suất với các CTV khác (ẩn danh)
 
-### **🤖 AI & Auto-Subtitle Stack**
-```
-Audio Extraction: FFmpeg 6+
-Speech-to-Text: 
-  - Whisper (OpenAI) - Tự triển khai
-Translation: 
-  - Google Translate API
-Subtitle Processing: 
-  - FFmpeg (đồng bộ thời gian)
-  - Thuật toán tùy chỉnh (nhóm câu)
-  - Xuất SRT/VTT/ASS
-```
+#### **🔗 Quản lý liên kết nâng cao** 
+- 🎨 **Tạo link tracking đa dạng**: UTM tự động, mã QR, link rút gọn
+- 📱 **Deep linking**: Liên kết trực tiếp đến phim, trang đăng ký VIP
+- 🎭 **Link có thời hạn**: Tự động hết hạn sau campaign, tránh spam
+- 📊 **Phân tích chi tiết**: Thiết bị, địa lý, thời gian truy cập
+- 🔄 **A/B testing link**: So sánh hiệu quả các phiên bản link khác nhau
 
-### **📱 Mobile Apps (Đa nền tảng)**
-```
-Framework: Flutter 3.24+ (Dart)
-State: Riverpod
-Video Player: Better Player
-Local Storage: Hive
-HTTP: Dio
-Auth: OAuth → JWT backend
-Push: Firebase Cloud Messaging
-Payments:
-  - StoreKit 2
-  - Google Play Billing 6
-Deploy:
-  - App Store Connect
-  - Google Play Console
-```
+#### **💰 Hệ thống hoa hồng & rút tiền**
+- 💎 **Cấu trúc hoa hồng linh hoạt**: % theo doanh số, bonus theo milestone
+- 📊 **Theo dõi chi tiết**: Từng giao dịch, người dùng mang lại doanh thu
+- 💳 **Rút tiền đa phương thức**: Bank transfer, Momo, VNPay
+- ⏱️ **Chu kỳ thanh toán linh hoạt**: Hàng tuần, hàng tháng, theo yêu cầu
+- 🔍 **Lịch sử minh bạch**: Tất cả giao dịch rút tiền với trạng thái rõ ràng
+
+#### **📈 Báo cáo & phân tích**
+- 📋 **Báo cáo tự động**: Gửi email hàng tuần/tháng về hiệu suất
+- 📊 **Xuất dữ liệu**: CSV, Excel, PDF với filter tùy chỉnh
+- 🎯 **Phân tích hành vi khách hàng**: Thời gian xem, tỷ lệ chuyển đổi VIP
+- 📱 **Báo cáo di động**: Responsive dashboard cho điện thoại
+
+#### **🎨 Tài liệu & công cụ marketing**
+- 🖼️ **Thư viện banner**: Đa kích thước, cập nhật theo campaign
+- 🎥 **Video quảng cáo**: có sẵn tracking code, tối ưu cho mạng xã hội
+- 📝 **Mẫu nội dung**: Caption Facebook, script TikTok, email marketing
+- 📊 **Hướng dẫn tối ưu hóa**: Best practices, case study thành công
+- 🎯 **Công cụ tạo content**: Banner maker online, QR generator
 
 ---
+
+## 🛠️ Công nghệ sử dụng
+
+### **🌐 Nền tảng Web (Khách hàng)**
+```
+Khung làm việc: Next.js 15+ (React 18)
+Giao diện: TailwindCSS
+Trình phát video: HLS.js + Video.js
+Quản lý trạng thái: Zustand + React Query v5
+Xác thực: JWT từ backend
+Tối ưu SEO: next-seo + dữ liệu có cấu trúc
+Đa ngôn ngữ: next-intl (Việt, English, 中文)
+Thành phần giao diện: Shadcn/ui
+Hiệu ứng: Framer Motion
+Mạng phân phối: Cloudflare (Tối ưu hóa hình ảnh + video)
+Triển khai: Cloudflare Pages
+```
+
+### **🎛️ Bảng điều khiển quản trị CMS**
+```
+Khung làm việc: Next.js 15 (Cổng quản trị)
+Thư viện giao diện: Ant Design
+Biểu đồ: Recharts
+Trình soạn thảo: Monaco Editor (chỉnh sửa phụ đề)
+Tải lên tệp: Uppy.js (kéo & thả)
+Thời gian thực: Socket.io (theo dõi tiến độ)
+Triển khai: Cloudflare Pages riêng biệt
+```
+
+### **🔧 Hệ thống Backend & Dịch vụ API** ⚠️ **[QUAN TRỌNG SẢN XUẤT]**
+```
+Môi trường chạy: Node.js 20+ LTS
+Khung làm việc: NestJS 10+
+Cơ sở dữ liệu: MySQL 8.0+ SÂO CHÉP MASTER-SLAVE (Bắt buộc)
+  - Master: Hoạt động ghi với bộ nhớ kết nối
+  - Slave: Hoạt động đọc cho phân tích & báo cáo  
+  - QUAN TRỌNG: Indexing thích hợp cho hiệu suất (users, videos, comments)
+  - QUAN TRỌNG: Phân vùng bảng cho bảng lớn
+Redis: Redis 7+ CLUSTER (Bắt buộc cho 10k người dùng)
+  - Lưu trữ phiên với quản lý TTL
+  - Bộ nhớ đệm phản hồi API với vô hiệu hóa thích hợp
+  - Lưu trữ giới hạn tốc độ
+  - Hàng đợi công việc BullMQ
+ORM: Prisma (an toàn kiểu dữ liệu) với tối ưu hóa truy vấn
+Hệ thống hàng đợi: BullMQ + Redis với cơ chế thử lại
+Xác thực: JWT + Token làm mới + Phân quyền theo vai trò
+  - BẢO MẬT: Giới hạn tốc độ cho endpoint đăng nhập
+  - BẢO MẬT: Cơ chế khóa tài khoản
+  - BẢO MẬT: Vô hiệu hóa phiên
+Lưu trữ tệp: Cloudflare R2 + URL ký
+  - HIỆU SUẤT: Tối ưu hóa tiêu đề bộ nhớ đệm CDN
+  - DỌN DẸP: Công việc dọn dẹp phân đoạn tự động
+Hệ sinh thái API:
+  - API Nhiệm vụ hàng ngày: GET/POST /tasks, theo dõi hoàn thành
+  - Quản lý danh sách phát: CRUD /playlists, bộ sưu tập người dùng
+  - Thông báo thông minh: Firebase + trình kích hoạt tùy chỉnh
+  - Thử nghiệm A/B: Cờ tính năng + phân tích
+Tích hợp thanh toán: 
+  - Quốc tế: Xác thực IAP (iOS App Store / Google Play)
+  - Việt Nam: VNPay + Momo với XÁC MINH CHỮ KÝ
+  - QUAN TRỌNG: Hệ thống đối sánh giao dịch
+  - QUAN TRỌNG: Cơ chế thử lại webhook
+Dịch vụ email: Resend
+Thông báo đẩy: Firebase Cloud Messaging
+Xử lý video: FFmpeg Workers (tiến trình riêng)
+  - KHẢ NĂNG MỞ RỘNG: Dịch vụ mã hóa riêng
+  - ĐỘPIN CẬY: Cơ chế thử lại cho mã hóa thất bại
+CDN: Cloudflare R2 + Cloudflare CDN
+Thời gian thực: Socket.io (trạng thái mã hóa, thông báo quản trị)
+Hệ thống kiểm toán: Ghi nhật ký hoạt động hoàn chỉnh với bảo vệ giả mạo
+Thành phần chỉ dẫn API: Swagger/OpenAPI + Postman
+Triển khai: Docker + Ubuntu VPS + Cân bằng tải Nginx
+  - KHẢ NĂNG MỞ RỘNG: Nhiều instance backend
+  - GIÁM SÁT: Kiểm tra sức khỏe + tự động mở rộng
+  - BẢO MẬT: Bảo vệ WAF + DDoS
+
+GIÁM SÁT & CẢNH BÁO (Bắt buộc):
+  - Theo dõi lỗi: Sentry với tích hợp Slack
+  - Hiệu suất: APM New Relic/DataDog
+  - Cơ sở dữ liệu: Giám sát hiệu suất truy vấn
+  - số liệu kinh doanh: Bảng điều khiển tùy chỉnh
+  - Thời gian hoạt động: Giám sát endpoint (mục tiêu: 99.9%)
+```
 
 ## 🏗️ Kiến trúc hệ thống
 
@@ -362,98 +501,113 @@ Deploy:
                                    │        domain.com        │
                                    └─────────────┬────────────┘
                                                  │
-        ┌────────────────────────────────────────┼────────────────────────────────────────┐
-        │                                        │                                        │
-┌───────▼────────┐                       ┌───────▼────────┐                       ┌───────▼────────┐
-│ www.domain.com │                       │ api.domain.com │                       │admin.domain.com│
-│  Web Client    │                       │  Backend API   │                       │   Admin CMS    │
-│ (User-facing)  │                       │  (NestJS)      │                       │ (Management)   │
-└───────┬────────┘                       └───────┬────────┘                       └───────┬────────┘
-        │                                        │                                        │
-┌───────▼────────┐               ┌────────────────▼────────────────┐               ┌───────▼────────┐
-│ Cloudflare     │               │            VPS Server           │               │ Cloudflare     │
-│ Pages + CDN    │               │                                 │               │ Pages + CDN    │
-│                │               │  ┌────────────────────────────┐ │               │                │
-│ • Next.js 15   │               │  │        NestJS API          │ │               │ • Next.js 15   │
-│ • HLS Player   │               │  │ ────────────────────────── │ │               │ • Ant Design   │
-│ • SEO / i18n   │               │  │ • Auth (JWT + Refresh)     │ │               │ • CMS Tools    │
-│ • Responsive   │               │  │ • Business Logic           │ │               │ • Analytics    │
-└────────────────┘               │  │ • Payment Validation       │ │               └────────────────┘
-                                 │  │ • Affiliate / VIP / Gold   │ │
-                                 │  └──────────────┬─────────────┘ │
-                                 │                 │               │
-                                 │  ┌──────────────▼────────────┐  │
-                                 │  │        MySQL 8.0          │  │
-                                 │  │  (Main Relational DB)     │  │
-                                 │  │ • Users / Movies          │  │
-                                 │  │ • Orders / VIP / CTV      │  │
-                                 │  └──────────────┬────────────┘  │
-                                 │                 │               │
-                                 │  ┌──────────────▼───────────┐   │
-                                 │  │          Redis 7+        │   │
-                                 │  │ ──────────────────────── │   │
-                                 │  │ • Cache                  │   │
-                                 │  │ • Session / Rate limit   │   │
-                                 │  │ • BullMQ Queue           │   │
-                                 │  │ • Socket.io Adapter      │   │
-                                 │  └──────────────┬───────────┘   │
-                                 │                 │               │
-                                 │  ┌──────────────▼───────────┐   │
-                                 │  │      BullMQ Workers      │   │
-                                 │  │ ──────────────────────── │   │
-                                 │  │ • Video Encode (FFmpeg)  │   │
-                                 │  │ • Subtitle Processing    │   │
-                                 │  │ • Email / Notification   │   │
-                                 │  └──────────────┬───────────┘   │
-                                 │                 │               │
-                                 │  ┌──────────────▼───────────┐   │
-                                 │  │     FFmpeg Engine        │   │
-                                 │  │ • HLS Segmentation       │   │
-                                 │  │ • Multi Resolution       │   │
-                                 │  │ • Thumbnail Generation   │   │
-                                 │  └──────────────┬───────────┘   │
-                                 └─────────────────┼───────────────┘
-                                                   │
-                               ┌───────────────────▼───────────────────┐
-                               │        Cloudflare R2 (Object Storage) │
-                               │ ───────────────────────────────────── │
-                               │ • HLS Segments (.ts / .m3u8)          │
-                               │ • Posters / Thumbnails                │
-                               │ • Subtitle Files (SRT / VTT)          │
-                               └───────────────────┬───────────────────┘
-                                                   │
-                               ┌───────────────────▼───────────────────┐
-                               │        Cloudflare CDN (Global Edge)   │
-                               │ • Video Delivery                      │
-                               │ • Image Optimization                  │
-                               │ • DDoS / WAF                          │
-                               └───────────────────────────────────────┘
+     ┌───────────────────────────────────────────┼───────────────────────────────────────────┐
+     │                                           │                                           │
+┌────▼─────┐  ┌──────────┐            ┌─────────▼──────────┐            ┌──────────┐  ┌────▼─────┐
+│www.domain│  │ctv.domain│            │  api.domain.com    │            │admin     │  │cdn.domain│
+│   .com   │  │   .com   │            │   Backend API      │            │.domain   │  │   .com   │
+│Web Client│  │CTV Portal│            │                    │            │  .com    │  │   CDN    │
+│(Customer)│  │(Partners)│            │                    │            │Admin CMS │  │(Static)  │
+└────┬─────┘  └─────┬────┘            └─────────┬──────────┘            └─────┬────┘  └────┬─────┘
+     │              │                           │                             │            │
+┌────▼─────┐ ┌──────▼────┐          ┌──────────▼──────────┐          ┌───────▼────┐ ┌─────▼────┐
+│Cloudflare│ │Cloudflare │          │      VPS Server     │          │Cloudflare  │ │Cloudflare│
+│Pages     │ │Pages      │          │                     │          │Pages       │ │R2+CDN    │
+│+ CDN     │ │+ CDN      │          │ ┌─────────────────┐ │          │+ CDN       │ │Global    │
+│          │ │           │          │ │   NestJS API    │ │          │            │ │Delivery  │
+│• Next.js │ │• Next.js  │          │ │ ───────────────│ │          │• Next.js   │ │          │
+│• Customer│ │• CTV      │          │ │• Auth (JWT)    │ │          │• Admin     │ │• HLS     │
+│• HLS     │ │• Dashboard│          │ │• Business Logic│ │          │• Analytics │ │• Images  │
+│• Payment │ │• Reports  │          │ │• Payments      │ │          │• Management│ │• Files   │
+│• Social  │ │• Withdraw │          │ │• CTV/Affiliate │ │          │• Moderation│ │          │
+└──────────┘ └───────────┘          │ │• VIP/Gold      │ │          └────────────┘ └──────────┘
+                                    │ └─────────────────┘ │
+                                    │         │           │
+                                    │ ┌───────▼─────────┐ │
+                                    │ │   MySQL 8.0     │ │
+                                    │ │(Main Database)  │ │
+                                    │ │• Users/Videos   │ │
+                                    │ │• Orders/VIP     │ │
+                                    │ │• CTV/Affiliates │ │
+                                    │ │• Audit Logs     │ │
+                                    │ └───────┬─────────┘ │
+                                    │         │           │
+                                    │ ┌───────▼─────────┐ │
+                                    │ │    Redis 7+     │ │
+                                    │ │ ─────────────── │ │
+                                    │ │• Cache/Session  │ │
+                                    │ │• Rate Limiting  │ │
+                                    │ │• BullMQ Queue   │ │
+                                    │ │• Socket.io      │ │
+                                    │ │• CTV Tracking   │ │
+                                    │ └───────┬─────────┘ │
+                                    │         │           │
+                                    │ ┌───────▼─────────┐ │
+                                    │ │ BullMQ Workers  │ │
+                                    │ │ ─────────────── │ │
+                                    │ │• Video Encoding │ │
+                                    │ │• Subtitle AI    │ │
+                                    │ │• Email/Push     │ │
+                                    │ │• CTV Commission │ │
+                                    │ │• Analytics      │ │
+                                    │ └─────────────────┘ │
+                                    └─────────────────────┘
 ```
 
 ---
 
-## 🚀 Lộ trình triển khai
+## 🚀 Lộ trình triển khai ⚠️ **[UPDATED FOR PRODUCTION READINESS]**
 
-##### **🌐 Tuần 1: Thiết lập Next.js + Xác thực + Video API**
+### 🚨 **PHÂN TÍCH CÁC LỖ HỔNG QUAN TRỌNG**
 
-**Backend (2 người)**
-- ✔ Hoàn thiện API xác thực (JWT, Refresh token, OAuth endpoints)
-- ✔ Middleware xác thực (AuthGuard, JwtStrategy)
-- ✔ API người dùng (GET /users/profile, PUT /users/profile)
-- ✔ API Video (GET /videos/list, GET /videos/:id)
-- ✔ URL streaming (Tạo manifest HLS)
-- ✔ Rate limiting + CORS setup
+**Trạng thái hiện tại**: ⚠️ **15% sẵn sàng sản xuất**
+**Các vấn đề chính**: Lỗ hổng bảo mật, nút thắt khả năng mở rộng, rủi ro tích hợp thanh toán
+**Thời gian ước tính**: Phát triển chuyên sâu **4-6 tháng**
+**Ngân sách yêu cầu**: Phát triển $15.000-25.000 + hoạt động $1.000-1.500/tháng
 
-**Frontend Web (2 người)**
+**PHẢI FIX TRƯỚC KHI PHÁT TRIỂN:**
+- 🔐 Khoảng trống bảo mật xác thực & ủy quyền
+- 💰 Thiếu xác minh chữ ký webhook thanh toán
+- 🗄️ Thiết kế cơ sở dữ liệu thiếu indexing & sao chép thích hợp
+- 📹 Kiến trúc phát trực tuyến video có điểm lỗi duy nhất
+- 🔍 Không có giám sát, ghi nhật ký hoặc theo dõi lỗi
+- ⚖️ Thiếu load balancing & dự phòng
+
+### 🏗️ **UPDATED PRODUCTION ROADMAP**
+
+##### **🔒 GIAI ĐOẠN 1: BẢO MẬT & NỀN TẢNG (Tuần 1-4) [QUAN TRỌNG]**
+
+**Tuần 1-2: Cứng hóa bảo mật & Nền tảng cơ sở dữ liệu**
+- 🚨 **Thiết kế Sơ đồ cơ sở dữ liệu**: Sơ đồ ER hoàn chỉnh với các mối quan hệ phù hợp
+- 🚨 **Chiến lược chỉ mục**: Chỉ mục quan trọng cho các truy vấn user, video, comment
+- 🚨 **Thiết lập Master-Slave**: Cấu hình sao chép MySQL
+- 🚨 **Xác thực đầu vào**: Xác thực toàn diện cho tất cả các endpoint
+- 🚨 **Bảo mật xác thực**: Giới hạn tốc độ + khóa tài khoản
+- 🚨 **Bảo mật thanh toán**: Xác minh chữ ký VNPay/Momo
+- 🚨 **Bảo vệ Tiêm SQL**: Thực thi truy vấn có tham số
+- 🚨 **Thiết lập theo dõi lỗi**: Tích hợp Sentry với cảnh báo
+
+**Tuần 3-4: API cốt lõi & Bảo mật**
+- ✔ API xác thực (JWT, Refresh token, OAuth endpoints)
+- ✔ Middleware xác thực (AuthGuard, JwtStrategy, Role-based access)
+- ✔ API người dùng với security validation
+- ✔ API Video với kiểm soát truy cập
+- ✔ URL streaming (Tạo manifest HLS với signed URLs)
+- ✔ Rate limiting + CORS + security headers
+- ✔ API CTV tracking với fraud detection
+- ✔ API Admin authentication với permission matrix
+- ✔ Audit logging system với tamper protection
+
+**Frontend Web**
 - ✔ Thiết lập Next.js 15 app router
 - ✔ TailwindCSS + Shadcn/ui cơ bản
-- ✔ **Xác thực**: Đăng nhập Email/Mật khẩu, Đăng ký, Quên mật khẩu, OAuth integration
-- ✔ **Chế độ khách**: Guest mode (device_id tracking, lưu lịch sử xem)
+- ✔ **Xác thực**: Đăng nhập Email/Mật khẩu, Đăng ký, Quên mật khẩu, Tích hợp OAuth
+- ✔ **Chế độ khách**: Chế độ khách (theo dõi device_id, lưu lịch sử xem)
 - ✔ Luồng xác thực (Lưu JWT, làm mới token)
 - ✔ Zustand store (Auth state, User data)
 - ✔ Trang chủ (Banner cuộn, Trending, Danh mục, Khuyến nghị)
 
-**Admin CMS (1 người)**
+**Admin CMS**
 - ✔ Thiết lập Next.js 15 riêng biệt
 - ✔ Ant Design + Layout cớ bản
 - ✔ Bảo vệ xác thực (Login-required)
@@ -461,19 +615,22 @@ Deploy:
 
 ---
 
-##### **🎬 Tuần 2: Web (Player + Tương tác + Thanh toán) + Admin Video**
+##### **⚡ GIAI ĐOẠN 2: KHẢ NĂNG MỞ RỘNG & HIỆU SUẤT (Tuần 5-8) [ĐỨC TIÊN CẤP CAO]**
 
-**Backend (2 người)**
-- ✔ API Bình luận (GET/POST/DELETE)
+**Backend**
+- ✔ API Bình luận (GET/POST/DELETE với kiểm duyệt)
 - ✔ API Yêu thích (POST/DELETE, GET danh sách)
-- ✔ API Đánh giá (POST ratings)
-- ✔ API Thanh toán (VNPay, Momo endpoints)
-- ✔ API Tiền tệ ảo (GET số dư, POST trừ tiền)
-- ✔ API Đăng ký VIP (POST subscribe, GET status)
-- ✔ API Mở khóa tập (POST unlock, GET lịch sử)
-- ✔ API Mã trao đổi (POST redeem, Xác thực)
+- ✔ API Đánh giá (POST đánh giá với chống spam)
+- ✔ API Thanh toán (VNPay, Momo endpoints + xác thực IPN)
+- ✔ API Tiền tệ ảo (GET số dư, POST trừ tiền với ghi nhật ký kiểm toán)
+- ✔ API Đăng ký VIP (POST đăng ký, GET trạng thái, PUT nâng cấp/hạ độ)
+- ✔ API Mở khóa tập (POST unlock, GET lịch sử, pricing validation)
+- ✔ API Mã trao đổi (POST đổi, Xác thực, xác thực lô)
+- ✔ API CTV commission tracking (GET commissions, POST withdraw-request)
+- ✔ API Admin quản lý người dùng (GET người dùng, PUT số dư người dùng, PUT vip người dùng)
+- ✔ Socket.io setup cho real-time updates (encoding status, notifications)
 
-**Frontend Web (2 người)** - **Tất cả tính năng:**
+**Frontend Web** - **Tất cả tính năng:**
 - ✔ **Trình phát HLS**: Tích hợp HLS.js + Video.js, điều khiển phát (play, pause, seek, quality)
 - ✔ **Điều khiển cảm ứng & Gesture**: Vuốt tập, Nhấn đôi tua nhanh, Nhấn giữ xem trước 2x, Pinch zoom
 - ✔ **Phụ đề đa ngôn ngữ**: Chọn ngôn ngữ, Tùy chỉnh kích thước & nền mờ, Đồng bộ AI
@@ -486,7 +643,7 @@ Deploy:
 - ✔ **Thiết kế Responsive**: Mobile (iOS/Android), Tablet, Desktop
 - ✔ **i18n**: Giao diện Việt/English/中文
 
-**Admin CMS (1 người)**
+**Admin CMS**
 - ✔ **Quản lý Video**: 
   - Tải lên (Kéo & thả, Uppy.js, Theo dõi tiến độ)
   - Metadata form (Tên, Mô tả, Diễn viên, Đạo diễn, Năm, Danh mục)
@@ -498,17 +655,21 @@ Deploy:
 
 ---
 
-##### **🎛️ Tuần 3: Web (Search + Recommendations + Polish) + Admin (Analytics + Full Management)**
+##### **🎯 GIAI ĐOẠN 3: LOGIC KINH DOANH & TÍNH NĂNG (Tuần 9-12) [ĐỨC TIÊN CẤP TRUNG]**
 
-**Backend (2 người)**
-- ✔ API Khuyến nghị (GET /videos/recommendations, thuật toán dựa trên lịch sử xem)
-- ✔ API Tìm kiếm (Full-text, Bộ lọc: danh mục, năm, đánh giá)
-- ✔ API Phân tích (Thống kê: Lượt xem, Người dùng, Doanh thu)
-- ✔ API Admin (Quản lý người dùng, Quản lý trạng thái video)
-- ✔ API Phụ đề (Tải, Xóa, Ánh xạ ngôn ngữ)
-- ✔ API Điểm danh & Phần thưởng (GET/POST reward logs)
+**Backend**
+- ✔ API Khuyến nghị (GET /videos/recommendations, thuật toán dựa trên lịch sử xem với A/B testing)
+- ✔ API Tìm kiếm (Toàn văn bản, Bộ lọc: danh mục, năm, đánh giá với phân tích tìm kiếm)
+- ✔ API Phân tích (Thống kê: Lượt xem, Người dùng, Doanh thu, hiệu suất CTV)
+- ✔ API Admin Extended (Công cụ kiểm duyệt, Hoạt động hàng loạt, Xuất dữ liệu)
+- ✔ API CTV Management cho Admin (Phê duyệt rút tiền, Tạo báo cáo, Đặt tỷ lệ hoa hồng)
+- ✔ API CTV Portal riêng (Bảng điều khiển, Yêu cầu rút tiền, Số liệu hiệu suất)
+- ✔ API Phụ đề (Tải lên, Xóa, Ánh xạ ngôn ngữ, Hàng đợi xử lý AI)
+- ✔ API Điểm danh & Phần thưởng (GET/POST nhật ký phần thưởng, Lược đồ phần thưởng có thể cấu hình)
+- ✔ API Security & Anti-fraud (Dấu vân tay thiết bị, Phát hiện hoạt động đáng ngờ)
+- ✔ API Notification system (Thông báo đẩy, Các chiến dịch email, Lấy lại mục tiêu thông minh)
 
-**Frontend Web (2 người)** - **Tính năng cuối:**
+**Frontend Web** - **Tính năng cuối:**
 - ✔ **Trang tìm kiếm**: Full-text search, Bộ lọc (danh mục, năm, đánh giá), Sắp xếp (trending, new, rating)
 - ✔ **Khuyến nghị cá nhân hóa**: Dựa trên lịch sử xem, Hiển thị trên home & sidebar
 - ✔ **Phần thưởng & Giữ chân khách**: 
@@ -523,9 +684,9 @@ Deploy:
   - Code splitting & lazy load components
   - Image optimization (Cloudflare)
   - SEO (next-seo, structured data)
-  - Performance: Core Web Vitals
+  - Hiệu suất: Core Web Vitals
 
-**Admin CMS (1 người)** - **Dashboard đầy đủ:**
+**Admin CMS** - **Dashboard đầy đủ:**
 - ✔ **Quản lý Video Đầy đủ**: 
   - Sửa video (RE-upload, Update metadata)
   - Cấu hình giá (Từng tập hoặc chuỗi)
@@ -558,7 +719,85 @@ Deploy:
 
 ---
 
-**✅ Kết quả Cuối tháng - MVP Hoàn chỉnh:**
+##### **🚀 GIAI ĐOẠN 4: TRIỂN KHAI SẢN XUẤT (Tuần 13-16) [SẴN SÀNG PHÁT HÀNH]**
+
+**Tuần 13-14: Cơ sở hạ tầng & Kiểm tra tải**
+- 🏗️ Cung cấp máy chủ sản xuất (load balancer + nhiều instance)
+- 🔧 Thiết lập đường ống CI/CD với kiểm tra tự động
+- 🔐 Chứng chỉ SSL + cứng hóa bảo mật
+- 📧 Tích hợp dịch vụ Email/SMS
+- 📊 Hoàn thành hệ thống giám sát + cảnh báo
+- 💾 Sao lưu + kiểm tra phục hồi sau thảm họa
+- ⚡ Kiểm tra tải với 10k người dùng đồng thời mô phỏng
+- 🛡️ Kiểm tra xâm nhập bảo mật
+
+**Tuần 15-16: Kiểm tra cuối cùng & Phát hành**
+- 💰 Kiểm tra cổng thanh toán với tiền thực (số tiền nhỏ)
+- 📱 Gửi ứng dụng di động đến cửa hàng (iOS/Android)
+- 👥 Kiểm tra chấp nhận của người dùng với người dùng beta
+- 📈 Tối ưu hóa hiệu suất dựa trên việc sử dụng thực tế
+- 🔥 Phát hành mềm với cơ sở người dùng hạn chế
+- 📊 Triển khai theo dõi số liệu kinh doanh
+
+### 🎯 **DANH SÁCH KIỂM TRA SẴN SÀNG SẢN XUẤT**
+
+#### **🔒 Danh sách kiểm tra Bảo mật (Bắt buộc)**
+- [ ] Kiểm tra đầu vào trên tất cả các endpoint được triển khai
+- [ ] Bảo vệ chống SQL injection được xác minh
+- [ ] Bảo vệ XSS được triển khai
+- [ ] Token CSRF cho các thao tác thay đổi trạng thái
+- [ ] Giới hạn tốc độ trên các endpoint nhạy cảm
+- [ ] Giới hạn tốc độ xác thực + khóa tài khoản
+- [ ] JWT token hết hạn + logic làm mới
+- [ ] Bảo mật mật khẩu (bcrypt, yêu cầu độ phức tạp)
+- [ ] HTTPS được thực thi với header bảo mật phù hợp
+- [ ] API Admin có ma trận ủy quyền phù hợp
+
+#### **💰 Danh sách kiểm tra Bảo mật Thanh toán (QUAN TRỌNG)**
+- [ ] Xác minh chữ ký webhook VNPay đang hoạt động
+- [ ] Xác minh chữ ký webhook Momo đang hoạt động
+- [ ] Tính idempotency giao dịch được triển khai
+- [ ] Hệ thống đối sánh thanh toán đang hoạt động
+- [ ] Cơ chế thử lại thanh toán thất bại
+- [ ] Quy tắc cơ bản phát hiện gian lận
+- [ ] Ghi nhật ký kiểm toán tiền tệ ảo
+- [ ] Ngăn chặn chi tiêu kép
+- [ ] Xử lý timeout gọi lại thanh toán
+
+#### **📊 Danh sách kiểm tra Hiệu suất (10K Người dùng)**
+- [ ] Truy vấn cơ sở dữ liệu được tối ưu hóa với các chỉ mục phù hợp
+- [ ] Thời gian phản hồi API <500ms (phần trăm thứ 95)
+- [ ] Redis caching được triển khai đúng cách
+- [ ] Tỷ lệ cache hit CDN >90%
+- [ ] Thời gian tải video <3 giây
+- [ ] Hiệu suất ứng dụng di động được kiểm tra
+- [ ] Kiểm tra rò rỉ bộ nhớ hoàn tất
+- [ ] Load balancer được cấu hình và kiểm tra
+- [ ] Quy tắc tự động mở rộng được triển khai
+
+#### **🔧 Danh sách kiểm tra Cơ sở hạ tầng (KHẢ NĂNG MỞ RỘNG)**
+- [ ] Sao chép cơ sở dữ liệu master-slave hoạt động
+- [ ] Thiết lập và kiểm tra cụm Redis
+- [ ] Load balancer được cấu hình (Nginx)
+- [ ] Nhiều instance backend đang chạy
+- [ ] CDN được cấu hình đúng cách
+- [ ] Hệ thống sao lưu được tự động hóa
+- [ ] Giám sát + cảnh báo hoạt động
+- [ ] Theo dõi lỗi (Sentry) được tích hợp
+- [ ] Kiểm tra sức khỏe được triển khai
+- [ ] Kế hoạch phục hồi sau thảm họa đã được kiểm tra
+
+#### **📱 Danh sách kiểm tra Logic kinh doanh**
+- [ ] Vòng đời đăng ký VIP chính xác
+- [ ] Tính toán hoa hồng được xác minh
+- [ ] Hoạt động tiền tệ ảo là nguyên tử
+- [ ] Đường ống mã hóa video ổn định
+- [ ] Hệ thống khuyến nghị hoạt động
+- [ ] Thông báo đẩy được nhắm mục đích chính xác
+- [ ] Theo dõi phân tích chính xác
+- [ ] Bảng điều khiển quản trị đầy đủ chức năng
+
+**✅ Kết quả Production-Ready System:**
 
 **Web (www.domain.com)** - Nền tảng streaming hoàn toàn chức năng:
 - ✅ Xác thực đầy đủ (Email, OAuth, Guest mode)
@@ -586,579 +825,19 @@ Deploy:
 - ✅ Quản lý Video (Upload, Metadata, Phim nhiều tập, Hàng đợi mã hóa)
 - ✅ Quản lý Phụ đề (Upload, Chỉnh sửa, Ánh xạ)
 - ✅ Quản lý Banner
-- ✅ Quản lý Danh mục
+- ✅ Quản lý Danh mục  
 - ✅ Tìm kiếm & Lọc Người dùng
 - ✅ Quản lý Số dư & VIP
 - ✅ Bảng điều khiển Phân tích (Thẻ, Biểu đồ, Xếp hạng)
 - ✅ Cấu hình hệ thống
 - ✅ Thời gian thực (Socket.io)
+- ✅ Quản lý CTV & Hoa hồng
+- ✅ Audit logs & Security monitoring
 
----
-
-## 📦 Cấu trúc dự án
-
-```
-vietshort/
-│
-├── backend/                           # NestJS Backend API (Node.js 20+ LTS)
-│   ├── src/
-│   │   ├── main.ts                   # Entry point
-│   │   ├── app.module.ts             # Root module
-│   │   │
-│   │   ├── auth/                      # 🔐 Xác thực & ủy quyền
-│   │   │   ├── auth.controller.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── jwt.strategy.ts        # JWT strategy
-│   │   │   ├── oauth.strategy.ts      # OAuth bridge
-│   │   │   ├── auth.module.ts
-│   │   │   └── dto/
-│   │   │       ├── login.dto.ts
-│   │   │       ├── register.dto.ts
-│   │   │       └── refresh-token.dto.ts
-│   │   │
-│   │   ├── users/                     # 👥 Quản lý người dùng
-│   │   │   ├── users.controller.ts
-│   │   │   ├── users.service.ts
-│   │   │   ├── users.module.ts
-│   │   │   ├── dto/
-│   │   │   │   ├── create-user.dto.ts
-│   │   │   │   ├── update-profile.dto.ts
-│   │   │   │   └── user.dto.ts
-│   │   │   └── entities/
-│   │   │       └── user.entity.ts
-│   │   │
-│   │   ├── videos/                    # 🎬 Video & Streaming
-│   │   │   ├── videos.controller.ts
-│   │   │   ├── videos.service.ts
-│   │   │   ├── videos.module.ts
-│   │   │   ├── dto/
-│   │   │   │   ├── create-video.dto.ts
-│   │   │   │   ├── update-video.dto.ts
-│   │   │   │   └── query-video.dto.ts
-│   │   │   ├── entities/
-│   │   │   │   ├── video.entity.ts
-│   │   │   │   └── episode.entity.ts
-│   │   │   └── services/
-│   │   │       ├── hls-streaming.service.ts  # HLS manifest generation
-│   │   │       └── video-queue.service.ts    # Encoding queue
-│   │   │
-│   │   ├── subtitles/                 # 🤖 Phụ đề tự động
-│   │   │   ├── subtitles.controller.ts
-│   │   │   ├── subtitles.service.ts
-│   │   │   ├── subtitles.module.ts
-│   │   │   ├── dto/
-│   │   │   │   └── upload-subtitle.dto.ts
-│   │   │   └── workers/
-│   │   │       ├── whisper.worker.ts
-│   │   │       ├── translate.worker.ts
-│   │   │       └── sync.worker.ts
-│   │   │
-│   │   ├── comments/                  # 💬 Bình luận
-│   │   │   ├── comments.controller.ts
-│   │   │   ├── comments.service.ts
-│   │   │   ├── comments.module.ts
-│   │   │   └── dto/
-│   │   │       ├── create-comment.dto.ts
-│   │   │       └── reply.dto.ts
-│   │   │
-│   │   ├── likes/                     # ❤️ Thích & Yêu thích
-│   │   │   ├── likes.controller.ts
-│   │   │   ├── likes.service.ts
-│   │   │   └── likes.module.ts
-│   │   │
-│   │   ├── ratings/                   # ⭐ Đánh giá
-│   │   │   ├── ratings.controller.ts
-│   │   │   ├── ratings.service.ts
-│   │   │   └── ratings.module.ts
-│   │   │
-│   │   ├── payment/                   # 💰 Thanh toán
-│   │   │   ├── payment.controller.ts
-│   │   │   ├── payment.service.ts
-│   │   │   ├── payment.module.ts
-│   │   │   ├── providers/
-│   │   │   │   ├── vnpay.provider.ts
-│   │   │   │   ├── momo.provider.ts
-│   │   │   │   └── iap.provider.ts
-│   │   │   ├── dto/
-│   │   │   │   ├── create-payment.dto.ts
-│   │   │   │   └── payment-callback.dto.ts
-│   │   │   └── entities/
-│   │   │       └── transaction.entity.ts
-│   │   │
-│   │   ├── wallet/                    # 🪙 Ví & Tiền tệ ảo
-│   │   │   ├── wallet.controller.ts
-│   │   │   ├── wallet.service.ts
-│   │   │   ├── wallet.module.ts
-│   │   │   └── entities/
-│   │   │       └── wallet.entity.ts
-│   │   │
-│   │   ├── vip/                       # 💎 VIP & Subscription
-│   │   │   ├── vip.controller.ts
-│   │   │   ├── vip.service.ts
-│   │   │   ├── vip.module.ts
-│   │   │   └── entities/
-│   │   │       └── vip-subscription.entity.ts
-│   │   │
-│   │   ├── unlock/                    # 🔓 Mở khóa tập
-│   │   │   ├── unlock.controller.ts
-│   │   │   ├── unlock.service.ts
-│   │   │   └── unlock.module.ts
-│   │   │
-│   │   ├── exchange-codes/            # 🎟️ Mã trao đổi
-│   │   │   ├── exchange-codes.controller.ts
-│   │   │   ├── exchange-codes.service.ts
-│   │   │   ├── exchange-codes.module.ts
-│   │   │   ├── dto/
-│   │   │   │   ├── create-code-batch.dto.ts
-│   │   │   │   └── redeem-code.dto.ts
-│   │   │   └── entities/
-│   │   │       ├── exchange-code.entity.ts
-│   │   │       └── code-batch.entity.ts
-│   │   │
-│   │   ├── recommendations/           # ⭐ Khuyến nghị
-│   │   │   ├── recommendations.controller.ts
-│   │   │   ├── recommendations.service.ts
-│   │   │   ├── recommendations.module.ts
-│   │   │   └── algorithms/
-│   │   │       ├── collaborative-filter.ts
-│   │   │       └── history-based.ts
-│   │   │
-│   │   ├── search/                    # 🔍 Tìm kiếm
-│   │   │   ├── search.controller.ts
-│   │   │   ├── search.service.ts
-│   │   │   └── search.module.ts
-│   │   │
-│   │   ├── gamification/              # 🎮 Điểm danh & Phần thưởng
-│   │   │   ├── daily-check-in.controller.ts
-│   │   │   ├── daily-check-in.service.ts
-│   │   │   ├── daily-tasks.controller.ts
-│   │   │   ├── daily-tasks.service.ts
-│   │   │   ├── achievements.controller.ts
-│   │   │   ├── achievements.service.ts
-│   │   │   ├── gamification.module.ts
-│   │   │   └── entities/
-│   │   │       ├── daily-check-in.entity.ts
-│   │   │       ├── daily-task.entity.ts
-│   │   │       └── achievement.entity.ts
-│   │   │
-│   │   ├── affiliate/                 # 💼 Hệ thống CTV
-│   │   │   ├── affiliate.controller.ts
-│   │   │   ├── affiliate.service.ts
-│   │   │   ├── affiliate.module.ts
-│   │   │   ├── dto/
-│   │   │   │   ├── create-affiliate.dto.ts
-│   │   │   │   └── affiliate-stats.dto.ts
-│   │   │   └── entities/
-│   │   │       ├── affiliate.entity.ts
-│   │   │       └── affiliate-referral.entity.ts
-│   │   │
-│   │   ├── analytics/                 # 📊 Phân tích & Thống kê
-│   │   │   ├── analytics.controller.ts
-│   │   │   ├── analytics.service.ts
-│   │   │   ├── analytics.module.ts
-│   │   │   └── reports/
-│   │   │       ├── views.report.ts
-│   │   │       ├── revenue.report.ts
-│   │   │       └── user.report.ts
-│   │   │
-│   │   ├── notifications/             # 🔔 Thông báo
-│   │   │   ├── notifications.controller.ts
-│   │   │   ├── notifications.service.ts
-│   │   │   ├── notifications.module.ts
-│   │   │   ├── providers/
-│   │   │   │   ├── firebase.provider.ts
-│   │   │   │   └── email.provider.ts
-│   │   │   └── dto/
-│   │   │       └── send-notification.dto.ts
-│   │   │
-│   │   ├── admin/                     # 🎛️ API quản trị
-│   │   │   ├── admin.controller.ts
-│   │   │   ├── admin.service.ts
-│   │   │   ├── admin.module.ts
-│   │   │   └── dto/
-│   │   │       ├── user-management.dto.ts
-│   │   │       ├── content-management.dto.ts
-│   │   │       └── admin-logs.dto.ts
-│   │   │
-│   │   ├── common/                    # 🛠️ Tiện ích chung
-│   │   │   ├── guards/
-│   │   │   │   ├── jwt.guard.ts
-│   │   │   │   ├── roles.guard.ts
-│   │   │   │   └── auth.guard.ts
-│   │   │   ├── interceptors/
-│   │   │   │   ├── logging.interceptor.ts
-│   │   │   │   └── transform.interceptor.ts
-│   │   │   ├── middleware/
-│   │   │   │   ├── logger.middleware.ts
-│   │   │   │   └── rate-limit.middleware.ts
-│   │   │   ├── exceptions/
-│   │   │   │   └── custom-exceptions.ts
-│   │   │   ├── decorators/
-│   │   │   │   ├── user.decorator.ts
-│   │   │   │   └── roles.decorator.ts
-│   │   │   └── utils/
-│   │   │       ├── validators.ts
-│   │   │       └── helpers.ts
-│   │   │
-│   │   ├── config/                    # ⚙️ Config
-│   │   │   ├── database.config.ts
-│   │   │   ├── jwt.config.ts
-│   │   │   ├── payment.config.ts
-│   │   │   └── cloudflare.config.ts
-│   │   │
-│   │   └── prisma/                    # 📦 Prisma ORM
-│   │       ├── schema.prisma
-│   │       └── migrations/
-│   │
-│   ├── .env.example
-│   ├── .gitignore
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── nest-cli.json
-│   └── docker/
-│       └── Dockerfile
-│
-│
-├── frontend-web/                      # 🌐 Next.js 15 Customer Web
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx             # Root layout
-│   │   │   ├── page.tsx               # Trang chủ
-│   │   │   ├── (auth)/
-│   │   │   │   ├── login/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── register/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── forgot-password/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   └── oauth-callback/
-│   │   │   │       └── page.tsx
-│   │   │   ├── (main)/
-│   │   │   │   ├── layout.tsx
-│   │   │   │   ├── videos/
-│   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   └── page.tsx   # Chi tiết phim
-│   │   │   │   │   └── watch/
-│   │   │   │   │       └── [id]/
-│   │   │   │   │           └── page.tsx # Video player
-│   │   │   │   ├── search/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── category/
-│   │   │   │   │   └── [slug]/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── account/
-│   │   │   │   │   ├── profile/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── history/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── bookmarks/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── vip/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── wallet/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── settings/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   └── rewards/
-│   │   │   │       ├── daily-check-in/
-│   │   │   │       │   └── page.tsx
-│   │   │   │       ├── tasks/
-│   │   │   │       │   └── page.tsx
-│   │   │   │       └── achievements/
-│   │   │   │           └── page.tsx
-│   │   │   └── api/
-│   │   │       └── auth/
-│   │   │           └── [...nextauth]/
-│   │   │               └── route.ts
-│   │   │
-│   │   ├── components/
-│   │   │   ├── layout/
-│   │   │   │   ├── Header.tsx
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── Footer.tsx
-│   │   │   │   └── Navigation.tsx
-│   │   │   ├── auth/
-│   │   │   │   ├── LoginForm.tsx
-│   │   │   │   ├── RegisterForm.tsx
-│   │   │   │   └── OAuthButtons.tsx
-│   │   │   ├── video/
-│   │   │   │   ├── VideoPlayer.tsx    # HLS + Video.js
-│   │   │   │   ├── SubtitleControl.tsx
-│   │   │   │   ├── QualitySelector.tsx
-│   │   │   │   ├── GestureHandler.tsx
-│   │   │   │   ├── VideoCard.tsx
-│   │   │   │   └── VideoGrid.tsx
-│   │   │   ├── movies/
-│   │   │   │   ├── MovieDetails.tsx
-│   │   │   │   ├── EpisodeSelector.tsx
-│   │   │   │   ├── MovieBanner.tsx
-│   │   │   │   └── MovieTrendingCarousel.tsx
-│   │   │   ├── social/
-│   │   │   │   ├── LikeButton.tsx
-│   │   │   │   ├── BookmarkButton.tsx
-│   │   │   │   ├── RatingComponent.tsx
-│   │   │   │   ├── CommentSection.tsx
-│   │   │   │   ├── ShareButtons.tsx
-│   │   │   │   └── CommentInput.tsx
-│   │   │   ├── payment/
-│   │   │   │   ├── PaymentModal.tsx
-│   │   │   │   ├── VIPCard.tsx
-│   │   │   │   ├── UnlockModal.tsx
-│   │   │   │   └── WalletDisplay.tsx
-│   │   │   ├── rewards/
-│   │   │   │   ├── DailyCheckInCard.tsx
-│   │   │   │   ├── DailyTasksList.tsx
-│   │   │   │   ├── AchievementBadge.tsx
-│   │   │   │   └── RewardPopup.tsx
-│   │   │   ├── search/
-│   │   │   │   ├── SearchBar.tsx
-│   │   │   │   ├── FilterPanel.tsx
-│   │   │   │   └── SearchResults.tsx
-│   │   │   ├── home/
-│   │   │   │   ├── BannerSection.tsx
-│   │   │   │   ├── TrendingSection.tsx
-│   │   │   │   ├── CategoriesSection.tsx
-│   │   │   │   ├── RecommendationsSection.tsx
-│   │   │   │   └── PromotionalBanner.tsx
-│   │   │   └── common/
-│   │   │       ├── Loading.tsx
-│   │   │       ├── ErrorBoundary.tsx
-│   │   │       ├── Modal.tsx
-│   │   │       ├── Toast.tsx
-│   │   │       └── Pagination.tsx
-│   │   │
-│   │   ├── hooks/
-│   │   │   ├── useAuth.ts
-│   │   │   ├── useVideo.ts
-│   │   │   ├── usePayment.ts
-│   │   │   ├── useUser.ts
-│   │   │   ├── useGestures.ts
-│   │   │   ├── useInfiniteScroll.ts
-│   │   │   └── useLocalStorage.ts
-│   │   │
-│   │   ├── lib/
-│   │   │   ├── api.ts              # API client
-│   │   │   ├── auth.ts             # Auth utilities
-│   │   │   ├── validators.ts       # Form validators
-│   │   │   ├── constants.ts        # Constants
-│   │   │   └── utils.ts            # Helpers
-│   │   │
-│   │   ├── stores/
-│   │   │   ├── authStore.ts        # Zustand auth
-│   │   │   ├── userStore.ts        # User data
-│   │   │   ├── videoStore.ts       # Video state
-│   │   │   ├── cartStore.ts        # Payment cart
-│   │   │   └── uiStore.ts          # UI state
-│   │   │
-│   │   ├── types/
-│   │   │   ├── api.ts
-│   │   │   ├── user.ts
-│   │   │   ├── video.ts
-│   │   │   ├── payment.ts
-│   │   │   └── common.ts
-│   │   │
-│   │   ├── styles/
-│   │   │   ├── globals.css
-│   │   │   ├── variables.css
-│   │   │   └── animations.css
-│   │   │
-│   │   └── i18n/
-│   │       ├── locales/
-│   │       │   ├── vi.json
-│   │       │   ├── en.json
-│   │       │   └── zh.json
-│   │       └── i18n.config.ts
-│   │
-│   ├── public/
-│   │   ├── images/
-│   │   ├── icons/
-│   │   └── videos/
-│   │
-│   ├── .env.example
-│   ├── .gitignore
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── next.config.js
-│   └── tailwind.config.js
-│
-│
-├── admin-cms/                         # 🎛️ Next.js 15 Admin Dashboard
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx               # Dashboard home
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx
-│   │   │   ├── (dashboard)/
-│   │   │   │   ├── layout.tsx
-│   │   │   │   ├── page.tsx           # Main dashboard
-│   │   │   │   ├── videos/
-│   │   │   │   │   ├── page.tsx       # Video list
-│   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   └── page.tsx   # Edit video
-│   │   │   │   │   └── upload/
-│   │   │   │   │       └── page.tsx   # Upload
-│   │   │   │   ├── subtitles/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── [id]/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── banners/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── [id]/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── categories/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── [id]/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── users/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── [id]/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── analytics/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   ├── views/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── revenue/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   └── users/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── settings/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   ├── languages/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── vip-pricing/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   └── admin-users/
-│   │   │   │   │       └── page.tsx
-│   │   │   │   ├── encoding-queue/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   └── reports/
-│   │   │   │       └── page.tsx
-│   │   │   └── api/
-│   │   │       └── auth/
-│   │   │           └── [...nextauth]/
-│   │   │               └── route.ts
-│   │   │
-│   │   ├── components/
-│   │   │   ├── layout/
-│   │   │   │   ├── AdminHeader.tsx
-│   │   │   │   ├── AdminSidebar.tsx
-│   │   │   │   └── AdminLayout.tsx
-│   │   │   ├── dashboard/
-│   │   │   │   ├── StatCard.tsx
-│   │   │   │   ├── ChartWidget.tsx
-│   │   │   │   ├── RecentActivity.tsx
-│   │   │   │   └── TopVideos.tsx
-│   │   │   ├── videos/
-│   │   │   │   ├── VideoUploadForm.tsx
-│   │   │   │   ├── VideoEditForm.tsx
-│   │   │   │   ├── VideoTable.tsx
-│   │   │   │   ├── EncodingQueueTable.tsx
-│   │   │   │   └── VideoPreview.tsx
-│   │   │   ├── subtitles/
-│   │   │   │   ├── SubtitleUpload.tsx
-│   │   │   │   ├── SubtitleEditor.tsx     # Monaco Editor
-│   │   │   │   └── SubtitleMapping.tsx
-│   │   │   ├── banners/
-│   │   │   │   ├── BannerForm.tsx
-│   │   │   │   ├── BannerTable.tsx
-│   │   │   │   └── BannerPreview.tsx
-│   │   │   ├── users/
-│   │   │   │   ├── UserTable.tsx
-│   │   │   │   ├── UserDetails.tsx
-│   │   │   │   ├── UserFilters.tsx
-│   │   │   │   └── WalletManager.tsx
-│   │   │   ├── analytics/
-│   │   │   │   ├── ViewsChart.tsx        # Recharts
-│   │   │   │   ├── RevenueChart.tsx
-│   │   │   │   ├── UserGrowthChart.tsx
-│   │   │   │   └── TopVideosChart.tsx
-│   │   │   └── common/
-│   │   │       ├── DataTable.tsx
-│   │   │       ├── FormBuilder.tsx
-│   │   │       ├── FilterBar.tsx
-│   │   │       └── ExportButton.tsx
-│   │   │
-│   │   ├── hooks/
-│   │   │   ├── useAdminAuth.ts
-│   │   │   ├── useAdminAPI.ts
-│   │   │   ├── usePagination.ts
-│   │   │   └── useFilters.ts
-│   │   │
-│   │   ├── lib/
-│   │   │   ├── admin-api.ts
-│   │   │   ├── admin-auth.ts
-│   │   │   └── admin-utils.ts
-│   │   │
-│   │   ├── stores/
-│   │   │   ├── adminAuthStore.ts
-│   │   │   ├── adminVideoStore.ts
-│   │   │   └── adminUIStore.ts
-│   │   │
-│   │   ├── types/
-│   │   │   ├── admin.ts
-│   │   │   └── dashboard.ts
-│   │   │
-│   │   └── styles/
-│   │       ├── globals.css
-│   │       └── admin.css
-│   │
-│   ├── .env.example
-│   ├── .gitignore
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── next.config.js
-│
-├── docs/                              # 📚 Tài liệu
-│   ├── API.md                        # API documentation
-│   ├── DEPLOYMENT.md                 # Deployment guide
-│   ├── ARCHITECTURE.md               # Architecture overview
-│   ├── AUTO_SUBTITLE.md              # Subtitle system
-│   ├── DATABASE.md                   # Database schema
-│   ├── SETUP.md                      # Local setup guide
-│   ├── ENV_VARIABLES.md              # Environment variables
-│   └── API_EXAMPLES.md               # cURL/Postman examples
-│
-├── docker/
-│   ├── docker-compose.yml            # Local development
-│   ├── docker-compose.prod.yml       # Production
-│   ├── backend.Dockerfile
-│   ├── frontend.Dockerfile
-│   └── admin.Dockerfile
-│
-├── scripts/
-│   ├── setup.sh                      # Project setup
-│   ├── migrate.sh                    # Database migration
-│   ├── seed.sh                       # Seed data
-│   ├── build.sh                      # Build all projects
-│   ├── deploy.sh                     # Deploy to production
-│   └── health-check.sh               # Health check
-│
-├── infra/                            # Infrastructure as Code
-│   ├── nginx/
-│   │   ├── nginx.conf
-│   │   ├── vhost/
-│   │   │   ├── www.conf
-│   │   │   ├── api.conf
-│   │   │   └── admin.conf
-│   │   └── ssl/
-│   │       └── certificates/
-│   └── k8s/ (optional)
-│       ├── deployment.yml
-│       ├── service.yml
-│       └── ingress.yml
-│
-├── .github/
-│   ├── workflows/
-│   │   ├── ci.yml                   # CI/CD pipeline
-│   │   ├── test.yml
-│   │   └── deploy.yml
-│   └── PULL_REQUEST_TEMPLATE.md
-│
-├── .gitignore
-├── .env.example
-├── README.md
-├── CONTRIBUTING.md
-└── LICENSE
-```
+**CTV Portal (ctv.domain.com)** - Bảng điều khiển đối tác:
+- ✅ Đăng nhập & Xác thực
+- ✅ Phân tích hiệu suất
+- ✅ Theo dõi hoa hồng
+- ✅ Yêu cầu rút tiền
+- ✅ Tài liệu marketing
+- ✅ Báo cáo thời gian thực
