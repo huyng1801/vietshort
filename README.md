@@ -217,10 +217,12 @@ VietShort là nền tảng phát trực tuyến video hiện đại, kết hợp
 
 #### **💬 Quản lý Tương tác xã hội**
 - 🗨️ **Quản lý bình luận**: 
+  - Bình luận được tự động phê duyệt nhưng có bộ lọc từ khóa cấm, spam, hoặc nội dung vi phạm.
   - Duyệt, phê duyệt, xóa bình luận, chặn người dùng spam
   - Cấu hình filters từ khóa cấm, tự động tiếp điểm
   - Xem thống kê bình luận theo phim
 - ⭐ **Quản lý đánh giá**: 
+  - Chỉ khách hàng VIP mới được đánh giá phim.
   - Xem chi tiết đánh giá, xóa đánh giá spam, phân tích rating distribution
 - 💝 **Quản lý yêu thích & Sưu tầm**: 
   - Xem thống kê phim được thích nhất, sưu tầm nhiều nhất
@@ -282,12 +284,12 @@ VietShort là nền tảng phát trực tuyến video hiện đại, kết hợp
   - 📈 **Lịch sử giao dịch**: Theo dõi chi tiết chuyển động vàng theo người dùng
   - 📊 **Nhật ký sử dụng**: Lịch sử mở khóa tập phim (vàng vs quảng cáo)
 - 🎖️ **Quản lý thành viên**:
-  - ✏️ **Sửa số dư vang**: Hỗ trợ sửa số dư vang của người dùng
+  - ✏️ **Sửa số dư vàng**: Hỗ trợ sửa số dư vàng của người dùng
   - 👑 **Sửa thành miên**: Hỗ trợ bù cấp thành viên VIP
   - 👥 **Xem thành viên đội**: Hỗ trợ xem người dùng trực tiếp, gián tiếp
   - 📁 **Phân tổ thành viên**: Cấu hình phân nhóm:
     - Thành viên thường: Xem phim cơ bản, có quảng cáo, giới hạn chất lượng.
-    - VIP FreeAds: Xem phim không quảng cáo, chất lượng cao hơn.
+    - VIP FreeAds: Xem phim không quảng cáo.
     - VIP Gold: Không quảng cáo, mở khóa chất lượng 1080p, xem phim độc quyền, nhiều quyền lợi nhất.
 - 📋 **Nhật ký chi tiết**:
   - 🪙 **Nhật ký tiền vàng**: Tìm kiếm theo ID, biệt danh để xem biến động tiền vàng
@@ -314,28 +316,6 @@ VietShort là nền tảng phát trực tuyến video hiện đại, kết hợp
   - 📅 **Báo cáo theo thời gian**: Phân tích hiệu suất hàng ngày, hàng tuần, hàng tháng của từng CTV
   - 🏆 **Top performer**: Bảng xếp hạng và công nhận thành tích, thưởng bonus
   - 💰 **Máy tính hoa hồng**: Tỷ lệ phần trăm có thể cấu hình cho mỗi đối tác, các mức hoa hồng theo doanh số
-
-- 🎛️ **Portal CTV riêng biệt (ctv.domain.com)**:
-  - 🔐 **Đăng nhập riêng**: Đăng nhập CTV với tài khoản riêng để xem bảng điều khiển cá nhân
-  - 📊 **Bảng điều khiển CTV**: Xem số liệu cá nhân (nhẪsn, chuyển đổi, hoa hồng)
-- 🎛️ **Quản lý link định cao cấp**: 
-    - Tạo link định theo dõi cho các chiến dịch khác nhau (Facebook, TikTok, Instagram)
-    - Các tham số UTM tự động (nguồn, trung bình, chiến dịch)
-    - Các URL ngắn với miền tự định
-    - Mã QR cho tính năng tiếp thị hưởng cêtn đất
-    - Phân tích link chi tiết (bản đồ, thiết bị, thời gian)
-  - 💰 **Hệ thống rút tiền**:
-    - **Ngưỡng tối thiểu**: 500k VND để rút hoa hồng
-    - **Chu kỳ thanh toán**: Weekly/Monthly tùy chọn
-    - **Phương thức**: Bank transfer, Momo, VNPay
-    - **Trạng thái theo dõi**: Chờ duyệt → Đã duyệt → Đã chuyển
-  - 👥 **Quản lý lưu hàngđế xuất thảo**:
-    - **Danh sách người dùng được giới thiệu**: Chi tiết từng lưu hàng xuất thảo với dòng thời gian
-    - **Theo dõi chuyển đổi**: Theo dõi hành trình từ nhẪsn → đăng ký → thanh toán
-    - **Chi tiết căn cứ**: Chi tiết hoa hồng từ mỗi người dùng
-    - **Hiệu suất theo nguồn**: Phân tích hiệu quả theo từng kênh tiếp thị
-  - 📈 **Báo cáo chi tiết**: Xem báo cáo chi tiết theo ngày/tháng, export CSV/PDF
-  - 🎁 **Tài liệu marketing**: Download banner, poster, video quảng cáo với tracking links
 
 #### **🎟️ Quản lý mã trao đổi**
 
@@ -366,47 +346,27 @@ VietShort là nền tảng phát trực tuyến video hiện đại, kết hợp
 
 ### 🤝 **CTV Portal** (Cổng đối tác)
 
-Portal riêng biệt dành cho đối tác CTV tiếp thị liên kết, tối ưu hóa hiệu suất và quản lý doanh thu hoa hồng một cách chuyên nghiệp.
+Portal riêng biệt dành cho đối tác CTV tiếp thị liên kết, tối ưu hóa hiệu suất và quản lý doanh thu hoa hồng.
 
-#### **🔑 Hệ thống xác thực & bảo mật**
-- 🔐 **Đăng nhập riêng biệt**: Tài khoản CTV độc lập với backend riêng
-- 🛡️ **Phân quyền theo vai trò**: CTV thường, CTV cao cấp, Quản lý vùng
-- 📱 **Xác thực hai yếu tố**: SMS/Email OTP cho bảo mật cao
+#### **🔑 Hệ thống xác thực**
+- 🔐 **Đăng nhập riêng biệt**: Tài khoản CTV độc lập (frontend riêng, API backend dùng chung)
 - 🔄 **Phiên làm việc tự động gia hạn**: Không phải đăng nhập lại liên tục
 
 #### **📊 Bảng điều khiển thống kê**
-- 📈 **Số liệu thời gian thực**: Lượt click, tỷ lệ chuyển đổi, doanh thu theo giờ
-- 📅 **Biểu đồ xu hướng**: Theo ngày, tuần, tháng với khả năng so sánh kỳ trước
-- 🎯 **Phân tích nguồn truy cập**: Facebook, TikTok, Instagram, Website, Email
-- 💹 **Dự báo doanh thu**: Ước tính hoa hồng cuối tháng dựa trên xu hướng
-- 🏆 **Bảng xếp hạng**: So sánh hiệu suất với các CTV khác (ẩn danh)
+- 📈 **Số liệu cơ bản**: Lượt click, tỷ lệ chuyển đổi, doanh thu
+- 📅 **Biểu đồ xu hướng**: Theo ngày, tuần, tháng
 
-#### **🔗 Quản lý liên kết nâng cao** 
-- 🎨 **Tạo link tracking đa dạng**: UTM tự động, mã QR, link rút gọn
-- 📱 **Deep linking**: Liên kết trực tiếp đến phim, trang đăng ký VIP
-- 🎭 **Link có thời hạn**: Tự động hết hạn sau campaign, tránh spam
-- 📊 **Phân tích chi tiết**: Thiết bị, địa lý, thời gian truy cập
-- 🔄 **A/B testing link**: So sánh hiệu quả các phiên bản link khác nhau
+#### **🔗 Quản lý liên kết** 
+- 🎨 **Tạo link tracking**: Mã giới thiệu riêng với UTM tracking
 
 #### **💰 Hệ thống hoa hồng & rút tiền**
-- 💎 **Cấu trúc hoa hồng linh hoạt**: % theo doanh số, bonus theo milestone
+- 💎 **Tính hoa hồng**: % theo doanh số
 - 📊 **Theo dõi chi tiết**: Từng giao dịch, người dùng mang lại doanh thu
-- 💳 **Rút tiền đa phương thức**: Bank transfer, Momo, VNPay
-- ⏱️ **Chu kỳ thanh toán linh hoạt**: Hàng tuần, hàng tháng, theo yêu cầu
+- 💳 **Rút tiền**: Bank transfer (chu kỳ hàng tháng)
 - 🔍 **Lịch sử minh bạch**: Tất cả giao dịch rút tiền với trạng thái rõ ràng
 
-#### **📈 Báo cáo & phân tích**
-- 📋 **Báo cáo tự động**: Gửi email hàng tuần/tháng về hiệu suất
-- 📊 **Xuất dữ liệu**: CSV, Excel, PDF với filter tùy chỉnh
-- 🎯 **Phân tích hành vi khách hàng**: Thời gian xem, tỷ lệ chuyển đổi VIP
-- 📱 **Báo cáo di động**: Responsive dashboard cho điện thoại
-
-#### **🎨 Tài liệu & công cụ marketing**
-- 🖼️ **Thư viện banner**: Đa kích thước, cập nhật theo campaign
-- 🎥 **Video quảng cáo**: có sẵn tracking code, tối ưu cho mạng xã hội
-- 📝 **Mẫu nội dung**: Caption Facebook, script TikTok, email marketing
-- 📊 **Hướng dẫn tối ưu hóa**: Best practices, case study thành công
-- 🎯 **Công cụ tạo content**: Banner maker online, QR generator
+#### **🎨 Tài liệu marketing**
+- 🖼️ **Thư viện banner**: Banner quảng cáo cơ bản với tracking code
 
 ---
 
@@ -438,16 +398,16 @@ Thời gian thực: Socket.io (theo dõi tiến độ)
 Triển khai: Cloudflare Pages riêng biệt
 ```
 
-### **🔧 Hệ thống Backend & Dịch vụ API** ⚠️ **[QUAN TRỌNG SẢN XUẤT]**
+### **🔧 Hệ thống Backend & Dịch vụ API** ⚠️ **[Quan trọng sản xuất]**
 ```
 Môi trường chạy: Node.js 20+ LTS
 Khung làm việc: NestJS 10+
-Cơ sở dữ liệu: MySQL 8.0+ SÂO CHÉP MASTER-SLAVE (Bắt buộc)
+Cơ sở dữ liệu: MySQL 8.0+ Sao chép Master-Slave (Bắt buộc)
   - Master: Hoạt động ghi với bộ nhớ kết nối
   - Slave: Hoạt động đọc cho phân tích & báo cáo  
-  - QUAN TRỌNG: Indexing thích hợp cho hiệu suất (users, videos, comments)
-  - QUAN TRỌNG: Phân vùng bảng cho bảng lớn
-Redis: Redis 7+ CLUSTER (Bắt buộc cho 10k người dùng)
+  - Quan trọng: Indexing thích hợp cho hiệu suất (users, videos, comments)
+  - Quan trọng: Phân vùng bảng cho bảng lớn
+Redis: Redis 7+ Cluster (Bắt buộc cho 10k người dùng)
   - Lưu trữ phiên với quản lý TTL
   - Bộ nhớ đệm phản hồi API với vô hiệu hóa thích hợp
   - Lưu trữ giới hạn tốc độ
@@ -455,12 +415,12 @@ Redis: Redis 7+ CLUSTER (Bắt buộc cho 10k người dùng)
 ORM: Prisma (an toàn kiểu dữ liệu) với tối ưu hóa truy vấn
 Hệ thống hàng đợi: BullMQ + Redis với cơ chế thử lại
 Xác thực: JWT + Token làm mới + Phân quyền theo vai trò
-  - BẢO MẬT: Giới hạn tốc độ cho endpoint đăng nhập
-  - BẢO MẬT: Cơ chế khóa tài khoản
-  - BẢO MẬT: Vô hiệu hóa phiên
+  - Bảo mật: Giới hạn tốc độ cho endpoint đăng nhập
+  - Bảo mật: Cơ chế khóa tài khoản
+  - Bảo mật: Vô hiệu hóa phiên
 Lưu trữ tệp: Cloudflare R2 + URL ký
-  - HIỆU SUẤT: Tối ưu hóa tiêu đề bộ nhớ đệm CDN
-  - DỌN DẸP: Công việc dọn dẹp phân đoạn tự động
+  - Hiệu suất: Tối ưu hóa tiêu đề bộ nhớ đệm CDN
+  - Dọn dẹp: Công việc dọn dẹp phân đoạn tự động
 Hệ sinh thái API:
   - API Nhiệm vụ hàng ngày: GET/POST /tasks, theo dõi hoàn thành
   - Quản lý danh sách phát: CRUD /playlists, bộ sưu tập người dùng
@@ -468,28 +428,28 @@ Hệ sinh thái API:
   - Thử nghiệm A/B: Cờ tính năng + phân tích
 Tích hợp thanh toán: 
   - Quốc tế: Xác thực IAP (iOS App Store / Google Play)
-  - Việt Nam: VNPay + Momo với XÁC MINH CHỮ KÝ
-  - QUAN TRỌNG: Hệ thống đối sánh giao dịch
-  - QUAN TRỌNG: Cơ chế thử lại webhook
+  - Việt Nam: VNPay + Momo với Xác minh chữ ký
+  - Quan trọng: Hệ thống đối sánh giao dịch
+  - Quan trọng: Cơ chế thử lại webhook
 Dịch vụ email: Resend
 Thông báo đẩy: Firebase Cloud Messaging
 Xử lý video: FFmpeg Workers (tiến trình riêng)
-  - KHẢ NĂNG MỞ RỘNG: Dịch vụ mã hóa riêng
-  - ĐỘPIN CẬY: Cơ chế thử lại cho mã hóa thất bại
+  - Khả năng mở rộng: Dịch vụ mã hóa riêng
+  - Độ tin cậy: Cơ chế thử lại cho mã hóa thất bại
 CDN: Cloudflare R2 + Cloudflare CDN
 Thời gian thực: Socket.io (trạng thái mã hóa, thông báo quản trị)
 Hệ thống kiểm toán: Ghi nhật ký hoạt động hoàn chỉnh với bảo vệ giả mạo
-Thành phần chỉ dẫn API: Swagger/OpenAPI + Postman
+Thành phần chỉ dẫn API: Swagger/OpenAPI
 Triển khai: Docker + Ubuntu VPS + Cân bằng tải Nginx
-  - KHẢ NĂNG MỞ RỘNG: Nhiều instance backend
-  - GIÁM SÁT: Kiểm tra sức khỏe + tự động mở rộng
-  - BẢO MẬT: Bảo vệ WAF + DDoS
+  - Khả năng mở rộng: Nhiều instance backend
+  - Giám sát: Kiểm tra sức khỏe + tự động mở rộng
+  - Bảo mật: Bảo vệ WAF + DDoS
 
-GIÁM SÁT & CẢNH BÁO (Bắt buộc):
+Giám sát & Cảnh báo (Bắt buộc):
   - Theo dõi lỗi: Sentry với tích hợp Slack
   - Hiệu suất: APM New Relic/DataDog
   - Cơ sở dữ liệu: Giám sát hiệu suất truy vấn
-  - số liệu kinh doanh: Bảng điều khiển tùy chỉnh
+  - Số liệu kinh doanh: Bảng điều khiển tùy chỉnh
   - Thời gian hoạt động: Giám sát endpoint (mục tiêu: 99.9%)
 ```
 
@@ -505,9 +465,9 @@ GIÁM SÁT & CẢNH BÁO (Bắt buộc):
      │                                           │                                           │
 ┌────▼─────┐  ┌──────────┐            ┌─────────▼──────────┐            ┌──────────┐  ┌────▼─────┐
 │www.domain│  │ctv.domain│            │  api.domain.com    │            │admin     │  │cdn.domain│
-│   .com   │  │   .com   │            │   Backend API      │            │.domain   │  │   .com   │
-│Web Client│  │CTV Portal│            │                    │            │  .com    │  │   CDN    │
-│(Customer)│  │(Partners)│            │                    │            │Admin CMS │  │(Static)  │
+│   .com   │  │   .com   │            │   Backend API      │            │  .com    │  │   .com   │
+│Web Client│  │CTV Portal│            │                    │            │Admin CMS │  │(Static)  │
+│(Customer)│  │(Partners)│            │                    │            │          │  │   CDN    │
 └────┬─────┘  └─────┬────┘            └─────────┬──────────┘            └─────┬────┘  └────┬─────┘
      │              │                           │                             │            │
 ┌────▼─────┐ ┌──────▼────┐          ┌──────────▼──────────┐          ┌───────▼────┐ ┌─────▼────┐
@@ -515,12 +475,12 @@ GIÁM SÁT & CẢNH BÁO (Bắt buộc):
 │Pages     │ │Pages      │          │                     │          │Pages       │ │R2+CDN    │
 │+ CDN     │ │+ CDN      │          │ ┌─────────────────┐ │          │+ CDN       │ │Global    │
 │          │ │           │          │ │   NestJS API    │ │          │            │ │Delivery  │
-│• Next.js │ │• Next.js  │          │ │ ───────────────│ │          │• Next.js   │ │          │
-│• Customer│ │• CTV      │          │ │• Auth (JWT)    │ │          │• Admin     │ │• HLS     │
-│• HLS     │ │• Dashboard│          │ │• Business Logic│ │          │• Analytics │ │• Images  │
-│• Payment │ │• Reports  │          │ │• Payments      │ │          │• Management│ │• Files   │
-│• Social  │ │• Withdraw │          │ │• CTV/Affiliate │ │          │• Moderation│ │          │
-└──────────┘ └───────────┘          │ │• VIP/Gold      │ │          └────────────┘ └──────────┘
+│• Next.js │ │• Next.js  │          │ │ ─────────────── │ │          │• Next.js   │ │          │
+│• Customer│ │• CTV      │          │ │• Auth (JWT)     │ │          │• Admin     │ │• HLS     │
+│• HLS     │ │• Dashboard│          │ │• Business Logic │ │          │• Analytics │ │• Images  │
+│• Payment │ │• Reports  │          │ │• Payments       │ │          │• Management│ │• Files   │
+│• Social  │ │• Withdraw │          │ │• CTV/Affiliate  │ │          │• Moderation│ │          │
+└──────────┘ └───────────┘          │ │• VIP/Gold       │ │          └────────────┘ └──────────┘
                                     │ └─────────────────┘ │
                                     │         │           │
                                     │ ┌───────▼─────────┐ │
@@ -556,14 +516,12 @@ GIÁM SÁT & CẢNH BÁO (Bắt buộc):
 
 ---
 
-## 🚀 Lộ trình triển khai ⚠️ **[UPDATED FOR PRODUCTION READINESS]**
+## 🚀 **Lộ trình triển khai **
 
-### 🚨 **PHÂN TÍCH CÁC LỖ HỔNG QUAN TRỌNG**
+### 🚨 **Phân tích lỗ hổng quan trọng**
 
 **Trạng thái hiện tại**: ⚠️ **15% sẵn sàng sản xuất**
 **Các vấn đề chính**: Lỗ hổng bảo mật, nút thắt khả năng mở rộng, rủi ro tích hợp thanh toán
-**Thời gian ước tính**: Phát triển chuyên sâu **4-6 tháng**
-**Ngân sách yêu cầu**: Phát triển $15.000-25.000 + hoạt động $1.000-1.500/tháng
 
 **PHẢI FIX TRƯỚC KHI PHÁT TRIỂN:**
 - 🔐 Khoảng trống bảo mật xác thực & ủy quyền

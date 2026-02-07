@@ -587,163 +587,84 @@ vietshort/
 │   └── next.config.js
 │
 │
-├── ctv-portal/                        # 🤝 Next.js 15 Cổng đối tác CTV [DEDICATED PARTNER PORTAL]
+├── ctv-portal/                        # 🤝 Next.js 15 Cổng đối tác CTV
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── layout.tsx             # Layout chứng chỉ với security headers
+│   │   │   ├── layout.tsx             # Root layout
 │   │   │   ├── page.tsx               # Trang chủ CTV
 │   │   │   ├── login/
-│   │   │   │   ├── page.tsx           # Đăng nhập riêng với OTP
-│   │   │   │   └── forgot-password/
-│   │   │   │       └── page.tsx
+│   │   │   │   └── page.tsx           # Đăng nhập riêng
 │   │   │   ├── (dashboard)/
-│   │   │   │   ├── layout.tsx         # Dashboard layout chứng chỉ
-│   │   │   │   ├── page.tsx           # Bảng điều khiển tổng quát (thời gian thực)
-│   │   │   │   ├── analytics/
-│   │   │   │   │   ├── page.tsx       # Hiệu suất chi tiết (clicks, conversions, revenue)
-│   │   │   │   │   ├── performance/
-│   │   │   │   │   │   └── page.tsx   # Trending & performance metrics
-│   │   │   │   │   ├── sources/
-│   │   │   │   │   │   └── page.tsx   # Phân tích nguồn truy cập
-│   │   │   │   │   ├── devices/
-│   │   │   │   │   │   └── page.tsx   # Thiết bị & hệ điều hành
-│   │   │   │   │   └── geo/
-│   │   │   │   │       └── page.tsx   # Phân tích địa lý
+│   │   │   │   ├── layout.tsx         # Dashboard layout
+│   │   │   │   ├── page.tsx           # Bảng điều khiển chính
 │   │   │   │   ├── links/
-│   │   │   │   │   ├── page.tsx       # Quản lý link referral (UTM, QR, short URL)
-│   │   │   │   │   ├── create/
-│   │   │   │   │   │   └── page.tsx   # Tạo link với deep linking
-│   │   │   │   │   ├── analytics/
-│   │   │   │   │   │   └── page.tsx   # Chi tiết click & conversion từng link
-│   │   │   │   │   └── ab-testing/
-│   │   │   │   │       └── page.tsx   # So sánh hiệu suất link khác nhau
+│   │   │   │   │   ├── page.tsx       # Quản lý link referral & UTM
+│   │   │   │   │   └── create/
+│   │   │   │   │       └── page.tsx   # Tạo link mới
 │   │   │   │   ├── commissions/
-│   │   │   │   │   ├── page.tsx       # Theo dõi hoa hồng (chi tiết theo giao dịch)
-│   │   │   │   │   ├── history/
-│   │   │   │   │   │   └── page.tsx   # Lịch sử minh bạch
-│   │   │   │   │   ├── calculator/
-│   │   │   │   │   │   └── page.tsx   # Máy tính ước tính hoa hồng
-│   │   │   │   │   └── milestones/
-│   │   │   │   │       └── page.tsx   # Bonus theo mức doanh số
+│   │   │   │   │   ├── page.tsx       # Theo dõi hoa hồng
+│   │   │   │   │   └── history/
+│   │   │   │   │       └── page.tsx   # Lịch sử giao dịch
 │   │   │   │   ├── withdrawals/
-│   │   │   │   │   ├── page.tsx       # Yêu cầu rút tiền (bank, Momo, VNPay)
-│   │   │   │   │   ├── create/
-│   │   │   │   │   │   └── page.tsx   # Form rút tiền
-│   │   │   │   │   └── status/
-│   │   │   │   │       └── page.tsx   # Theo dõi trạng thái chi trả
-│   │   │   │   ├── reports/
-│   │   │   │   │   ├── page.tsx       # Báo cáo tổng quát
-│   │   │   │   │   ├── daily/
-│   │   │   │   │   │   └── page.tsx   # Báo cáo hàng ngày
-│   │   │   │   │   ├── monthly/
-│   │   │   │   │   │   └── page.tsx   # Báo cáo hàng tháng
-│   │   │   │   │   ├── custom/
-│   │   │   │   │   │   └── page.tsx   # Báo cáo tùy chỉnh
-│   │   │   │   │   └── export/
-│   │   │   │   │       └── page.tsx   # Xuất CSV, Excel, PDF
+│   │   │   │   │   ├── page.tsx       # Yêu cầu rút tiền
+│   │   │   │   │   └── create/
+│   │   │   │   │       └── page.tsx   # Form rút tiền
 │   │   │   │   ├── materials/
-│   │   │   │   │   ├── page.tsx       # Tài liệu marketing (thư viện)
-│   │   │   │   │   ├── banners/
-│   │   │   │   │   │   └── page.tsx   # Banner (đa kích thước, tracking codes)
-│   │   │   │   │   ├── videos/
-│   │   │   │   │   │   └── page.tsx   # Video quảng cáo (optimized cho social)
-│   │   │   │   │   ├── templates/
-│   │   │   │   │   │   └── page.tsx   # Mẫu nội dung (Facebook, TikTok, Email)
-│   │   │   │   │   └── guides/
-│   │   │   │   │       └── page.tsx   # Hướng dẫn tối ưu & best practices
+│   │   │   │   │   └── page.tsx       # Thư viện banner & tài liệu
 │   │   │   │   └── settings/
-│   │   │   │       ├── page.tsx       # Thiết lập tài khoản
-│   │   │   │       ├── profile/
-│   │   │   │       │   └── page.tsx   # Hồ sơ công ty
-│   │   │   │       ├── bank-account/
-│   │   │   │       │   └── page.tsx   # Tài khoản rút tiền
-│   │   │   │       └── notifications/
-│   │   │   │           └── page.tsx   # Tùy chọn thông báo
+│   │   │   │       └── page.tsx       # Thiết lập tài khoản
 │   │   │   │
-│   │   │   └── error.tsx             # Error boundary
+│   │   │   └── error.tsx
 │   │   │
 │   │   ├── components/
 │   │   │   ├── layout/
-│   │   │   │   ├── CTVHeader.tsx       # Header với security menu
-│   │   │   │   ├── CTVSidebar.tsx      # Sidebar với 7+ mục chính
-│   │   │   │   └── CTVLayout.tsx       # Layout responsive
+│   │   │   │   ├── CTVHeader.tsx
+│   │   │   │   ├── CTVSidebar.tsx
+│   │   │   │   └── CTVLayout.tsx
 │   │   │   ├── dashboard/
-│   │   │   │   ├── RealTimeMetrics.tsx # Số liệu thời gian thực
-│   │   │   │   ├── MetricsGrid.tsx     # Grid hiệu suất chính
-│   │   │   │   ├── PerformanceChart.tsx # Biểu đồ xu hướng
-│   │   │   │   ├── ConversionFunnel.tsx #漏斗chuyển đổi
-│   │   │   │   ├── RankingCard.tsx     # Thứ hạng so với CTV khác
-│   │   │   │   └── RecentReferrals.tsx # Lưu hàng xuất thảo gần đây
-│   │   │   ├── analytics/
-│   │   │   │   ├── ClicksChart.tsx     # Biểu đồ lượt click
-│   │   │   │   ├── ConversionsChart.tsx # Biểu đồ chuyển đổi
-│   │   │   │   ├── RevenueChart.tsx    # Biểu đồ doanh thu
-│   │   │   │   ├── CommissionChart.tsx # Biểu đồ hoa hồng
-│   │   │   │   ├── SourceAnalytics.tsx # Phân tích bởi nguồn
-│   │   │   │   └── DeviceAnalytics.tsx # Phân tích bởi thiết bị
+│   │   │   │   ├── MetricsCard.tsx
+│   │   │   │   ├── TrendChart.tsx
+│   │   │   │   └── PerformanceWidget.tsx
 │   │   │   ├── links/
-│   │   │   │   ├── LinkGenerator.tsx   # Tạo link với UTM & tracking
-│   │   │   │   ├── LinkTable.tsx       # Danh sách link
-│   │   │   │   ├── LinkCopyButton.tsx  # Copy link
-│   │   │   │   ├── LinkQRCode.tsx      # QR code generation
-│   │   │   │   ├── DeepLinkBuilder.tsx # Deep linking configurator
-│   │   │   │   └── LinkAnalytics.tsx   # Chi tiết hiệu suất link
+│   │   │   │   ├── LinkGenerator.tsx
+│   │   │   │   ├── LinkTable.tsx
+│   │   │   │   └── LinkCopyButton.tsx
 │   │   │   ├── commissions/
-│   │   │   │   ├── CommissionDisplay.tsx # Hiển thị hoa hồng
-│   │   │   │   ├── CommissionHistory.tsx # Lịch sử giao dịch
-│   │   │   │   ├── CommissionCalculator.tsx # Máy tính hoa hồng
-│   │   │   │   ├── MilestoneTracker.tsx # Theo dõi mục tiêu bonus
-│   │   │   │   └── TransactionDetail.tsx # Chi tiết từng giao dịch
+│   │   │   │   ├── CommissionDisplay.tsx
+│   │   │   │   ├── CommissionHistory.tsx
+│   │   │   │   └── CommissionChart.tsx
 │   │   │   ├── withdrawals/
-│   │   │   │   ├── WithdrawalForm.tsx  # Form rút tiền
-│   │   │   │   ├── WithdrawalTable.tsx # Lịch sử rút tiền
-│   │   │   │   ├── WithdrawalStatus.tsx # Trạng thái chi trả
-│   │   │   │   └── BankAccountSetup.tsx # Cấu hình tài khoản
+│   │   │   │   ├── WithdrawalForm.tsx
+│   │   │   │   └── WithdrawalHistory.tsx
 │   │   │   ├── materials/
-│   │   │   │   ├── BannerLibrary.tsx   # Thư viện banner
-│   │   │   │   ├── VideoLibrary.tsx    # Thư viện video
-│   │   │   │   ├── ContentTemplate.tsx # Mẫu nội dung
-│   │   │   │   └── ContentGuide.tsx    # Hướng dẫn tối ưu
+│   │   │   │   ├── BannerLibrary.tsx
+│   │   │   │   └── MaterialDownload.tsx
 │   │   │   └── common/
 │   │   │       ├── DataTable.tsx
 │   │   │       ├── FilterBar.tsx
-│   │   │       ├── ExportButton.tsx
-│   │   │       ├── DateRangePicker.tsx
-│   │   │       └── TrendIndicator.tsx
+│   │   │       └── DateRangePicker.tsx
 │   │   │
 │   │   ├── hooks/
 │   │   │   ├── useCTVAuth.ts
 │   │   │   ├── useCTVAPI.ts
-│   │   │   ├── useMetrics.ts
-│   │   │   └── useCommission.ts
+│   │   │   └── useMetrics.ts
 │   │   │
 │   │   ├── lib/
 │   │   │   ├── ctv-api.ts
-│   │   │   ├── ctv-auth.ts
-│   │   │   └── ctv-utils.ts
+│   │   │   └── ctv-auth.ts
 │   │   │
 │   │   ├── stores/
 │   │   │   ├── ctvAuthStore.ts
-│   │   │   ├── metricsStore.ts
-│   │   │   └── ctvUIStore.ts
+│   │   │   └── metricsStore.ts
 │   │   │
 │   │   ├── types/
 │   │   │   ├── ctv.ts
-│   │   │   ├── metrics.ts
 │   │   │   ├── commission.ts
-│   │   │   ├── referral.ts
-│   │   │   └── withdrawal.ts
+│   │   │   └── referral.ts
 │   │   │
 │   │   ├── styles/
 │   │   │   ├── globals.css
-│   │   │   ├── ctv.css
-│   │   │   └── charts.css
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── ctv-metrics.ts
-│   │   │   ├── ctv-commission.ts
-│   │   │   ├── date-formatter.ts
-│   │   │   └── export-helpers.ts
+│   │   │   └── ctv.css
 │   │   │
 │   ├── .env.example
 │   ├── .gitignore
