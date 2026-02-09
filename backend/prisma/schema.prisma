@@ -1,0 +1,1012 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  // previewFeatures removed: fullTextIndex is now stable
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ═══════════════════════════════════════════════════════════
+// USER & AUTH
+// ═══════════════════════════════════════════════════════════
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  nickname         String    @unique
+  passwordHash     String?
+  firstName        String?
+  lastName         String?
+  avatar           String?
+  phone            String?
+  dateOfBirth      DateTime?
+  gender           Gender?
+  
+  // VIP và Balance
+  vipTier          VipType?  // VIP_GOLD, null = All users
+  vipExpiresAt     DateTime?
+  goldBalance      Int       @default(0)
+  
+  // Authentication
+  isEmailVerified  Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  isLocked         Boolean   @default(false)
+  lockReason       String?
+  lockedAt         DateTime?
+  lockedBy         String?
+  
+  // OAuth providers
+  googleId         String?   @unique
+  facebookId       String?   @unique
+  appleId          String?   @unique
+  tiktokId         String?   @unique
+  
+  // Device tracking cho guest mode
+  deviceId         String?
+  
+  // Registration tracking
+  registrationSource String?  // web, android, ios, guest
+  registrationIp     String?
+  
+  // Thông tin bổ sung
+  country          String?
+  timezone         String?
+  language         String    @default("vi")
+  
+  // Metadata
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  lastLoginAt      DateTime?
+  
+  // Relations
+  refreshTokens    RefreshToken[]
+  watchHistory     WatchHistory[]
+  favorites        Favorite[]
+  likes            Like[]
+  ratings          Rating[]
+  comments         Comment[]
+  transactions     Transaction[]
+  unlocks          VideoUnlock[]
+  checkIns         CheckIn[]
+  exchangeRedeems  ExchangeRedeem[]
+  referrals        CtvReferral[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  dailyTaskProgress UserDailyTaskProgress[]
+  achievements     UserAchievement[]
+  
+  @@map("users")
+  @@index([email])
+  @@index([nickname])
+  @@index([vipTier])
+  @@index([createdAt])
+  @@index([deviceId])
+  @@index([googleId])
+  @@index([facebookId])
+  @@index([appleId])
+  @@index([tiktokId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("refresh_tokens")
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIDEO & CONTENT
+// ═══════════════════════════════════════════════════════════
+
+model Video {
+  id               String      @id @default(cuid())
+  title            String
+  description      String?     @db.Text
+  slug             String      @unique
+  poster           String?
+  
+  // Video info
+  duration         Int?        // seconds
+  releaseYear      Int?
+  director         String?
+  actors           String?     @db.Text
+  country          String?
+  language         String      @default("vi")
+  genres           String?     // comma-separated genres for quick filtering
+  
+  // Series info
+  isSerial         Boolean     @default(false)
+  totalEpisodes    Int?
+  
+  // Content classification
+  ageRating        AgeRating   @default(ALL)
+  
+  // Pricing và Access control
+  isVipOnly        Boolean     @default(false)
+  vipTier          VipType?    // null = all VIP, specific tier required
+  unlockPrice      Int?        // gold to unlock entire series
+  
+  // Status
+  status           VideoStatus @default(DRAFT)
+  publishedAt      DateTime?
+  
+  // SEO
+  metaTitle        String?
+  metaDescription  String?
+  keywords         String?
+  
+  // Stats (denormalized for performance)
+  viewCount        Int         @default(0)
+  likeCount        Int         @default(0)
+  shareCount       Int         @default(0)
+  favoriteCount    Int         @default(0)
+  commentCount     Int         @default(0)
+  ratingAverage    Float?      @default(0.0)
+  ratingCount      Int         @default(0)
+  
+  // Metadata
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  // Relations
+  episodes         Episode[]
+  watchHistory     WatchHistory[]
+  favorites        Favorite[]
+  likes            Like[]
+  ratings          Rating[]
+  comments         Comment[]
+  videoGenres      VideoGenre[]
+  
+  @@map("videos")
+  @@index([slug])
+  @@index([status])
+  @@index([isVipOnly])
+  @@index([publishedAt])
+  @@index([viewCount])
+  @@index([ratingAverage])
+  @@fulltext([title, description])
+}
+
+model Episode {
+  id               String      @id @default(cuid())
+  videoId          String
+  episodeNumber    Int
+  title            String?
+  description      String?     @db.Text
+  
+  // Video files
+  hlsManifest      String?     // HLS m3u8 URL
+  mp4Url           String?     // Direct MP4 for fallback
+  
+  // Episode specific pricing
+  // If unlockPrice is null → free, if null and video.isVipOnly=true → VIP only
+  unlockPrice      Int?        // gold to unlock this episode (null = free)
+  
+  // Processing status
+  encodingStatus   EncodingStatus @default(PENDING)
+  encodingProgress Int         @default(0)
+  
+  // Duration
+  duration         Int?        // seconds
+  
+  // Metadata
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  // Relations
+  video            Video       @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  watchHistory     WatchHistory[]
+  unlocks          VideoUnlock[]
+  subtitles        Subtitle[]
+  
+  @@map("episodes")
+  @@unique([videoId, episodeNumber])
+  @@index([videoId])
+  @@index([encodingStatus])
+}
+
+model Subtitle {
+  id         String   @id @default(cuid())
+  episodeId  String
+  language   String   // vi, en, zh-CN, etc
+  content    String   @db.LongText // SRT content
+  isAuto     Boolean  @default(false) // AI-generated
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  episode    Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  
+  @@map("subtitles")
+  @@unique([episodeId, language])
+  @@index([episodeId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// GENRE
+// ═══════════════════════════════════════════════════════════
+
+model Genre {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  videos      VideoGenre[]
+  
+  @@map("genres")
+  @@index([slug])
+  @@index([isActive])
+}
+
+model VideoGenre {
+  videoId  String
+  genreId  String
+  
+  video    Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  genre    Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  
+  @@id([videoId, genreId])
+  @@map("video_genres")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SOCIAL INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+
+model WatchHistory {
+  id          String   @id @default(cuid())
+  userId      String?  // null for guest users
+  deviceId    String?  // for guest tracking
+  videoId     String
+  episodeId   String?
+  
+  // Progress tracking
+  watchTime   Int      @default(0) // seconds watched
+  progressive Int      @default(0) // last position in seconds
+  isCompleted Boolean  @default(false)
+  
+  // Session info
+  sessionId   String?
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video       Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  episode     Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  
+  @@map("watch_history")
+  @@index([userId])
+  @@index([deviceId])
+  @@index([videoId])
+  @@index([createdAt])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  @@map("favorites")
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  @@map("likes")
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  rating    Int      // 1-5 stars
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  @@map("ratings")
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+  @@index([rating])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  parentId  String?  // For nested replies
+  content   String   @db.Text
+  
+  // Moderation
+  isApproved Boolean @default(true)
+  isReported Boolean @default(false)
+  reportCount Int    @default(0)
+  moderatedBy String?
+  moderatedAt DateTime?
+  
+  // Stats
+  likeCount  Int     @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  
+  @@map("comments")
+  @@index([userId])
+  @@index([videoId])
+  @@index([parentId])
+  @@index([isApproved])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAYMENT & TRANSACTION
+// ═══════════════════════════════════════════════════════════
+
+model Transaction {
+  id              String          @id @default(cuid())
+  userId          String
+  type            TransactionType
+  amount          Int             // In VND cents
+  rewardValue      Int?            // Gold coins awarded or VIP days added
+  
+  // Payment provider info
+  provider        PaymentProvider?
+  providerTxId    String?         // VNPay/Momo transaction ID
+  providerStatus  String?
+  
+  // Internal reference
+  referenceId     String?         // Internal reference
+  description     String?
+  notes           String?         @db.Text
+  
+  // Idempotency key (prevent duplicate transactions)
+  idempotencyKey  String?         @unique
+  
+  // Status
+  status          TransactionStatus @default(PENDING)
+  processedAt     DateTime?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("transactions")
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([provider])
+  @@index([providerTxId])
+  @@index([createdAt])
+}
+
+model VideoUnlock {
+  id        String   @id @default(cuid())
+  userId    String
+  episodeId String
+  method    UnlockMethod
+  goldSpent Int?     // Gold spent (only if method=GOLD)
+  adWatched Boolean? // Whether user watched ad (only if method=AD)
+  
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  
+  @@map("video_unlocks")
+  @@unique([userId, episodeId])
+  @@index([userId])
+  @@index([episodeId])
+  @@index([method])
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIP PLANS
+// ═══════════════════════════════════════════════════════════
+
+model VipPlan {
+  id           String   @id @default(cuid())
+  name         String   // "VIP FreeAds 1 tháng", "VIP Gold 3 tháng"
+  vipType      VipType  // VIP_FREEADS or VIP_GOLD
+  durationDays Int      // 30, 90, 365
+  priceVnd     Int      // Price in VND (19000, 49000, etc.)
+  priceGold    Int?     // Price in gold (alternative payment)
+  discount     Float?   // Discount percentage (0.14 = 14% off)
+  description  String?  @db.Text
+  
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("vip_plans")
+  @@index([vipType])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+// ═══════════════════════════════════════════════════════════
+// GAMIFICATION
+// ═══════════════════════════════════════════════════════════
+
+model CheckInReward {
+  id           String   @id @default(cuid())
+  day          Int      @unique // 1-7 (ngày trong streak)
+  rewardGold   Int      @default(0) // Số vàng thưởng
+  description  String?  // Mô tả phần thưởng
+
+  isActive     Boolean  @default(true)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("check_in_rewards")
+  @@index([day])
+  @@index([isActive])
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  day       Int      // 1-7 (day in streak)
+  rewardGold   Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("check_ins")
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+
+model DailyTask {
+  id           String   @id @default(cuid())
+  name         String   // "Xem 1 tập phim", "Thích 1 video", "Bình luận"
+  description  String?
+  taskType     DailyTaskType
+  targetCount  Int      @default(1)  // How many times to complete
+  rewardGold   Int      @default(0)  // Gold reward
+  
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  progress     UserDailyTaskProgress[]
+  
+  @@map("daily_tasks")
+  @@index([isActive])
+  @@index([taskType])
+}
+
+model UserDailyTaskProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  taskId       String
+  date         DateTime @db.Date
+  currentCount Int      @default(0)
+  isCompleted  Boolean  @default(false)
+  completedAt  DateTime?
+  rewardClaimed Boolean @default(false)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task         DailyTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@map("user_daily_task_progress")
+  @@unique([userId, taskId, date])
+  @@index([userId])
+  @@index([taskId])
+  @@index([date])
+}
+
+model Achievement {
+  id           String   @id @default(cuid())
+  name         String   // "Bình luận đầu tiên", "Xem 100 tập"
+  description  String?  @db.Text
+  category     String?  // "social", "watch", "payment"
+  
+  // Unlock conditions
+  conditionType  AchievementCondition
+  conditionValue Int      @default(1)  // Target count
+  
+  rewardGold   Int      @default(0)
+  
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  userAchievements UserAchievement[]
+  
+  @@map("achievements")
+  @@index([isActive])
+  @@index([conditionType])
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  rewardClaimed Boolean  @default(false)
+  
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  
+  @@map("user_achievements")
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXCHANGE CODES
+// ═══════════════════════════════════════════════════════════
+
+model ExchangeCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  batchName       String
+  description     String?
+  rewardType      RewardType
+  rewardValue     Int        // Gold amount if GOLD, duration if VIP_DAYS, or combined if BOTH
+  usageLimit      Int       @default(1)
+  usedCount       Int       @default(0)
+  codeLength      Int       @default(8)
+  
+  isActive        Boolean   @default(true)
+  expiresAt       DateTime?
+  
+  createdAt       DateTime  @default(now())
+  createdBy       String    // Admin user ID
+  
+  // Relations
+  redeems         ExchangeRedeem[]
+  
+  @@map("exchange_codes")
+  @@index([code])
+  @@index([batchName])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model ExchangeRedeem {
+  id           String      @id @default(cuid())
+  userId       String
+  codeId       String
+  ipAddress    String?
+  userAgent    String?
+  deviceId     String?
+  
+  redeemedAt   DateTime    @default(now())
+  
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code         ExchangeCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  
+  @@map("exchange_redeems")
+  @@unique([userId, codeId])
+  @@index([userId])
+  @@index([codeId])
+  @@index([redeemedAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// CTV AFFILIATE
+// ═══════════════════════════════════════════════════════════
+
+model CtvAffiliate {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  nickname        String    @unique
+  passwordHash    String
+  companyName     String?
+  realName        String
+  phone           String?
+  bankAccount     String?
+  bankName        String?
+  
+  // Commission settings
+  commissionRate  Float     @default(0.1) // 10%
+  totalEarned     Int       @default(0)   // In VND cents
+  pendingPayout   Int       @default(0)   // In VND cents
+  paidOut         Int       @default(0)   // In VND cents
+  
+  // Tracking
+  referralCode    String    @unique
+  referralUrl     String    // https://vietshort.vn/?ref=code
+  
+  // Stats (denormalized)
+  totalClicks     Int       @default(0)
+  totalRegistrations Int    @default(0)
+  totalPurchasers Int       @default(0)
+  
+  // Status
+  isActive        Boolean   @default(true)
+  isVerified      Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  referrals       CtvReferral[]
+  payouts         CtvPayout[]
+  
+  @@map("ctv_affiliates")
+  @@index([referralCode])
+  @@index([email])
+  @@index([isActive])
+}
+
+model CtvReferral {
+  id               String      @id @default(cuid())
+  affiliateId      String
+  userId           String
+  
+  // Tracking info
+  clickedAt        DateTime?   // When user first clicked
+  registeredAt     DateTime?   // When user registered
+  firstPurchaseAt  DateTime?   // When user made first purchase
+  
+  // Commission tracking
+  totalRevenue     Int         @default(0) // Total revenue from this user (VND cents)
+  totalCommission  Int         @default(0) // Total commission earned (VND cents)
+  
+  // Metadata
+  ipAddress        String?
+  userAgent        String?
+  referrerUrl      String?
+  
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  affiliate        CtvAffiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("ctv_referrals")
+  @@unique([affiliateId, userId])
+  @@index([affiliateId])
+  @@index([userId])
+}
+
+model CtvPayout {
+  id          String        @id @default(cuid())
+  affiliateId String
+  amount      Int           // In VND cents
+  status      PayoutStatus  @default(PENDING)
+  
+  // Payment details
+  bankAccount String
+  bankName    String
+  notes       String?       @db.Text
+  
+  // Processing
+  processedAt DateTime?
+  processedBy String?       // Admin ID
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  affiliate   CtvAffiliate  @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  
+  @@map("ctv_payouts")
+  @@index([affiliateId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  content     String           @db.Text
+  
+  // Target linking
+  targetType  String?          // "video", "episode", "promotion", etc.
+  targetId    String?          // ID of the target resource
+  
+  // Status
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  
+  // Delivery
+  channel     NotificationChannel @default(IN_APP)
+  sentAt      DateTime?
+  
+  createdAt   DateTime         @default(now())
+  
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notifications")
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// BANNERS
+// ═══════════════════════════════════════════════════════════
+
+model Banner {
+  id           String   @id @default(cuid())
+  title        String
+  imageUrl     String
+  linkUrl      String?  // External URL or internal video ID
+  linkType     String?  // "video", "external", "promotion"
+  linkTarget   String?  // Video ID or URL
+  
+  // Display settings
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  startAt      DateTime?
+  endAt        DateTime?
+  
+  // Targeting
+  targetVipType VipType? // Show only to specific VIP tier, null = all
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("banners")
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([startAt])
+  @@index([endAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════════════════
+
+model Admin {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  nickname     String      @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  
+  // Permissions
+  role         AdminRole   @default(MODERATOR)
+  permissions  String      // JSON array of specific permissions
+  
+  // Status
+  isActive     Boolean     @default(true)
+  
+  // Metadata
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  lastLoginAt  DateTime?
+  
+  // Relations
+  auditLogs    AuditLog[]
+  
+  @@map("admins")
+  @@index([email])
+  @@index([role])
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  userId       String?     // Regular user
+  adminId      String?     // Admin user
+  action       String      // Action performed
+  resource     String      // Resource affected (user, video, etc)
+  resourceId   String?     // ID of affected resource
+  
+  // Details
+  changes      String?     @db.Text // JSON of changes made
+  ipAddress    String?
+  userAgent    String?
+  
+  // Tamper protection
+  checksum     String?     // Hash of log entry
+  
+  createdAt    DateTime    @default(now())
+  
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  admin        Admin?      @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([adminId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// README: VIP FreeAds / VIP Gold - null = NORMAL user
+enum VipType {
+  VIP_FREEADS  // VIP FreeAds - xem phim không quảng cáo
+  VIP_GOLD     // VIP Gold - không quảng cáo, 1080p, phim độc quyền
+}
+
+enum AgeRating {
+  ALL
+  T13    // 13+
+  T16    // 16+
+  T18    // 18+
+}
+
+enum VideoStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  DELETED
+}
+
+enum EncodingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TransactionType {
+  PURCHASE_GOLD      // Nạp tiền mua vàng
+  PURCHASE_VIP       // Mua gói VIP
+  SPEND_GOLD         // Tiêu vàng (unlock video)
+  REFUND             // Hoàn tiền
+  ADMIN_ADJUST       // Admin điều chỉnh
+  EXCHANGE_REDEEM    // Đổi mã exchange code
+  AD_REWARD          // Thưởng xem quảng cáo
+  CHECKIN_REWARD     // Thưởng điểm danh
+  TASK_REWARD        // Thưởng nhiệm vụ hàng ngày
+  ACHIEVEMENT_REWARD // Thưởng thành tích
+}
+
+enum PaymentProvider {
+  VNPAY
+  MOMO
+  BANK_TRANSFER
+  APPLE_IAP      // iOS StoreKit
+  GOOGLE_PLAY    // Google Play Billing
+  ADMIN          // Admin manual
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum UnlockMethod {
+  GOLD
+  AD
+  VIP
+}
+
+enum RewardType {
+  GOLD
+  VIP_DAYS
+  BOTH
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  CONTENT_MANAGER
+}
+
+enum DailyTaskType {
+  WATCH_VIDEO     // Xem phim
+  LIKE_VIDEO      // Thích video
+  COMMENT         // Bình luận
+  SHARE           // Chia sẻ
+  WATCH_AD        // Xem quảng cáo
+  RATE_VIDEO      // Đánh giá phim
+}
+
+enum AchievementCondition {
+  WATCH_EPISODES   // Xem đủ số tập
+  WATCH_MINUTES    // Xem đủ số phút
+  FIRST_COMMENT    // Bình luận đầu tiên
+  FIRST_LIKE       // Thích đầu tiên
+  FIRST_SHARE      // Chia sẻ đầu tiên
+  TOTAL_COMMENTS   // Tổng số bình luận
+  TOTAL_SHARES     // Tổng số chia sẻ
+  VIP_SUBSCRIBE    // Đăng ký VIP
+  GOLD_SPENT       // Tiêu vàng
+  FOLLOW_SOCIAL    // Theo dõi mạng xã hội
+  STREAK_CHECKIN   // Chuỗi điểm danh liên tục
+}
+
+enum NotificationType {
+  NEW_EPISODE      // Tập mới
+  PROMOTION        // Khuyến mãi
+  SYSTEM           // Hệ thống
+  VIP_EXPIRING     // VIP sắp hết hạn
+  ACHIEVEMENT      // Đạt thành tích
+  REFERRAL         // Mã giới thiệu
+  PAYMENT          // Thanh toán
+  REMINDER         // Nhắc nhở xem phim
+}
+
+enum NotificationChannel {
+  IN_APP     // Thông báo trong app
+  PUSH       // Push notification
+  EMAIL      // Email
+}

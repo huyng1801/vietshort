@@ -1,0 +1,33 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "rootDir": "..",
+  "testRegex": "test/.*\\.e2e-spec\\.ts$",
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "collectCoverageFrom": [
+    "src/**/*.ts"
+  ],
+  "coverageDirectory": "<rootDir>/coverage",
+  "testTimeout": 60000,
+  "verbose": true,
+  "bail": false,
+  "maxWorkers": 1,
+  "transform": {
+    "^.+\\.ts$": ["ts-jest", {
+      "tsconfig": {
+        "module": "commonjs",
+        "target": "ES2020"
+      }
+    }]
+  },
+  "globals": {
+    "ts-jest": {
+      "tsconfig": {
+        "module": "commonjs"
+      }
+    }
+  }
+}
