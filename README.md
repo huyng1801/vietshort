@@ -523,19 +523,9 @@ Giám sát & Cảnh báo (Bắt buộc):
 **Trạng thái hiện tại**: ⚠️ **15% sẵn sàng sản xuất**
 **Các vấn đề chính**: Lỗ hổng bảo mật, nút thắt khả năng mở rộng, rủi ro tích hợp thanh toán
 
-**PHẢI FIX TRƯỚC KHI PHÁT TRIỂN:**
-- 🔐 Khoảng trống bảo mật xác thực & ủy quyền
-- 💰 Thiếu xác minh chữ ký webhook thanh toán
-- 🗄️ Thiết kế cơ sở dữ liệu thiếu indexing & sao chép thích hợp
-- 📹 Kiến trúc phát trực tuyến video có điểm lỗi duy nhất
-- 🔍 Không có giám sát, ghi nhật ký hoặc theo dõi lỗi
-- ⚖️ Thiếu load balancing & dự phòng
+##### **🔒 Giai đoạn 1: Bảo mật & Nền tảng [Quan trọng]**
 
-### 🏗️ **UPDATED PRODUCTION ROADMAP**
-
-##### **🔒 GIAI ĐOẠN 1: BẢO MẬT & NỀN TẢNG (Tuần 1-4) [QUAN TRỌNG]**
-
-**Tuần 1-2: Cứng hóa bảo mật & Nền tảng cơ sở dữ liệu**
+**Cứng hóa bảo mật & Nền tảng cơ sở dữ liệu**
 - 🚨 **Thiết kế Sơ đồ cơ sở dữ liệu**: Sơ đồ ER hoàn chỉnh với các mối quan hệ phù hợp
 - 🚨 **Chiến lược chỉ mục**: Chỉ mục quan trọng cho các truy vấn user, video, comment
 - 🚨 **Thiết lập Master-Slave**: Cấu hình sao chép MySQL
@@ -545,7 +535,7 @@ Giám sát & Cảnh báo (Bắt buộc):
 - 🚨 **Bảo vệ Tiêm SQL**: Thực thi truy vấn có tham số
 - 🚨 **Thiết lập theo dõi lỗi**: Tích hợp Sentry với cảnh báo
 
-**Tuần 3-4: API cốt lõi & Bảo mật**
+**API cốt lõi & Bảo mật**
 - ✔ API xác thực (JWT, Refresh token, OAuth endpoints)
 - ✔ Middleware xác thực (AuthGuard, JwtStrategy, Role-based access)
 - ✔ API người dùng với security validation
@@ -573,7 +563,7 @@ Giám sát & Cảnh báo (Bắt buộc):
 
 ---
 
-##### **⚡ GIAI ĐOẠN 2: KHẢ NĂNG MỞ RỘNG & HIỆU SUẤT (Tuần 5-8) [ĐỨC TIÊN CẤP CAO]**
+##### **⚡ Giai đoạn 2: Khả năng mở rộng & Hiệu suất**
 
 **Backend**
 - ✔ API Bình luận (GET/POST/DELETE với kiểm duyệt)
@@ -613,7 +603,7 @@ Giám sát & Cảnh báo (Bắt buộc):
 
 ---
 
-##### **🎯 GIAI ĐOẠN 3: LOGIC KINH DOANH & TÍNH NĂNG (Tuần 9-12) [ĐỨC TIÊN CẤP TRUNG]**
+##### **🎯 Giai đoạn 3: Logic kinh doanh và tính năng**
 
 **Backend**
 - ✔ API Khuyến nghị (GET /videos/recommendations, thuật toán dựa trên lịch sử xem với A/B testing)
@@ -677,13 +667,13 @@ Giám sát & Cảnh báo (Bắt buộc):
 
 ---
 
-##### **🚀 GIAI ĐOẠN 4: TRIỂN KHAI SẢN XUẤT (Tuần 13-16) [SẴN SÀNG PHÁT HÀNH]**
+##### **🚀 Giai doạn 4: Triển khai sản xuất**
 
 **Tuần 13-14: Cơ sở hạ tầng & Kiểm tra tải**
 - 🏗️ Cung cấp máy chủ sản xuất (load balancer + nhiều instance)
 - 🔧 Thiết lập đường ống CI/CD với kiểm tra tự động
 - 🔐 Chứng chỉ SSL + cứng hóa bảo mật
-- 📧 Tích hợp dịch vụ Email/SMS
+- 📧 Tích hợp dịch vụ Email
 - 📊 Hoàn thành hệ thống giám sát + cảnh báo
 - 💾 Sao lưu + kiểm tra phục hồi sau thảm họa
 - ⚡ Kiểm tra tải với 10k người dùng đồng thời mô phỏng

@@ -3,12 +3,13 @@
 
 generator client {
   provider = "prisma-client-js"
-  // previewFeatures removed: fullTextIndex is now stable
   binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["fullTextIndex"]
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -188,16 +189,18 @@ model Episode {
   description      String?     @db.Text
   
   // Video files
-  hlsManifest      String?     // HLS m3u8 URL
+  sourceUrl        String?     // Raw source file URL in R2 (r2://raw/videos/{videoId}/ep-{n}/source.mp4)
+  hlsManifest      String?     // HLS m3u8 URL (CDN)
   mp4Url           String?     // Direct MP4 for fallback
   
   // Episode specific pricing
-  // If unlockPrice is null → free, if null and video.isVipOnly=true → VIP only
+  // If unlockPrice is null → free
   unlockPrice      Int?        // gold to unlock this episode (null = free)
   
   // Processing status
   encodingStatus   EncodingStatus @default(PENDING)
   encodingProgress Int         @default(0)
+  encodingError    String?     @db.Text // Error message if encoding failed (extended for long FFmpeg errors)
   
   // Duration
   duration         Int?        // seconds
@@ -219,20 +222,28 @@ model Episode {
 }
 
 model Subtitle {
-  id         String   @id @default(cuid())
+  id         String          @id @default(cuid())
   episodeId  String
-  language   String   // vi, en, zh-CN, etc
-  content    String   @db.LongText // SRT content
-  isAuto     Boolean  @default(false) // AI-generated
+  language   String          // vi, en, zh-CN, etc
+  label      String?         // "Tiếng Việt", "English", etc.
+  content    String?         @db.LongText // SRT content (stored inline)
+  srtUrl     String?         // R2 CDN URL to SRT file
+  isAuto     Boolean         @default(false) // AI-generated via Whisper
   
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  // Processing status (for AI-generated subtitles)
+  status     SubtitleStatus  @default(READY)
+  progress   Int             @default(0)
+  error      String?         @db.Text
   
-  episode    Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  
+  episode    Episode         @relation(fields: [episodeId], references: [id], onDelete: Cascade)
   
   @@map("subtitles")
   @@unique([episodeId, language])
   @@index([episodeId])
+  @@index([status])
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -457,7 +468,6 @@ model VipPlan {
   vipType      VipType  // VIP_FREEADS or VIP_GOLD
   durationDays Int      // 30, 90, 365
   priceVnd     Int      // Price in VND (19000, 49000, etc.)
-  priceGold    Int?     // Price in gold (alternative payment)
   discount     Float?   // Discount percentage (0.14 = 14% off)
   description  String?  @db.Text
   
@@ -600,9 +610,33 @@ model UserAchievement {
 // EXCHANGE CODES
 // ═══════════════════════════════════════════════════════════
 
+model CodeBatch {
+  id              String       @id @default(cuid())
+  batchName       String       @unique
+  rewardType      RewardType
+  rewardValue     Int          // Gold amount if GOLD, VIP days if VIP_DAYS
+  quantity        Int          // Number of codes generated
+  usageLimit      Int          @default(1) // Usage limit per code
+  codeLength      Int          @default(8)
+  codePrefix      String?
+  isActive        Boolean      @default(true)
+  expiresAt       DateTime?
+  createdBy       String
+  createdAt       DateTime     @default(now())
+  
+  // Relations
+  codes           ExchangeCode[]
+  
+  @@map("code_batches")
+  @@index([batchName])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
 model ExchangeCode {
   id              String    @id @default(cuid())
   code            String    @unique
+  batchId         String?
   batchName       String
   description     String?
   rewardType      RewardType
@@ -618,10 +652,12 @@ model ExchangeCode {
   createdBy       String    // Admin user ID
   
   // Relations
+  batch           CodeBatch?      @relation(fields: [batchId], references: [id], onDelete: SetNull)
   redeems         ExchangeRedeem[]
   
   @@map("exchange_codes")
   @@index([code])
+  @@index([batchId])
   @@index([batchName])
   @@index([isActive])
   @@index([expiresAt])
@@ -662,17 +698,31 @@ model CtvAffiliate {
   bankAccount     String?
   bankName        String?
   
+  // 3-tier hierarchy
+  parentId        String?                           // Parent affiliate ID (null = Tier 1)
+  tier            Int             @default(1)       // 1 = Company, 2 = Sub-manager, 3 = Individual
+  affiliateType   AffiliateType   @default(INDIVIDUAL)
+  
   // Commission settings
-  commissionRate  Float     @default(0.1) // 10%
-  totalEarned     Int       @default(0)   // In VND cents
+  commissionRate  Float     @default(0.1) // 10% — Tier 1: platform pays this; Tier 2/3: parent allocates
+  totalEarned     Int       @default(0)   // In VND cents (own earnings)
   pendingPayout   Int       @default(0)   // In VND cents
   paidOut         Int       @default(0)   // In VND cents
+  
+  // Network stats (denormalized — aggregated from entire tree below)
+  networkEarned   Int       @default(0)   // Total earned by entire sub-network
+  networkMembers  Int       @default(0)   // Total sub-affiliates count
+  
+  // Contract info (primarily for Tier 1 companies)
+  contractNotes   String?   @db.Text
+  contractStartAt DateTime?
+  contractEndAt   DateTime?
   
   // Tracking
   referralCode    String    @unique
   referralUrl     String    // https://vietshort.vn/?ref=code
   
-  // Stats (denormalized)
+  // Stats (denormalized — own direct stats)
   totalClicks     Int       @default(0)
   totalRegistrations Int    @default(0)
   totalPurchasers Int       @default(0)
@@ -685,6 +735,8 @@ model CtvAffiliate {
   updatedAt       DateTime  @updatedAt
   
   // Relations
+  parent          CtvAffiliate?  @relation("AffiliateTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children        CtvAffiliate[] @relation("AffiliateTree")
   referrals       CtvReferral[]
   payouts         CtvPayout[]
   
@@ -692,6 +744,8 @@ model CtvAffiliate {
   @@index([referralCode])
   @@index([email])
   @@index([isActive])
+  @@index([parentId])
+  @@index([tier])
 }
 
 model CtvReferral {
@@ -909,9 +963,21 @@ enum VideoStatus {
 
 enum EncodingStatus {
   PENDING
+  QUEUED
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum SubtitleStatus {
+  READY       // Manual upload, already available
+  QUEUED      // Waiting in queue for AI processing
+  EXTRACTING  // Extracting audio from video
+  TRANSCRIBING // Whisper transcribing
+  TRANSLATING // Translating to target language
+  UPLOADING   // Uploading SRT to R2
+  COMPLETED   // Done
+  FAILED      // Error
 }
 
 enum TransactionType {
@@ -962,6 +1028,11 @@ enum PayoutStatus {
   PROCESSING
   COMPLETED
   REJECTED
+}
+
+enum AffiliateType {
+  COMPANY      // Tier 1: Company/Agency contracted directly
+  INDIVIDUAL   // Tier 2/3: Individual affiliates
 }
 
 enum AdminRole {

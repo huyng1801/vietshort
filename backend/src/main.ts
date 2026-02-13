@@ -12,15 +12,15 @@ async function bootstrap() {
   });
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
-  const isProduction = configService.get('nodeEnv') === 'production';
+  const isProduction = configService.get('app.nodeEnv') === 'production';
 
   // ─── Sentry Initialization ──────────────────────────
-  const sentryDsn = configService.get('monitoring.sentryDsn');
+  const sentryDsn = configService.get('app.sentry.dsn');
   if (sentryDsn) {
     Sentry.init({
       dsn: sentryDsn,
-      environment: configService.get('monitoring.sentryEnvironment'),
-      tracesSampleRate: configService.get('monitoring.sentryTracesSampleRate') || 0.1,
+      environment: configService.get('app.sentry.environment') || (isProduction ? 'production' : 'development'),
+      tracesSampleRate: configService.get('app.sentry.tracesSampleRate') || 0.1,
       release: `vietshort-api@${process.env.npm_package_version || '1.0.0'}`,
       integrations: [
         new Sentry.Integrations.Http({ tracing: true }),
@@ -48,7 +48,11 @@ async function bootstrap() {
   }));
 
   // ─── CORS ──────────────────────────────────────────
-  const corsOrigins = configService.get('security.corsOrigins') || ['http://localhost:3001', 'http://localhost:3002'];
+  const corsOrigins = configService.get('security.cors.origin') || [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+  ];
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
@@ -115,10 +119,10 @@ async function bootstrap() {
   // ─── Graceful Shutdown ─────────────────────────────
   app.enableShutdownHooks();
 
-  const port = configService.get('port') || 3000;
+  const port = configService.get('app.port') || 3000;
   await app.listen(port);
 
-  logger.log(`VietShort API running on port ${port} [${configService.get('nodeEnv')}]`);
+  logger.log(`VietShort API running on port ${port} [${configService.get('app.nodeEnv')}]`);
   if (!isProduction) {
     logger.log(`API Documentation: http://localhost:${port}/api/docs`);
   }

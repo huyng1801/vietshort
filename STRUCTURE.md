@@ -242,13 +242,13 @@ vietshort/
 │   │   │       └── helpers.ts
 │   │   │
 │   │   ├── config/                    # ⚙️ Config [PRODUCTION SECURITY]
-│   │   │   ├── database.config.ts         # Master-slave connection config
+│   │   │   ├── database.config.ts         # Master-slave connection config + PrismaService
 │   │   │   ├── jwt.config.ts              # Secure JWT settings
-│   │   │   ├── payment.config.ts          # Payment gateway credentials
-│   │   │   ├── redis.config.ts            # Redis cluster configuration
-│   │   │   ├── cloudflare.config.ts       # CDN settings
-│   │   │   ├── security.config.ts         # Security policies
-│   │   │   └── monitoring.config.ts       # APM & logging config
+│   │   │   ├── payment.config.ts          # Payment gateway credentials (VNPay, MoMo)
+│   │   │   ├── redis.config.ts            # Redis cluster configuration + RedisService
+│   │   │   ├── cloudflare.config.ts       # R2 storage & CDN settings
+│   │   │   ├── security.config.ts         # Security policies (CORS, rate limit, OAuth)
+│   │   │   └── monitoring.config.ts       # APM, logging, email & video processing config
 │   │   │
 │   │   └── prisma/                    # 📦 Prisma ORM [DATABASE OPTIMIZED]
 │   │       ├── schema.prisma              # Với proper indexes & relations
@@ -782,3 +782,9 @@ vietshort/
 - Circuit breaker patterns
 - Retry mechanisms với exponential backoff
 - Graceful degradation strategies
+
+Role	Email	Password	Permissions
+SUPER_ADMIN	superadmin@vietshort.com	superadmin123	Tất cả quyền
+ADMIN	admin@vietshort.com	admin123	User & Content management
+CONTENT_MANAGER	content@vietshort.com	content123	Content management
+MODERATOR	moderator@vietshort.com	mod123	User moderation

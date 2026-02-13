@@ -2,6 +2,20 @@ import { Injectable, OnModuleInit, OnModuleDestroy, Module, Global, Logger } fro
 import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 
+/**
+ * Database Configuration - Master-slave connection config + PrismaService
+ *
+ * ENV vars: DATABASE_URL, DATABASE_READ_REPLICA_URL, DATABASE_SLOW_QUERY_MS
+ * Access via: configService.get('database.url'), configService.get('database.slowQueryMs'), etc.
+ */
+export const databaseConfig = () => ({
+  database: {
+    url: process.env.DATABASE_URL,
+    readReplicaUrl: process.env.DATABASE_READ_REPLICA_URL,
+    slowQueryMs: parseInt(process.env.DATABASE_SLOW_QUERY_MS || '2000', 10),
+  },
+});
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   [key: string]: any;
@@ -9,11 +23,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readReplica: PrismaClient | null = null;
 
   constructor(private configService: ConfigService) {
-    const nodeEnv = configService.get('nodeEnv') || configService.get('NODE_ENV') || 'development';
+    const nodeEnv = configService.get('app.nodeEnv') || 'development';
     super({
       datasources: {
         db: {
-          url: configService.get('database.url') || configService.get('DATABASE_URL'),
+          url: configService.get('database.url'),
         },
       },
       log: nodeEnv === 'development'
@@ -26,7 +40,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     });
 
     // Initialize read replica if configured
-    const readReplicaUrl = configService.get('database.readReplicaUrl') || configService.get('DATABASE_READ_REPLICA_URL');
+    const readReplicaUrl = configService.get('database.readReplicaUrl');
     if (readReplicaUrl) {
       this.readReplica = new PrismaClient({
         datasources: {
@@ -45,8 +59,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     }
 
     // Slow query logging in development
-    const nodeEnv = this.configService.get('nodeEnv') || 'development';
-    const slowMs = this.configService.get('database.slowQueryThreshold') || 2000;
+    const nodeEnv = this.configService.get('app.nodeEnv') || 'development';
+    const slowMs = this.configService.get('database.slowQueryMs') || 2000;
     if (nodeEnv === 'development') {
       (this as any).$on('query', (e: any) => {
         if (e.duration > slowMs) {

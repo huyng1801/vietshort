@@ -27,7 +27,8 @@ export class AuditLogInterceptor implements NestInterceptor {
         next: async (response) => {
           try {
             await this.createAuditLog({
-              userId: user?.id,
+              userId: user?.isAdmin ? undefined : user?.id,
+              adminId: user?.isAdmin ? user?.id : undefined,
               action: `${method} ${url}`,
               resource: this.extractResource(url),
               resourceId: this.extractResourceId(body, response),
@@ -42,7 +43,8 @@ export class AuditLogInterceptor implements NestInterceptor {
         error: async (error) => {
           try {
             await this.createAuditLog({
-              userId: user?.id,
+              userId: user?.isAdmin ? undefined : user?.id,
+              adminId: user?.isAdmin ? user?.id : undefined,
               action: `${method} ${url} - ERROR`,
               resource: this.extractResource(url),
               changes: JSON.stringify({ error: error.message }),

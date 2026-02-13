@@ -7,7 +7,7 @@ export class CorsMiddleware implements NestMiddleware {
   constructor(private configService: ConfigService) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    const allowedOrigins = this.configService.get('CORS_ORIGIN')?.split(',') || ['http://localhost:3001'];
+    const allowedOrigins = this.configService.get<string[]>('security.cors.origin') || ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
     const origin = req.headers.origin;
 
     if (origin && allowedOrigins.includes(origin)) {

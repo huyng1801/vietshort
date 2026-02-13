@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import * as Sentry from '@sentry/node';
@@ -14,6 +15,11 @@ import * as Sentry from '@sentry/node';
 @Injectable()
 export class ErrorInterceptor implements NestInterceptor {
   private readonly logger = new Logger(ErrorInterceptor.name);
+  private readonly isProduction: boolean;
+
+  constructor(private configService: ConfigService) {
+    this.isProduction = this.configService.get('app.nodeEnv') === 'production';
+  }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
@@ -41,7 +47,7 @@ export class ErrorInterceptor implements NestInterceptor {
           {
             success: false,
             message:
-              process.env.NODE_ENV === 'production'
+              this.isProduction
                 ? 'Đã xảy ra lỗi hệ thống'
                 : error.message,
             timestamp: new Date().toISOString(),

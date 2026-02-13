@@ -1,16 +1,35 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Module, Global } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Module, Global, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+
+/**
+ * Redis Configuration - Redis cluster configuration
+ *
+ * ENV vars: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB, REDIS_KEY_PREFIX
+ * Access via: configService.get('redis.host'), configService.get('redis.port'), etc.
+ */
+export default () => ({
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || '',
+    db: parseInt(process.env.REDIS_DB || '0', 10),
+    keyPrefix: process.env.REDIS_KEY_PREFIX || 'vietshort:',
+  },
+});
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private client: Redis;
+  private readonly logger = new Logger(RedisService.name);
 
   constructor(private configService: ConfigService) {
     this.client = new Redis({
       host: this.configService.get('redis.host'),
       port: this.configService.get('redis.port'),
       password: this.configService.get('redis.password'),
+      db: this.configService.get('redis.db'),
+      keyPrefix: this.configService.get('redis.keyPrefix'),
       enableReadyCheck: true,
       maxRetriesPerRequest: 3,
     });
@@ -18,11 +37,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     this.client.on('error', (error) => {
-      console.error('Redis connection error:', error);
+      this.logger.error('Redis connection error:', error.message);
     });
 
     this.client.on('connect', () => {
-      console.log('✅ Redis connected successfully');
+      this.logger.log('Redis connected successfully');
     });
   }
 

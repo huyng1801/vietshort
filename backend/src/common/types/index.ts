@@ -1,17 +1,20 @@
 // Database types (generated from Prisma)
-export type VipType = 'NORMAL' | 'VIP_FREEADS' | 'VIP_GOLD';
+export type VipType = 'VIP_FREEADS' | 'VIP_GOLD';
 export type AdminRole = 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | 'CONTENT_MANAGER';
 export type VideoStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED';
 export type EncodingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 export type TransactionType = 'PURCHASE_GOLD' | 'PURCHASE_VIP' | 'SPEND_GOLD' | 'REFUND' | 'ADMIN_ADJUST' | 'EXCHANGE_REDEEM' | 'AD_REWARD' | 'CHECKIN_REWARD' | 'TASK_REWARD' | 'ACHIEVEMENT_REWARD';
 export type PaymentProvider = 'VNPAY' | 'MOMO' | 'BANK_TRANSFER' | 'APPLE_IAP' | 'GOOGLE_PLAY' | 'ADMIN';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
-export type UnlockMethod = 'GOLD' | 'AD' | 'VIP' | 'FREE';
+export type UnlockMethod = 'GOLD' | 'AD' | 'VIP';
+export type PayoutStatus = 'PENDING' | 'APPROVED' | 'PROCESSING' | 'COMPLETED' | 'REJECTED';
 export type RewardType = 'GOLD' | 'VIP_DAYS' | 'BOTH';
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type AgeRating = 'ALL' | 'T13' | 'T16' | 'T18';
-export type DailyTaskType = 'WATCH_VIDEO' | 'LIKE_VIDEO' | 'COMMENT' | 'SHARE' | 'WATCH_AD' | 'RATE_VIDEO' | 'CHECK_IN';
+export type DailyTaskType = 'WATCH_VIDEO' | 'LIKE_VIDEO' | 'COMMENT' | 'SHARE' | 'WATCH_AD' | 'RATE_VIDEO';
+export type AchievementCondition = 'WATCH_EPISODES' | 'WATCH_MINUTES' | 'FIRST_COMMENT' | 'FIRST_LIKE' | 'FIRST_SHARE' | 'TOTAL_COMMENTS' | 'TOTAL_SHARES' | 'VIP_SUBSCRIBE' | 'GOLD_SPENT' | 'FOLLOW_SOCIAL' | 'STREAK_CHECKIN';
 export type NotificationType = 'NEW_EPISODE' | 'PROMOTION' | 'SYSTEM' | 'VIP_EXPIRING' | 'ACHIEVEMENT' | 'REFERRAL' | 'PAYMENT' | 'REMINDER';
+export type NotificationChannel = 'IN_APP' | 'PUSH' | 'EMAIL';
 
 // API Response types
 export interface ApiResponse<T = any> {
@@ -40,7 +43,7 @@ export interface User {
   phone?: string;
   dateOfBirth?: string;
   gender?: Gender;
-  vipType: VipType;
+  vipTier?: VipType | null;
   vipExpiresAt?: string;
   goldBalance: number;
   isEmailVerified: boolean;
@@ -94,7 +97,6 @@ export interface Episode {
   hlsManifest?: string;
   mp4Url?: string;
   unlockPrice?: number;
-  isFree: boolean;
   encodingStatus: EncodingStatus;
   encodingProgress: number;
   duration?: number;
@@ -270,7 +272,7 @@ export interface PaginationParams {
 
 // Filters
 export interface UserFilters extends PaginationParams {
-  vipType?: VipType;
+  vipTier?: VipType;
   isActive?: boolean;
   isLocked?: boolean;
   dateFrom?: string;

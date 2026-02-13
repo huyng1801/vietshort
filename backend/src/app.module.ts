@@ -1,80 +1,56 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 // Core modules
-import { DatabaseModule } from './config/database.config';
+import { DatabaseModule, databaseConfig } from './config/database.config';
 import { RedisModule } from './config/redis.config';
 
-// Feature modules
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { VideosModule } from './videos/videos.module';
+// Group modules
 import { AdminModule } from './admin/admin.module';
-import { CtvModule } from './affiliate/affiliate.module';
-import { PaymentModule } from './payment/payment.module';
-import { CommentsModule } from './comments/comments.module';
-import { LikesModule } from './likes/likes.module';
-import { RatingsModule } from './ratings/ratings.module';
-import { SearchModule } from './search/search.module';
-import { WalletModule } from './wallet/wallet.module';
-import { VipModule } from './vip/vip.module';
-import { UnlockModule } from './unlock/unlock.module';
-import { ExchangeCodesModule } from './exchange-codes/exchange-codes.module';
-import { GamificationModule } from './gamification/gamification.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { RecommendationsModule } from './recommendations/recommendations.module';
-import { SubtitlesModule } from './subtitles/subtitles.module';
-import { AnalyticsModule } from './analytics/analytics.module';
+import { ClientModule } from './client/client.module';
+import { CtvModule } from './ctv/ctv.module';
 
 // Guards and interceptors
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { ThrottlerBehindProxyGuard } from './common/guards/throttle.guard';
 import { AuditLogInterceptor } from './common/interceptors/logging.interceptor';
 
-// Configuration
-import configuration from './config/configuration';
+// Configuration - load all config modules
+import jwtConfig from './config/jwt.config';
+import paymentConfig from './config/payment.config';
+import cloudflareConfig from './config/cloudflare.config';
+import securityConfig from './config/security.config';
+import monitoringConfig from './config/monitoring.config';
+import redisConfig from './config/redis.config';
 
 @Module({
   imports: [
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
+      load: [jwtConfig, paymentConfig, cloudflareConfig, securityConfig, monitoringConfig, redisConfig, databaseConfig],
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Rate limiting
-    ThrottlerModule.forRoot([{
-      ttl: parseInt(process.env.RATE_LIMIT_TTL || '60') * 1000,
-      limit: parseInt(process.env.RATE_LIMIT_LIMIT || '100'),
-    }]),
+    // Rate limiting - loads from security config
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [{
+        ttl: (config.get('security.rateLimit.ttl') || 60) * 1000,
+        limit: config.get('security.rateLimit.limit') || 100,
+      }],
+    }),
 
     // Core modules
     DatabaseModule,
     RedisModule,
 
-    // Feature modules
-    AuthModule,
-    UsersModule,
-    VideosModule,
-    AdminModule,
-    CtvModule,
-    PaymentModule,
-    CommentsModule,
-    LikesModule,
-    RatingsModule,
-    SearchModule,
-    WalletModule,
-    VipModule,
-    UnlockModule,
-    ExchangeCodesModule,
-    GamificationModule,
-    NotificationsModule,
-    RecommendationsModule,
-    SubtitlesModule,
-    AnalyticsModule,
+    // Feature modules - grouped by responsibility
+    AdminModule,      // Admin CMS APIs
+    ClientModule,     // Customer/Client APIs
+    CtvModule,        // CTV Portal APIs
   ],
   providers: [
     {
