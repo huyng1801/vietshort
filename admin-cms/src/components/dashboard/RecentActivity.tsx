@@ -9,7 +9,7 @@ import {
   CrownOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import { RecentActivityItem } from '@/types/dashboard';
+import { RecentActivityItem } from '@/types';
 import { formatRelativeTime } from '@/lib/admin-utils';
 
 const iconMap: Record<string, React.ReactNode> = {

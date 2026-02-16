@@ -138,7 +138,6 @@ export class AdminVideoService {
           orderBy: { episodeNumber: 'asc' },
           include: { subtitles: true },
         },
-        videoGenres: { include: { genre: true } },
         _count: { select: { comments: true, likes: true, favorites: true } },
       },
     });

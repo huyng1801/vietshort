@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AdminUser } from '@/types/admin';
+import { AdminUser } from '@/types';
 import { getStoredUser, clearAuth, setStoredUser } from '@/lib/admin-auth';
 
 interface AdminAuthState {

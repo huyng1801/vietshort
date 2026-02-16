@@ -20,7 +20,7 @@ import {
 import { UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import adminAPI from '@/lib/admin-api';
-import type { Banner } from '@/types/admin';
+import type { Banner } from '@/types';
 
 interface BannerFormModalProps {
   open: boolean;
@@ -181,10 +181,11 @@ export default function BannerFormModal({ open, banner, onClose, onSuccess }: Ba
       onCancel={onClose}
       onOk={handleSubmit}
       confirmLoading={submitting}
-      okText={isEdit ? 'Cập nhật' : 'Tạo banner'}
+      okText={isEdit ? 'Cập nhật' : 'Tạo mới'}
       cancelText="Hủy"
       width={680}
-      destroyOnClose
+      destroyOnHidden
+      maskClosable={!submitting}
       centered
     >
       <Form form={form} layout="vertical" autoComplete="off" style={{ marginTop: 16 }}>
@@ -205,7 +206,7 @@ export default function BannerFormModal({ open, banner, onClose, onSuccess }: Ba
           rules={[{ required: !isEdit, message: 'Vui lòng cung cấp hình ảnh' }]}
           tooltip={isEdit ? 'Bỏ trống để giữ ảnh cũ' : 'Tải lên hình ảnh hoặc dán URL'}
         >
-          <Space direction="vertical" style={{ width: '100%' }} size={8}>
+          <Space orientation="vertical" style={{ width: '100%' }} size={8}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <Upload
                 customRequest={customUpload}
@@ -239,8 +240,7 @@ export default function BannerFormModal({ open, banner, onClose, onSuccess }: Ba
                 src={imageUrl}
                 alt="preview"
                 width={300}
-                height={90}
-                style={{ objectFit: 'cover', borderRadius: 4, border: '1px solid #d9d9d9' }}
+                style={{ maxHeight: 180, objectFit: 'contain', borderRadius: 5, border: '1px solid #d9d9d9' }}
               />
             )}
             {isEdit && !imageUrl && banner?.imageUrl && (
@@ -250,8 +250,7 @@ export default function BannerFormModal({ open, banner, onClose, onSuccess }: Ba
                   src={banner.imageUrl}
                   alt="current"
                   width={300}
-                  height={90}
-                  style={{ objectFit: 'cover', borderRadius: 4, border: '1px solid #d9d9d9', opacity: 0.7 }}
+                  style={{ maxHeight: 180, objectFit: 'contain', borderRadius: 4, border: '1px solid #d9d9d9', opacity: 0.7 }}
                 />
               </div>
             )}
@@ -317,7 +316,7 @@ export default function BannerFormModal({ open, banner, onClose, onSuccess }: Ba
           </Col>
           <Col span={8}>
             <Form.Item label="Trạng thái" name="isActive" valuePropName="checked">
-              <Switch checkedChildren="Kích hoạt" unCheckedChildren="Ẩn" />
+              <Switch  />
             </Form.Item>
           </Col>
         </Row>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Table, Tag, Button, Space, Avatar, Typography, Popconfirm, message, Tooltip, Upload, Modal } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, CheckCircleOutlined, ClockCircleOutlined, VideoCameraOutlined, LoadingOutlined, CameraOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { Video } from '@/types/admin';
+import { Video } from '@/types';
 import { formatDate, formatNumber, getStatusColor, getStatusText, truncateText } from '@/lib/admin-utils';
 import adminAPI from '@/lib/admin-api';
 

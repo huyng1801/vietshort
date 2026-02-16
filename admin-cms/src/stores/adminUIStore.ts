@@ -1,9 +1,16 @@
 import { create } from 'zustand';
 
+interface BreadcrumbItem {
+  title: string;
+  href?: string;
+  icon?: React.ReactNode;
+}
+
 interface AdminUIState {
   sidebarCollapsed: boolean;
   activeMenuKey: string;
   breadcrumbs: { title: string; path?: string }[];
+  breadcrumbItems?: BreadcrumbItem[];
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setActiveMenuKey: (key: string) => void;
@@ -14,6 +21,7 @@ export const useAdminUIStore = create<AdminUIState>((set) => ({
   sidebarCollapsed: false,
   activeMenuKey: 'dashboard',
   breadcrumbs: [{ title: 'Dashboard' }],
+  breadcrumbItems: undefined,
 
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),

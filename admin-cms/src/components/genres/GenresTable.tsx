@@ -1,10 +1,10 @@
 'use client';
 
-import { Table, Tag, Badge, Space, Button, Tooltip } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { Table, Tag, Badge, Space, Button, Tooltip, Popconfirm } from 'antd';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ReactNode } from 'react';
-import type { Genre } from '@/types/admin';
-import DeleteConfirmPopover from './DeleteConfirmPopover';
+import type { Genre } from '@/types';
+
 
 interface GenresTableProps {
   genres: Genre[];
@@ -12,7 +12,7 @@ interface GenresTableProps {
   pagination: any;
   onTableChange: (pagination: any, filters?: any, sorter?: any) => void;
   onEdit: (genre: Genre) => void;
-  onDelete: (genre: Genre) => void;
+  onDelete: (genre: Genre) => void | Promise<void>;
 }
 
 export default function GenresTable({
@@ -73,7 +73,15 @@ export default function GenresTable({
       key: 'videoCount',
       width: 90,
       align: 'center' as const,
-      render: (_: any, record: Genre) => <Tag>{record.videoCount ?? 0}</Tag>,
+      render: (_: any, record: Genre) => {
+        const count = record.videoCount ?? 0;
+        let color = 'default';
+        if (count === 0) color = 'default';
+        else if (count < 5) color = 'green';
+        else if (count < 20) color = 'blue';
+        else color = 'red';
+        return <Tag color={color}>{count}</Tag>;
+      },
     },
     {
       title: 'Thao tác',
@@ -85,11 +93,45 @@ export default function GenresTable({
           <Tooltip title="Sửa">
             <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)} />
           </Tooltip>
-          <DeleteConfirmPopover
-            genre={record}
-            onConfirm={onDelete}
-            loading={loading}
-          />
+          {/* Inline Delete Confirm Popover */}
+            {(record.videoCount ?? 0) > 0 ? (
+              <Tooltip title="Không thể xóa khi có video">
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined style={{ fontSize: 14 }} />}
+                  disabled
+                  style={{ padding: '4px 8px', height: 'auto' }}
+                />
+              </Tooltip>
+            ) : (
+              <Popconfirm
+                title={<span style={{ fontWeight: 600 }}>Xác nhận xóa</span>}
+                description={
+                  <div style={{ marginTop: 8 }}>
+                    Bạn có chắc chắn muốn xóa thể loại <strong>"{record.name}"</strong>?
+                  </div>
+                }
+                onConfirm={() => onDelete(record)}
+                okButtonProps={{ danger: true, loading: loading }}
+                okText="Đồng ý"
+                cancelText="Hủy"
+                placement="topRight"
+                overlayStyle={{ width: 280 }}
+              >
+                <Tooltip title="Xóa">
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined style={{ fontSize: 14 }} />}
+                    disabled={loading}
+                    style={{ padding: '4px 8px', height: 'auto' }}
+                  />
+                </Tooltip>
+              </Popconfirm>
+            )}
         </Space>
       ),
     },
@@ -101,12 +143,7 @@ export default function GenresTable({
       dataSource={genres}
       loading={loading}
       rowKey="id"
-      pagination={{
-        ...pagination,
-        showSizeChanger: true,
-        showQuickJumper: true,
-        showTotal: (total) => `Tổng ${total} thể loại`,
-      }}
+      pagination={pagination}
       onChange={onTableChange}
       scroll={{ x: 1200 }}
     />

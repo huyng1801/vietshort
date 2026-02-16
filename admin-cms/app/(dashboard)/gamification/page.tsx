@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Tabs, message } from 'antd';
+import { Card, Row, Col, Statistic, Button, Space } from 'antd';
 import {
   TrophyOutlined,
   CalendarOutlined,
@@ -9,17 +9,16 @@ import {
   FireOutlined,
   GoldOutlined,
   ThunderboltOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
-import type { GamificationOverview } from '@/types/admin';
-import DailyTasksTab from '@/components/gamification/DailyTasksTab';
-import AchievementsTab from '@/components/gamification/AchievementsTab';
-import CheckInRewardsTab from '@/components/gamification/CheckInRewardsTab';
+import type { GamificationOverview } from '@/types';
 
 export default function GamificationPage() {
+  const router = useRouter();
   const [overview, setOverview] = useState<GamificationOverview | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('daily-tasks');
 
   const fetchOverview = useCallback(async () => {
     setLoading(true);
@@ -27,7 +26,7 @@ export default function GamificationPage() {
       const res = await adminAPI.getGamificationOverview();
       setOverview(res.data);
     } catch {
-      message.error('Không thể tải dữ liệu gamification');
+      // Silent error
     } finally {
       setLoading(false);
     }
@@ -39,14 +38,12 @@ export default function GamificationPage() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 24, fontSize: 22, fontWeight: 600 }}>
-        🎮 Quản lý Gamification
-      </h2>
+      <h1 className="text-2xl font-bold mb-6">🎮 Quản lý Gamification</h1>
 
       {/* Summary Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading} size="small">
+          <Card loading={loading} size="small" style={{ minHeight: 100 }}>
             <Statistic
               title="Nhiệm vụ đang hoạt động"
               value={overview?.dailyTasks.activeTasks || 0}
@@ -56,7 +53,7 @@ export default function GamificationPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading} size="small">
+          <Card loading={loading} size="small" style={{ minHeight: 100 }}>
             <Statistic
               title="Hoàn thành hôm nay"
               value={overview?.dailyTasks.todayCompletions || 0}
@@ -65,7 +62,7 @@ export default function GamificationPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading} size="small">
+          <Card loading={loading} size="small" style={{ minHeight: 100 }}>
             <Statistic
               title="Thành tích đã mở"
               value={overview?.achievements.totalUnlocked || 0}
@@ -74,53 +71,80 @@ export default function GamificationPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading} size="small">
+          <Card loading={loading} size="small" style={{ minHeight: 100 }}>
             <Statistic
               title="Điểm danh hôm nay"
-              value={overview?.checkIns.todayCheckIns || 0}
-              suffix={`(tuần: ${overview?.checkIns.weekCheckIns || 0})`}
+              value={overview?.checkIns?.todayCheckIns || 0}
+              suffix={`(tuần: ${overview?.checkIns?.weekCheckIns || 0})`}
               prefix={<CalendarOutlined style={{ color: '#eb2f96' }} />}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* Tabs */}
-      <Card>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'daily-tasks',
-              label: (
-                <span>
-                  <FireOutlined /> Nhiệm vụ hằng ngày
-                </span>
-              ),
-              children: <DailyTasksTab />,
-            },
-            {
-              key: 'achievements',
-              label: (
-                <span>
-                  <TrophyOutlined /> Thành tích
-                </span>
-              ),
-              children: <AchievementsTab />,
-            },
-            {
-              key: 'check-in',
-              label: (
-                <span>
-                  <GoldOutlined /> Điểm danh & Phần thưởng
-                </span>
-              ),
-              children: <CheckInRewardsTab />,
-            },
-          ]}
-        />
-      </Card>
+      {/* Quick Access Cards */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Card
+            hoverable
+            onClick={() => router.push('/gamification/daily-tasks')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+                  <FireOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+                  Nhiệm vụ hằng ngày
+                </div>
+                <div style={{ color: '#888', fontSize: 14 }}>
+                  Quản lý nhiệm vụ và phần thưởng
+                </div>
+              </div>
+              <RightOutlined style={{ fontSize: 24, color: '#d9d9d9' }} />
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card
+            hoverable
+            onClick={() => router.push('/gamification/achievements')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+                  <TrophyOutlined style={{ color: '#faad14', marginRight: 8 }} />
+                  Thành tích
+                </div>
+                <div style={{ color: '#888', fontSize: 14 }}>
+                  Quản lý huy hiệu và phần thưởng
+                </div>
+              </div>
+              <RightOutlined style={{ fontSize: 24, color: '#d9d9d9' }} />
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card
+            hoverable
+            onClick={() => router.push('/gamification/check-in-rewards')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+                  <GoldOutlined style={{ color: '#eb2f96', marginRight: 8 }} />
+                  Điểm danh - Phần thưởng
+                </div>
+                <div style={{ color: '#888', fontSize: 14 }}>
+                  Cấu hình phần thưởng 7 ngày
+                </div>
+              </div>
+              <RightOutlined style={{ fontSize: 24, color: '#d9d9d9' }} />
+            </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }

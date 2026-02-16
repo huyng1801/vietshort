@@ -3,7 +3,7 @@
 import React from 'react';
 import { Table, Tag, Button, Progress, Space, Tooltip } from 'antd';
 import { EyeOutlined, StopOutlined, DownloadOutlined } from '@ant-design/icons';
-import { CodeBatch } from '@/types/admin';
+import { CodeBatch } from '@/types';
 import { formatDate } from '@/lib/admin-utils';
 
 interface CodeBatchTableProps {
@@ -73,13 +73,13 @@ export default function CodeBatchTable({
       render: (_: unknown, record: CodeBatch) => (
         <div>
           <Progress
-            percent={record.usagePercentage}
+            percent={record.usagePercentage ?? 0}
             size="small"
-            status={record.usagePercentage >= 100 ? 'exception' : 'active'}
+            status={(record.usagePercentage ?? 0) >= 100 ? 'exception' : 'active'}
             showInfo={false}
           />
           <div style={{ fontSize: 12, textAlign: 'center' }}>
-            {record.usedCodes}/{record.totalCodes} ({record.usagePercentage}%)
+            {record.usedCodes}/{record.totalCodes} ({record.usagePercentage ?? 0}%)
           </div>
         </div>
       ),
@@ -131,7 +131,7 @@ export default function CodeBatchTable({
               type="link"
               size="small"
               icon={<DownloadOutlined />}
-              onClick={() => onExport?.(record.id, record.batchName)}
+              onClick={() => onExport?.(record.id, record.batchName ?? '')}
             />
           </Tooltip>
           {record.isActive && (

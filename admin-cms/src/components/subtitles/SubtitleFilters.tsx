@@ -36,15 +36,14 @@ export default function SubtitleFilters({
   onReset,
 }: SubtitleFiltersProps): ReactNode {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <Space wrap>
+    <Space wrap className="mb-4">
         <Input
           placeholder="Tìm kiếm video..."
           prefix={<SearchOutlined />}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           onPressEnter={onSearch}
-          style={{ width: 250 }}
+          style={{ width: 280 }}
           allowClear
         />
         <Select
@@ -101,7 +100,6 @@ export default function SubtitleFilters({
         <Button icon={<ReloadOutlined />} onClick={onReset}>
           Đặt lại
         </Button>
-      </Space>
-    </div>
+    </Space>
   );
 }

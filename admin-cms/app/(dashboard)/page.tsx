@@ -13,7 +13,7 @@ import {
 } from '@ant-design/icons';
 import adminAPI from '@/lib/admin-api';
 import { useAdminSocket } from '@/hooks/useAdminSocket';
-import type { DashboardStats, RecentActivityItem } from '@/types/dashboard';
+import type { DashboardStats, RecentActivityItem } from '@/types';
 
 // Lazy load heavy dashboard components
 const StatCard = dynamic(() => import('@/components/dashboard/StatCard'), { ssr: false });
@@ -21,7 +21,7 @@ const ChartWidget = dynamic(() => import('@/components/dashboard/ChartWidget'), 
 const RecentActivity = dynamic(() => import('@/components/dashboard/RecentActivity'), { ssr: false });
 const TopVideos = dynamic(() => import('@/components/dashboard/TopVideos'), { ssr: false });
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // Auto-refresh interval: 60 seconds
 const REFRESH_INTERVAL = 60_000;
@@ -81,8 +81,8 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={3} style={{ margin: 0 }}>Bảng điều khiển</Title>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold m-0">Bảng điều khiển</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Tooltip title={connected ? 'Đang kết nối realtime' : 'Không có kết nối realtime'}>
             <Badge status={connected ? 'success' : 'default'} text={<Text type="secondary" style={{ fontSize: 12 }}><WifiOutlined /> {connected ? 'Live' : 'Offline'}</Text>} />

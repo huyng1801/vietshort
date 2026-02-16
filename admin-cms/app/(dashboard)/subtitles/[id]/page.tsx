@@ -1,317 +1,246 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Card, Table, Tag, Space, Button, Select, message, Popconfirm, Avatar, Typography, Row, Col, Statistic, Tooltip, Progress } from 'antd';
 import {
-  Typography, Spin, message, Button, Tabs, Card, Table, Tag,
-  Space, Popconfirm, Select, Progress, Tooltip, Badge, Empty,
-} from 'antd';
-import {
-  ArrowLeftOutlined, DeleteOutlined, EditOutlined, PlusOutlined,
-  RobotOutlined, ReloadOutlined, SoundOutlined, CheckCircleOutlined,
-  LoadingOutlined, ExclamationCircleOutlined,
+  StarOutlined,
+  StarFilled,
+  DeleteOutlined,
+  ReloadOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
-import SubtitleUpload from '@/components/subtitles/SubtitleUpload';
-import SubtitleEditor from '@/components/subtitles/SubtitleEditor';
-import SubtitleMapping from '@/components/subtitles/SubtitleMapping';
 import adminAPI from '@/lib/admin-api';
-import type { Video, Episode, Subtitle, SubtitleStatusType } from '@/types/admin';
+import { usePagination } from '@/hooks/usePagination';
+import type { RatingItem, RatingStats } from '@/types';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-const STATUS_CONFIG: Record<SubtitleStatusType, { color: string; label: string; icon?: React.ReactNode }> = {
-  READY: { color: 'green', label: 'Sẵn sàng', icon: <CheckCircleOutlined /> },
-  QUEUED: { color: 'blue', label: 'Chờ xử lý' },
-  EXTRACTING: { color: 'purple', label: 'Trích xuất âm thanh', icon: <LoadingOutlined /> },
-  TRANSCRIBING: { color: 'purple', label: 'Nhận dạng giọng nói', icon: <SoundOutlined spin /> },
-  TRANSLATING: { color: 'orange', label: 'Đang dịch', icon: <LoadingOutlined /> },
-  UPLOADING: { color: 'cyan', label: 'Đang tải lên', icon: <LoadingOutlined /> },
-  COMPLETED: { color: 'success', label: 'Hoàn thành', icon: <CheckCircleOutlined /> },
-  FAILED: { color: 'error', label: 'Lỗi', icon: <ExclamationCircleOutlined /> },
+const STAR_COLORS: Record<number, string> = {
+  1: '#ff4d4f',
+  2: '#fa8c16',
+  3: '#fadb14',
+  4: '#52c41a',
+  5: '#1890ff',
 };
 
-const LANGUAGES = [
-  { label: '🇻🇳 Tiếng Việt', value: 'vi' },
-  { label: '🇺🇸 English', value: 'en' },
-];
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <Space size={2}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        s <= rating
+          ? <StarFilled key={s} style={{ color: '#fadb14', fontSize: 14 }} />
+          : <StarOutlined key={s} style={{ color: '#d9d9d9', fontSize: 14 }} />
+      ))}
+    </Space>
+  );
+}
 
-export default function SubtitleDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const videoId = params.id as string;
+export default function RatingsPage() {
+  const [ratings, setRatings] = useState<RatingItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<RatingStats | null>(null);
+  const [filterRating, setFilterRating] = useState<number | undefined>(undefined);
 
-  const [video, setVideo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [editingSubtitle, setEditingSubtitle] = useState<Subtitle | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [generating, setGenerating] = useState<string | null>(null);
-  const [selectedLang, setSelectedLang] = useState('vi');
+  const { params, setParams, total, setTotal, paginationConfig, handleTableChange } = usePagination({ defaultLimit: 20 });
 
-  const fetchVideo = useCallback(async () => {
+  const fetchRatings = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await adminAPI.getVideoSubtitles(videoId);
-      setVideo(res.data);
+      const res = await adminAPI.getRatings({
+        page: params.page,
+        limit: params.limit,
+        rating: filterRating,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      const result = res.data?.data || res.data;
+      setRatings(Array.isArray(result) ? result : result?.data || []);
+      setTotal(res.data?.pagination?.total || res.data?.total || 0);
     } catch {
-      message.error('Không thể tải video');
-      router.push('/subtitles');
+      message.error('Không thể tải danh sách đánh giá');
     } finally {
       setLoading(false);
     }
-  }, [videoId, router]);
+  }, [params.page, params.limit, filterRating, setTotal]);
 
-  useEffect(() => { fetchVideo(); }, [fetchVideo]);
-
-  // Poll for progress while any subtitle is processing
-  useEffect(() => {
-    if (!video) return;
-    const episodes = video.episodes || [];
-    const hasProcessing = episodes.some((ep: any) =>
-      ep.subtitles?.some((s: any) =>
-        ['QUEUED', 'EXTRACTING', 'TRANSCRIBING', 'TRANSLATING', 'UPLOADING'].includes(s.status),
-      ),
-    );
-    if (!hasProcessing) return;
-
-    const interval = setInterval(fetchVideo, 5000);
-    return () => clearInterval(interval);
-  }, [video, fetchVideo]);
-
-  const handleDelete = async (subtitleId: string) => {
-    setDeleting(subtitleId);
+  const fetchStats = useCallback(async () => {
     try {
-      await adminAPI.deleteSubtitle(subtitleId);
-      message.success('Đã xóa phụ đề');
-      fetchVideo();
+      const res = await adminAPI.getRatingStats();
+      setStats(res.data?.data || res.data);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRatings();
+  }, [fetchRatings]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await adminAPI.deleteRating(id);
+      message.success('Đã xóa đánh giá');
+      fetchRatings();
+      fetchStats();
     } catch {
       message.error('Xóa thất bại');
-    } finally {
-      setDeleting(null);
     }
   };
 
-  const handleGenerate = async (episodeId: string) => {
-    setGenerating(episodeId);
-    try {
-      await adminAPI.generateSubtitle(episodeId, { targetLanguage: selectedLang });
-      message.success('Đã thêm vào hàng đợi AI');
-      fetchVideo();
-    } catch (err: any) {
-      message.error(err?.response?.data?.message || 'Lỗi tạo phụ đề AI');
-    } finally {
-      setGenerating(null);
-    }
-  };
-
-  const handleEditSubtitle = async (subtitleId: string) => {
-    try {
-      const res = await adminAPI.getSubtitle(subtitleId);
-      setEditingSubtitle(res.data);
-      setActiveTab('editor');
-    } catch {
-      message.error('Không thể tải nội dung phụ đề');
-    }
-  };
-
-  if (loading) {
-    return <div style={{ textAlign: 'center', padding: 100 }}><Spin size="large" /></div>;
-  }
-  if (!video) return null;
-
-  const episodes: any[] = video.episodes || [];
-
-  // ─── Episode Subtitles Table ───
-  const episodeColumns = [
+  const columns = [
     {
-      title: 'Tập',
-      key: 'episode',
-      width: 100,
-      render: (_: any, ep: any) => (
-        <Text strong>Tập {ep.episodeNumber}</Text>
+      title: 'Người dùng',
+      key: 'user',
+      width: 180,
+      render: (_: any, record: RatingItem) => (
+        <Space>
+          <Avatar src={record.user?.avatar} size="small">{record.user?.nickname?.[0]}</Avatar>
+          <div>
+            <Text strong>{record.user?.nickname || '—'}</Text>
+            {record.user?.vipTier && (
+              <Tag color="gold" className="ml-1" style={{ fontSize: 10 }}>VIP</Tag>
+            )}
+          </div>
+        </Space>
       ),
     },
     {
-      title: 'Phụ đề',
-      key: 'subtitles',
-      render: (_: any, ep: any) => {
-        const subs: Subtitle[] = ep.subtitles || [];
-        if (subs.length === 0) return <Text type="secondary">Chưa có phụ đề</Text>;
-
-        return (
-          <Space wrap size={[4, 4]}>
-            {subs.map((sub) => {
-              const cfg = STATUS_CONFIG[sub.status] || STATUS_CONFIG.READY;
-              const isProcessing = ['QUEUED', 'EXTRACTING', 'TRANSCRIBING', 'TRANSLATING', 'UPLOADING'].includes(sub.status);
-
-              return (
-                <Tooltip
-                  key={sub.id}
-                  title={
-                    <div>
-                      <div>{sub.label || sub.language} — {cfg.label}</div>
-                      {isProcessing && <div>Tiến độ: {sub.progress}%</div>}
-                      {sub.error && <div style={{ color: '#ff7875' }}>Lỗi: {sub.error}</div>}
-                      {sub.isAuto && <div>🤖 Tạo bởi AI</div>}
-                    </div>
-                  }
-                >
-                  <Tag color={cfg.color} style={{ cursor: 'pointer', marginBottom: 0 }}>
-                    {cfg.icon} {sub.language.toUpperCase()}
-                    {isProcessing && ` ${sub.progress}%`}
-                  </Tag>
-                </Tooltip>
-              );
-            })}
-          </Space>
-        );
-      },
+      title: 'Video',
+      key: 'video',
+      width: 220,
+      ellipsis: true,
+      render: (_: any, record: RatingItem) => (
+        <Text>{record.video?.title || '—'}</Text>
+      ),
+    },
+    {
+      title: 'Đánh giá',
+      key: 'rating',
+      width: 150,
+      align: 'center' as const,
+      render: (_: any, record: RatingItem) => <StarDisplay rating={record.rating ?? record.score} />,
+    },
+    {
+      title: 'Ngày đánh giá',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 140,
+      render: (v: string) => new Date(v).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     },
     {
       title: 'Thao tác',
-      key: 'actions',
-      width: 200,
-      render: (_: any, ep: any) => {
-        const subs: Subtitle[] = ep.subtitles || [];
-        return (
-          <Space size={4} wrap>
-            {subs.map((sub) => {
-              const isProcessing = ['QUEUED', 'EXTRACTING', 'TRANSCRIBING', 'TRANSLATING', 'UPLOADING'].includes(sub.status);
-              if (isProcessing) {
-                return (
-                  <Progress
-                    key={sub.id}
-                    type="circle"
-                    size={30}
-                    percent={sub.progress}
-                    strokeColor="#722ed1"
-                  />
-                );
-              }
-              return (
-                <Space key={sub.id} size={2}>
-                  <Tooltip title={`Sửa ${sub.language}`}>
-                    <Button size="small" type="link" icon={<EditOutlined />} onClick={() => handleEditSubtitle(sub.id)} />
-                  </Tooltip>
-                  <Popconfirm title={`Xóa phụ đề ${sub.language}?`} onConfirm={() => handleDelete(sub.id)}>
-                    <Tooltip title={`Xóa ${sub.language}`}>
-                      <Button size="small" type="text" danger icon={<DeleteOutlined />} loading={deleting === sub.id} />
-                    </Tooltip>
-                  </Popconfirm>
-                </Space>
-              );
-            })}
-
-            <Tooltip title="Tạo phụ đề AI (Whisper)">
-              <Button
-                size="small"
-                type="link"
-                icon={<RobotOutlined />}
-                style={{ color: '#722ed1' }}
-                onClick={() => handleGenerate(ep.id)}
-                loading={generating === ep.id}
-              />
-            </Tooltip>
-          </Space>
-        );
-      },
+      key: 'action',
+      width: 80,
+      align: 'center' as const,
+      render: (_: any, record: RatingItem) => (
+        <Popconfirm title="Xóa đánh giá này?" onConfirm={() => handleDelete(record.id)} okText="Xóa" cancelText="Hủy">
+          <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      ),
     },
   ];
 
   return (
-    <div>
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <Tooltip title="Quay lại">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/subtitles')} />
-        </Tooltip>
-        <Title level={3} style={{ margin: 0 }}>Phụ đề: {video.title}</Title>
-        <div style={{ marginLeft: 'auto' }}>
-          <Space>
-            <span>Ngôn ngữ AI:</span>
-            <Select
-              value={selectedLang}
-              onChange={setSelectedLang}
-              options={LANGUAGES}
-              style={{ width: 180 }}
-              size="small"
-            />
-          </Space>
-        </div>
-      </div>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">
+        <StarOutlined className="mr-2" />
+        Quản lý đánh giá
+      </h2>
 
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: 'overview',
-            label: (
-              <span>
-                Tổng quan
-                <Badge
-                  count={episodes.reduce((a: number, ep: any) => a + (ep.subtitles?.length || 0), 0)}
-                  style={{ marginLeft: 8, backgroundColor: '#52c41a' }}
-                  showZero
-                />
-              </span>
-            ),
-            children: (
-              <Table
-                columns={episodeColumns}
-                dataSource={episodes}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                locale={{ emptyText: <Empty description="Video chưa có tập phim nào" /> }}
-              />
-            ),
-          },
-          {
-            key: 'upload',
-            label: 'Tải lên SRT',
-            children: (
-              <SubtitleUpload
-                videoId={videoId}
-                episodes={episodes}
-                onSuccess={fetchVideo}
-              />
-            ),
-          },
-          {
-            key: 'editor',
-            label: editingSubtitle ? `Sửa: ${editingSubtitle.language}` : 'Chỉnh sửa',
-            children: editingSubtitle ? (
-              <SubtitleEditor
-                subtitleId={editingSubtitle.id}
-                content={editingSubtitle.content || ''}
-                language={editingSubtitle.language}
-                label={editingSubtitle.label}
-                onSave={() => {
-                  fetchVideo();
-                  message.success('Đã lưu phụ đề');
-                }}
-                onClose={() => {
-                  setEditingSubtitle(null);
-                  setActiveTab('overview');
-                }}
-              />
-            ) : (
-              <Card>
-                <Empty description="Chọn phụ đề cần chỉnh sửa từ tab Tổng quan (nhấn nút ✏️)" />
-              </Card>
-            ),
-          },
-          {
-            key: 'bulk',
-            label: 'Upload hàng loạt',
-            children: (
-              <SubtitleMapping
-                videoId={videoId}
-                episodes={episodes}
-                onSuccess={fetchVideo}
-              />
-            ),
-          },
-        ]}
+      {/* Stats */}
+      <Row gutter={16} className="mb-4">
+        <Col span={6}>
+          <Card size="small">
+            <Statistic title="Tổng đánh giá" value={stats?.total || 0} prefix={<StarOutlined />} />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card size="small">
+            <Statistic
+              title="Trung bình"
+              value={stats?.averageRating || 0}
+              precision={1}
+              suffix="/ 5"
+              prefix={<StarFilled style={{ color: '#fadb14' }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card size="small" title="Phân bố đánh giá">
+            <div className="space-y-1">
+              {stats?.distribution?.map((d) => {
+                const percent = stats.totalRatings > 0 ? Math.round((d.count / stats.totalRatings) * 100) : 0;
+                return (
+                  <div key={d.star} className="flex items-center gap-2">
+                    <Text className="w-8">{d.star} ⭐</Text>
+                    <Progress
+                      percent={percent}
+                      size="small"
+                      className="flex-1 mb-0"
+                      strokeColor={STAR_COLORS[d.star ?? d.score]}
+                      format={() => `${d.count}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Top rated videos */}
+      {stats?.topRatedVideos && stats.topRatedVideos.length > 0 && (
+        <Card size="small" title={<><TrophyOutlined className="mr-1" /> Top 10 video được đánh giá cao nhất</>} className="mb-4">
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {stats.topRatedVideos.map((v, i) => (
+              <div key={v.id} className="flex-shrink-0 text-center" style={{ width: 100 }}>
+                <Tag color={i < 3 ? 'gold' : 'default'}>#{i + 1}</Tag>
+                <Tooltip title={v.title}>
+                  <Text ellipsis className="block text-xs mt-1">{v.title}</Text>
+                </Tooltip>
+                <Text type="secondary" className="text-xs">
+                  ⭐ {v.ratingAverage?.toFixed(1)} ({v.ratingCount})
+                </Text>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Filters */}
+      <Card size="small" className="mb-4">
+        <Space>
+          <Select
+            placeholder="Lọc theo sao"
+            value={filterRating}
+            onChange={(v) => { setFilterRating(v); setParams((p) => ({ ...p, page: 1 })); }}
+            style={{ width: 160 }}
+            allowClear
+          >
+            {[5, 4, 3, 2, 1].map((s) => (
+              <Select.Option key={s} value={s}>{s} sao</Select.Option>
+            ))}
+          </Select>
+          <Button icon={<ReloadOutlined />} onClick={() => { fetchRatings(); fetchStats(); }}>
+            Làm mới
+          </Button>
+        </Space>
+      </Card>
+
+      {/* Table */}
+      <Table
+        columns={columns}
+        dataSource={ratings}
+        rowKey="id"
+        loading={loading}
+        pagination={paginationConfig}
+        onChange={handleTableChange}
+        scroll={{ x: 800 }}
+        size="middle"
       />
     </div>
   );

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Descriptions, Tag, Card, Avatar, Space, Typography, Button, Popconfirm, message } from 'antd';
 import { UserOutlined, LockOutlined, UnlockOutlined, CheckCircleOutlined, MailOutlined } from '@ant-design/icons';
-import { User } from '@/types/admin';
+import { User } from '@/types';
 import { formatDate, formatNumber } from '@/lib/admin-utils';
 import adminAPI from '@/lib/admin-api';
 
@@ -84,7 +84,7 @@ export default function UserDetails({ user, onRefresh }: UserDetailsProps) {
           </Typography.Text>
         </Descriptions.Item>
         <Descriptions.Item label="Trạng thái">
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             {user.isLocked ? (
               <Tag icon={<LockOutlined />} color="red">Đã khóa</Tag>
             ) : (
@@ -102,7 +102,7 @@ export default function UserDetails({ user, onRefresh }: UserDetailsProps) {
         <Descriptions.Item label="Apple ID">{user.appleId || '-'}</Descriptions.Item>
         <Descriptions.Item label="TikTok ID">{user.tiktokId || '-'}</Descriptions.Item>
         <Descriptions.Item label="Hoạt động cuối">
-          {user.lastActiveAt ? formatDate(user.lastActiveAt) : '-'}
+          {user.lastLoginAt ? formatDate(user.lastLoginAt) : '-'}
         </Descriptions.Item>
         <Descriptions.Item label="Ngày đăng ký" span={2}>
           {formatDate(user.createdAt)}

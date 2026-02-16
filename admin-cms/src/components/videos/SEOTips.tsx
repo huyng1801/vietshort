@@ -61,7 +61,7 @@ export default function SEOTips() {
 
   return (
     <Card title="💡 Tips SEO" size="small">
-      <Space direction="vertical" style={{ width: '100%' }}>
+      <Space orientation="vertical" style={{ width: '100%' }}>
         <div>
           <Title level={5} style={{ margin: 0, marginBottom: 12, fontSize: 14 }}>
             Nguyên tắc SEO hiệu quả

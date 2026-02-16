@@ -21,7 +21,7 @@ const RevenueChart = dynamic(() => import('@/components/analytics/RevenueChart')
 const UserGrowthChart = dynamic(() => import('@/components/analytics/UserGrowthChart'), { ssr: false, loading: () => <Spin /> });
 const TopVideosChart = dynamic(() => import('@/components/analytics/TopVideosChart'), { ssr: false, loading: () => <Spin /> });
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 type ReportType = 'overview' | 'views' | 'revenue' | 'users';
@@ -203,17 +203,17 @@ export default function ReportsPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="VNPay" value={revenueData?.byProvider?.vnpay || 0} formatter={(v) => formatCurrency(v as number)} valueStyle={{ color: '#1677ff' }} />
+            <Statistic title="VNPay" value={revenueData?.byProvider?.vnpay || 0} formatter={(v) => formatCurrency(v as number)} styles={{ content: { color: '#1677ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="MoMo" value={revenueData?.byProvider?.momo || 0} formatter={(v) => formatCurrency(v as number)} valueStyle={{ color: '#d6249f' }} />
+            <Statistic title="MoMo" value={revenueData?.byProvider?.momo || 0} formatter={(v) => formatCurrency(v as number)} styles={{ content: { color: '#d6249f' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="IAP" value={revenueData?.byProvider?.iap || 0} formatter={(v) => formatCurrency(v as number)} valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="IAP" value={revenueData?.byProvider?.iap || 0} formatter={(v) => formatCurrency(v as number)} styles={{ content: { color: '#52c41a' } }} />
           </Card>
         </Col>
       </Row>
@@ -235,12 +235,12 @@ export default function ReportsPage() {
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="Người dùng mới" value={usersData?.newUsersInPeriod || 0} valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="Người dùng mới" value={usersData?.newUsersInPeriod || 0} styles={{ content: { color: '#52c41a' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="Đang hoạt động (7 ngày)" value={usersData?.activeUsers || 0} valueStyle={{ color: '#1890ff' }} />
+            <Statistic title="Đang hoạt động (7 ngày)" value={usersData?.activeUsers || 0} styles={{ content: { color: '#1890ff' } }} />
           </Card>
         </Col>
       </Row>
@@ -254,8 +254,8 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-        <Title level={3} style={{ margin: 0 }}>Báo cáo & Phân tích</Title>
+      <div className="flex justify-between items-start flex-wrap gap-3 mb-6">
+        <h1 className="text-2xl font-bold m-0">Báo cáo & Phân tích</h1>
         <Space wrap>
           <Select
             value={reportType}

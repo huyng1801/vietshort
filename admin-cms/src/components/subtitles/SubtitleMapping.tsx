@@ -219,7 +219,7 @@ export default function SubtitleMapping({ videoId, episodes, onSuccess }: Subtit
         </Space>
       }
     >
-      <Space direction="vertical" style={{ width: '100%' }} size={16}>
+      <Space orientation="vertical" style={{ width: '100%' }} size={16}>
         <Alert
           type="info"
           showIcon

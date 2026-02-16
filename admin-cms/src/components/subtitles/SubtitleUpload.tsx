@@ -204,7 +204,7 @@ export default function SubtitleUpload({ videoId, episodes, onSuccess }: Subtitl
 
   return (
     <Card title="Tải phụ đề SRT">
-      <Space direction="vertical" style={{ width: '100%' }} size={16}>
+      <Space orientation="vertical" style={{ width: '100%' }} size={16}>
         <Alert
           type="info"
           showIcon

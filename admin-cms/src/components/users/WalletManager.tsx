@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Card, Form, InputNumber, Input, Button, Table, Tag, message, Space, Typography } from 'antd';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import adminAPI from '@/lib/admin-api';
-import { WalletTransaction } from '@/types/admin';
+import { WalletTransaction } from '@/types';
 import { formatDate, formatNumber } from '@/lib/admin-utils';
 
 interface WalletManagerProps {
@@ -99,7 +99,7 @@ export default function WalletManager({
   ];
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size={16}>
+    <Space orientation="vertical" style={{ width: '100%' }} size={16}>
       <Card title="Điều chỉnh số dư">
         <Typography.Text style={{ fontSize: 16 }}>
           Số dư hiện tại: <Typography.Text strong style={{ color: '#faad14', fontSize: 20 }}>{formatNumber(currentBalance)} 🪙</Typography.Text>

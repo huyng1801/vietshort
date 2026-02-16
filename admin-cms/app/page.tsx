@@ -13,7 +13,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import adminAPI from '@/lib/admin-api';
-import type { DashboardStats } from '@/types/dashboard';
+import type { DashboardStats } from '@/types';
 
 // Lazy load heavy dashboard components
 const StatCard = dynamic(() => import('@/components/dashboard/StatCard'), { ssr: false });

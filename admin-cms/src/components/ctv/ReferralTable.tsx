@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Tag, Avatar, Typography, Space, message } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { CtvReferral } from '@/types/admin';
+import { CtvReferral } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/admin-utils';
 import { usePagination } from '@/hooks/usePagination';
 import adminAPI from '@/lib/admin-api';

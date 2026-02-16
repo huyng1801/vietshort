@@ -1,150 +1,75 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, Button, Space, message, Tabs, Input, Modal, Tooltip } from 'antd';
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Space, message, Modal } from 'antd';
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import CodeBatchTable from '@/components/exchange-codes/CodeBatchTable';
-import CodeBatchForm from '@/components/exchange-codes/CodeBatchForm';
 import ExchangeCodesTable from '@/components/exchange-codes/ExchangeCodesTable';
 import ExchangeCodeForm from '@/components/exchange-codes/ExchangeCodeForm';
+import FilterBar, { FilterField } from '@/components/common/FilterBar';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import type { ExchangeCode, CodeBatch } from '@/types/admin';
+import { useFilters } from '@/hooks/useFilters';
+import type { ExchangeCode } from '@/types';
 
-const { Title } = Typography;
-const { Search } = Input;
+const filterFields: FilterField[] = [
+  {
+    key: 'search',
+    label: 'Tìm kiếm',
+    type: 'search',
+    placeholder: 'Tìm kiếm mã...',
+    width: 280,
+  },
+];
+
+const defaultFilters = {
+  search: '',
+};
 
 export default function ExchangeCodesPage() {
   const router = useRouter();
-
-  // ==================== Batch State ====================
-  const [batches, setBatches] = useState<CodeBatch[]>([]);
-  const [batchTotal, setBatchTotal] = useState(0);
-  const [batchLoading, setBatchLoading] = useState(false);
-  const [batchModalOpen, setBatchModalOpen] = useState(false);
-  const {
-    params: batchParams,
-    handleTableChange: handleBatchTableChange,
-    paginationConfig: batchPaginationConfig,
-  } = usePagination();
-
-  // ==================== Codes State ====================
   const [codes, setCodes] = useState<ExchangeCode[]>([]);
-  const [codesTotal, setCodesTotal] = useState(0);
-  const [codesLoading, setCodesLoading] = useState(false);
-  const [codeModalOpen, setCodeModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const {
-    params: codeParams,
-    setParams: setCodeParams,
-    handleTableChange: handleCodeTableChange,
-    paginationConfig: codePaginationConfig,
+    params,
+    setParams,
+    total,
+    setTotal,
+    handleTableChange,
+    paginationConfig,
   } = usePagination();
+  const { filters, updateFilter, resetFilters } = useFilters(defaultFilters);
 
-  // ==================== Fetch Batches ====================
-  const fetchBatches = useCallback(async () => {
-    setBatchLoading(true);
-    try {
-      const res = await adminAPI.getCodeBatches({
-        page: batchParams.page,
-        limit: batchParams.limit,
-      });
-      if (res.data?.data) {
-        setBatches(res.data.data);
-        setBatchTotal(res.data.pagination?.total || res.data.data.length);
-      } else if (Array.isArray(res.data)) {
-        setBatches(res.data);
-        setBatchTotal(res.data.length);
-      } else {
-        setBatches([]);
-        setBatchTotal(0);
-      }
-    } catch (err: any) {
-      message.error(err?.response?.data?.message || 'Không thể tải danh sách lô mã');
-      setBatches([]);
-    } finally {
-      setBatchLoading(false);
-    }
-  }, [batchParams]);
-
-  // ==================== Fetch Individual Codes ====================
   const fetchCodes = useCallback(async () => {
-    setCodesLoading(true);
+    setLoading(true);
     try {
       const res = await adminAPI.getExchangeCodes({
-        page: codeParams.page,
-        limit: codeParams.limit,
-        search: searchTerm || undefined,
+        page: params.page,
+        limit: params.limit,
+        search: filters.search || undefined,
       });
       if (res.data?.data) {
         setCodes(res.data.data);
-        setCodesTotal(res.data.pagination?.total || res.data.data.length);
+        setTotal(res.data.pagination?.total || res.data.data.length);
       } else if (Array.isArray(res.data)) {
         setCodes(res.data);
-        setCodesTotal(res.data.length);
+        setTotal(res.data.length);
       } else {
         setCodes([]);
-        setCodesTotal(0);
+        setTotal(0);
       }
     } catch (err: any) {
       message.error(err?.response?.data?.message || 'Không thể tải danh sách mã');
       setCodes([]);
     } finally {
-      setCodesLoading(false);
+      setLoading(false);
     }
-  }, [codeParams, searchTerm]);
+  }, [params, filters, setTotal]);
 
-  useEffect(() => { fetchBatches(); }, [fetchBatches]);
-  useEffect(() => { fetchCodes(); }, [fetchCodes]);
-
-  // ==================== Batch Actions ====================
-  const handleViewBatch = (id: string) => {
-    router.push(`/exchange-codes/${id}`);
-  };
-
-  const handleDeactivateBatch = (id: string) => {
-    Modal.confirm({
-      title: 'Xác nhận vô hiệu hóa lô mã',
-      content: 'Tất cả mã trong lô này sẽ bị vô hiệu hóa. Hành động không thể hoàn tác.',
-      okText: 'Vô hiệu hóa',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await adminAPI.deactivateCodeBatch(id);
-          message.success('Đã vô hiệu hóa lô mã');
-          fetchBatches();
-        } catch (err: any) {
-          message.error(err?.response?.data?.message || 'Không thể vô hiệu hóa lô mã');
-        }
-      },
-    });
-  };
-
-  const handleExportBatch = async (id: string, batchName: string) => {
-    try {
-      const res = await adminAPI.exportCodes(id);
-      const blob = new Blob([res.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `codes_${batchName.replace(/\s+/g, '_')}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-      message.success('Đã xuất file Excel thành công');
-    } catch {
-      message.error('Xuất file thất bại');
-    }
-  };
-
-  // ==================== Code Actions ====================
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCodeParams((prev) => ({ ...prev, page: 1 }));
-  };
+  useEffect(() => {
+    fetchCodes();
+  }, [fetchCodes]);
 
   const handleEdit = (id: string) => {
     router.push(`/exchange-codes/${id}`);
@@ -165,116 +90,50 @@ export default function ExchangeCodesPage() {
 
   return (
     <div>
-      <div className="page-header">
-        <Title level={3}>Quản lý mã đổi quà</Title>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold m-0">Mã đổi quà</h1>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={fetchCodes}>
+            Làm mới
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setModalOpen(true)}
+          >
+            Tạo mã đơn lẻ
+          </Button>
+        </Space>
       </div>
 
-      <Tabs
-        defaultActiveKey="batches"
-        items={[
-          {
-            key: 'batches',
-            label: '📦 Lô mã',
-            children: (
-              <>
-                <div style={{ marginBottom: 16 }}>
-                  <Space wrap>
-                    <Tooltip title="Làm mới">
-                      <Button icon={<ReloadOutlined />} onClick={fetchBatches} />
-                    </Tooltip>
-                    <Tooltip title="Tạo lô mã mới">
-                      <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => setBatchModalOpen(true)}
-                      />
-                    </Tooltip>
-                  </Space>
-                </div>
-
-                <CodeBatchTable
-                  data={batches}
-                  loading={batchLoading}
-                  pagination={{ ...batchPaginationConfig, total: batchTotal, showTotal: (t: number) => `Tổng ${t} lô mã` }}
-                  onChange={handleBatchTableChange}
-                  onView={handleViewBatch}
-                  onDeactivate={handleDeactivateBatch}
-                  onExport={handleExportBatch}
-                />
-              </>
-            ),
-          },
-          {
-            key: 'codes',
-            label: '🔑 Tất cả mã',
-            children: (
-              <>
-                <div style={{ marginBottom: 16 }}>
-                  <Space wrap>
-                    <Search
-                      placeholder="Tìm kiếm mã..."
-                      prefix={<SearchOutlined />}
-                      onSearch={handleSearch}
-                      onChange={(e) => !e.target.value && handleSearch('')}
-                      style={{ width: 280 }}
-                      allowClear
-                    />
-                    <Button icon={<ReloadOutlined />} onClick={fetchCodes}>
-                      Làm mới
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() => setCodeModalOpen(true)}
-                    >
-                      Tạo mã đơn lẻ
-                    </Button>
-                  </Space>
-                </div>
-
-                <ExchangeCodesTable
-                  codes={codes}
-                  loading={codesLoading}
-                  pagination={{ ...codePaginationConfig, total: codesTotal, showTotal: (t: number) => `Tổng ${t} mã` }}
-                  onChange={handleCodeTableChange}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              </>
-            ),
-          },
-        ]}
+      <FilterBar
+        fields={filterFields}
+        values={filters}
+        onChange={updateFilter}
+        onReset={resetFilters}
       />
 
-      {/* Modal tạo lô mã */}
-      <Modal
-        title="Tạo lô mã mới"
-        open={batchModalOpen}
-        onCancel={() => setBatchModalOpen(false)}
-        footer={null}
-        width={600}
-        destroyOnClose
-      >
-        <CodeBatchForm
-          onSuccess={() => {
-            setBatchModalOpen(false);
-            fetchBatches();
-          }}
-        />
-      </Modal>
+      <ExchangeCodesTable
+        codes={codes}
+        loading={loading}
+        pagination={{ ...paginationConfig, total }}
+        onChange={handleTableChange}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
-      {/* Modal tạo mã đơn lẻ */}
       <Modal
         title="Tạo mã đổi quà đơn lẻ"
-        open={codeModalOpen}
-        onCancel={() => setCodeModalOpen(false)}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
         footer={null}
         width={600}
-        destroyOnClose
+        destroyOnHidden
+        maskClosable
       >
         <ExchangeCodeForm
           onSuccess={() => {
-            setCodeModalOpen(false);
+            setModalOpen(false);
             fetchCodes();
           }}
         />

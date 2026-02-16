@@ -5,8 +5,8 @@ import { useState, useCallback } from 'react';
 export function useFilters<T extends Record<string, unknown>>(defaultFilters: T) {
   const [filters, setFilters] = useState<T>(defaultFilters);
 
-  const updateFilter = useCallback((key: keyof T, value: unknown) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const updateFilter = useCallback((key: keyof T | string, value: unknown) => {
+    setFilters((prev) => ({ ...prev, [key as keyof T]: value }));
   }, []);
 
   const resetFilters = useCallback(() => {

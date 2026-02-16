@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsInt, Min, IsEnum, IsBoolean, IsNumber } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsString, IsOptional, IsInt, Min, IsEnum, IsBoolean, IsNumber, ValidateNested, IsArray } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DailyTaskType, AchievementCondition } from '@prisma/client';
 
@@ -77,5 +77,8 @@ export class UpdateCheckInRewardDto {
 
 export class BulkUpdateCheckInRewardsDto {
   @ApiProperty({ type: [UpdateCheckInRewardDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateCheckInRewardDto)
   rewards: UpdateCheckInRewardDto[];
 }

@@ -19,6 +19,7 @@ import {
   TagsOutlined,
   IdcardOutlined,
   TrophyOutlined,
+  CommentOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAdminUIStore } from '@/stores/adminUIStore';
@@ -32,7 +33,7 @@ const menuItems = [
     label: 'Dashboard',
   },
   {
-    key: '/videos',
+    key: 'videos',
     icon: <VideoCameraOutlined />,
     label: 'Nội dung',
     children: [
@@ -56,19 +57,43 @@ const menuItems = [
     label: 'Người dùng',
   },
   {
-    key: '/ctv-management',
+    key: 'social',
+    icon: <CommentOutlined />,
+    label: 'Tương tác xã hội',
+    children: [
+      { key: '/social/comments', label: 'Bình luận' },
+      { key: '/social/ratings', label: 'Đánh giá' },
+      { key: '/social/favorites', label: 'Sưu tầm' },
+      { key: '/social/likes', label: 'Yêu thích' },
+    ],
+  },
+  {
+    key: 'ctv',
     icon: <TeamOutlined />,
     label: 'Quản lý CTV',
+    children: [
+      { key: '/ctv-management', label: 'Danh sách CTV' },
+      { key: '/ctv-management/payouts', label: 'Yêu cầu rút tiền' },
+    ],
   },
   {
-    key: '/exchange-codes',
+    key: 'exchange',
     icon: <GiftOutlined />,
     label: 'Mã trao đổi',
+    children: [
+      { key: '/exchange-codes', label: 'Mã đổi quà' },
+      { key: '/exchange-codes/batches', label: 'Lô mã' },
+    ],
   },
   {
-    key: '/gamification',
+    key: 'gamification',
     icon: <TrophyOutlined />,
-    label: 'Gamification',
+    label: 'Trò chơi hóa',
+    children: [
+      { key: '/gamification/daily-tasks', label: 'Nhiệm vụ hằng ngày' },
+      { key: '/gamification/achievements', label: 'Thành tích' },
+      { key: '/gamification/check-in-rewards', label: 'Điểm danh - Phần thưởng' },
+    ],
   },
   {
     key: '/reports',

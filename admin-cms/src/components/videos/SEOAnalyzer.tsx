@@ -149,7 +149,7 @@ export default function SEOAnalyzer({
 
   return (
     <Card title="📊 Phân tích SEO" size="small" style={{ marginBottom: 16 }}>
-      <Space direction="vertical" style={{ width: '100%' }}>
+      <Space orientation="vertical" style={{ width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Progress 
             percent={seoScore.score} 

@@ -16,7 +16,7 @@ export default function CommissionCalculator({ commissionRate }: CommissionCalcu
 
   return (
     <Card title="Máy tính hoa hồng">
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <div>
           <Typography.Text>Doanh thu (VNĐ)</Typography.Text>
           <InputNumber value={revenue} onChange={(v) => setRevenue(v || 0)} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Tag, Button, Progress, Space, Card, message } from 'antd';
 import { ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import { io, Socket } from 'socket.io-client';
-import { EncodingJob } from '@/types/admin';
+import { EncodingJob } from '@/types';
 import { formatDate, getStatusColor, getStatusText } from '@/lib/admin-utils';
 import adminAPI from '@/lib/admin-api';
 

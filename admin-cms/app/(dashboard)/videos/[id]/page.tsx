@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import adminAPI from '@/lib/admin-api';
 import { io, Socket } from 'socket.io-client';
-import type { Video, Episode } from '@/types/admin';
+import type { Video, Episode } from '@/types';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;

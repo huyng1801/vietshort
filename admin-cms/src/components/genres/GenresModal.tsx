@@ -4,7 +4,7 @@ import { Modal, Form, Input, InputNumber, Switch, Space } from 'antd';
 import type { FormInstance } from 'antd';
 import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
-import type { Genre } from '@/types/admin';
+import type { Genre } from '@/types';
 import adminAPI from '@/lib/admin-api';
 
 interface GenresModalProps {
@@ -142,12 +142,13 @@ export default function GenresModal({
       onCancel={onCancel}
       onOk={() => form.submit()}
       confirmLoading={saving}
-      okText="Lưu"
+      okText={editingGenre ? 'Cập nhật' : 'Tạo mới'}
       cancelText="Hủy"
       destroyOnHidden
       width={520}
+      maskClosable={!saving}
     >
-      <Form form={form} layout="vertical" onFinish={onSubmit} preserve={false}>
+      <Form form={form} layout="vertical" onFinish={onSubmit} preserve={false} style={{ marginTop: 16 }}>
         <Form.Item
           name="name"
           label="Tên thể loại"
@@ -184,7 +185,7 @@ export default function GenresModal({
           </Form.Item>
 
           <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
-            <Switch checkedChildren="Hoạt động" unCheckedChildren="Ẩn" />
+            <Switch />
           </Form.Item>
         </Space>
       </Form>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, Empty } from 'antd';
 import dynamic from 'next/dynamic';
-import { RevenueData } from '@/types/dashboard';
+import { RevenueData } from '@/types';
 
 interface RevenueChartProps {
   data: RevenueData[];

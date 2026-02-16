@@ -50,6 +50,10 @@ import { UserReport } from './analytics/reports/user.report';
 import { AdminGamificationController } from './gamification/gamification.controller';
 import { GamificationManagementService } from './gamification/gamification-management.service';
 
+// Social management sub-module
+import { AdminSocialController } from './social/social.controller';
+import { SocialManagementService } from './social/social-management.service';
+
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -73,6 +77,7 @@ import { GamificationManagementService } from './gamification/gamification-manag
     AdminAuditLogsController,
     AnalyticsController,
     AdminGamificationController,
+    AdminSocialController,
   ],
   providers: [
     AdminService,
@@ -94,6 +99,7 @@ import { GamificationManagementService } from './gamification/gamification-manag
     RevenueReport,
     UserReport,
     GamificationManagementService,
+    SocialManagementService,
   ],
   exports: [
     AdminService,

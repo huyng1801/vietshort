@@ -5,7 +5,10 @@ import { Card, Form, Input, InputNumber, Switch, Button, message, Row, Col, Tag,
 import { BankOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
-import { Affiliate, AffiliateType } from '@/types/admin';
+import { Affiliate, AffiliateType } from '@/types';
+
+const TIER_COLORS: Record<number, string> = { 1: 'purple', 2: 'blue', 3: 'green' };
+const TIER_LABELS: Record<number, string> = { 1: 'Cấp 1 - Công ty', 2: 'Cấp 2 - CTV', 3: 'Cấp 3 - CTV phụ' };
 
 interface CTVFormProps {
   affiliate?: Affiliate;
@@ -91,7 +94,7 @@ export default function CTVForm({ affiliate, onSuccess }: CTVFormProps) {
             <Col span={12}>
               <div style={{ marginBottom: 16 }}>
                 <Typography.Text type="secondary">Cấp bậc</Typography.Text>
-                <div><Tag color={TIER_COLORS[affiliate.tier]}>{TIER_LABELS[affiliate.tier]}</Tag></div>
+                <div><Tag color={TIER_COLORS[affiliate.tier ?? 1]}>{TIER_LABELS[affiliate.tier ?? 1]}</Tag></div>
               </div>
             </Col>
             <Col span={12}>

@@ -4,19 +4,17 @@ export interface DashboardStats {
   userGrowthRate: number;
   totalVideos: number;
   publishedVideos: number;
+  videoGrowthRate: number;
   totalViews: number;
   viewsToday: number;
-  todayViews?: number; // alias for viewsToday
   viewGrowthRate: number;
   totalRevenue: number;
   revenueToday: number;
-  monthlyRevenue?: number;
   revenueGrowthRate: number;
   activeVipUsers: number;
   vipGrowthRate: number;
   onlineUsers: number;
   encodingQueue: number;
-  videoGrowthRate?: number;
   // Chart data
   viewsChart?: ChartDataPoint[];
   revenueChart?: ChartDataPoint[];

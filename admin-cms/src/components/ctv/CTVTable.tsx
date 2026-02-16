@@ -8,7 +8,7 @@ import {
   ApartmentOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { Affiliate } from '@/types/admin';
+import { Affiliate } from '@/types';
 import { formatNumber, formatCurrency, formatDate } from '@/lib/admin-utils';
 import adminAPI from '@/lib/admin-api';
 
@@ -89,7 +89,7 @@ export default function CTVTable({ affiliates, loading, pagination, onChange, on
       key: 'status',
       width: 130,
       render: (_: unknown, r: Affiliate) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           {r.isActive ? (
             <Tag icon={<CheckCircleOutlined />} color="green">Hoạt động</Tag>
           ) : (
@@ -117,11 +117,11 @@ export default function CTVTable({ affiliates, loading, pagination, onChange, on
       render: (v: number, r: Affiliate) => (
         <div>
           <Typography.Text strong style={{ color: '#52c41a' }}>{formatCurrency(v || 0)}</Typography.Text>
-          {(r.networkEarned || 0) > 0 && r.tier < 3 && (
+          {(r.networkEarned || 0) > 0 && (r.tier ?? 1) < 3 && (
             <>
               <br />
               <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                Mạng lưới: {formatCurrency(r.networkEarned)}
+                Mạng lưới: {formatCurrency(r.networkEarned ?? 0)}
               </Typography.Text>
             </>
           )}

@@ -7,7 +7,7 @@ import {
   BankOutlined, TeamOutlined, UserOutlined, ApartmentOutlined, EyeOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { Affiliate } from '@/types/admin';
+import { Affiliate } from '@/types';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/admin-utils';
 
 interface CTVDetailsProps {
@@ -22,7 +22,7 @@ const TIER_CONFIG: Record<number, { color: string; label: string; icon: React.Re
 
 export default function CTVDetails({ affiliate }: CTVDetailsProps) {
   const router = useRouter();
-  const tier = TIER_CONFIG[affiliate.tier] || TIER_CONFIG[1];
+  const tier = TIER_CONFIG[affiliate.tier ?? 1] || TIER_CONFIG[1];
 
   const childColumns = [
     {
@@ -30,7 +30,7 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
       key: 'tier',
       width: 80,
       render: (_: unknown, r: Affiliate) => {
-        const t = TIER_CONFIG[r.tier] || TIER_CONFIG[1];
+        const t = TIER_CONFIG[r.tier ?? 1] || TIER_CONFIG[1];
         return <Tag color={t.color}>{t.label}</Tag>;
       },
     },
@@ -110,14 +110,14 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
               title="Tổng thu nhập"
               value={affiliate.totalEarned || 0}
               prefix="₫"
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
       </Row>
 
       {/* Network stats (Tier 1/2) */}
-      {affiliate.tier < 3 && (
+      {(affiliate.tier ?? 1) < 3 && (
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col span={6}>
             <Card size="small">
@@ -125,7 +125,7 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
                 title="Thành viên mạng lưới"
                 value={affiliate.networkMembers || 0}
                 prefix={<ApartmentOutlined />}
-                valueStyle={{ color: '#722ed1' }}
+                styles={{ content: { color: '#722ed1' } }}
               />
             </Card>
           </Col>
@@ -140,7 +140,7 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
                 title="Thu nhập mạng lưới"
                 value={affiliate.networkEarned || 0}
                 prefix="₫"
-                valueStyle={{ color: '#722ed1' }}
+                styles={{ content: { color: '#722ed1' } }}
               />
             </Card>
           </Col>
@@ -224,7 +224,7 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
       )}
 
       {/* Sub-affiliates (Tier 1/2) */}
-      {affiliate.tier < 3 && affiliate.children && affiliate.children.length > 0 && (
+      {(affiliate.tier ?? 1) < 3 && affiliate.children && affiliate.children.length > 0 && (
         <Card
           title={
             <Space>
@@ -246,7 +246,7 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
       )}
 
       {/* Admin không tạo sub-CTV - chỉ xem */}
-      {affiliate.tier < 3 && (!affiliate.children || affiliate.children.length === 0) && (
+      {(affiliate.tier ?? 1) < 3 && (!affiliate.children || affiliate.children.length === 0) && (
         <Card>
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <Typography.Text type="secondary">Công ty chưa có CTV cấp dưới</Typography.Text>

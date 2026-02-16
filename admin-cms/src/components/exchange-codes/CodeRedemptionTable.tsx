@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Typography, Tag, message } from 'antd';
-import { CodeRedemption } from '@/types/admin';
+import { CodeRedemption } from '@/types';
 import { formatDate } from '@/lib/admin-utils';
 import adminAPI from '@/lib/admin-api';
 

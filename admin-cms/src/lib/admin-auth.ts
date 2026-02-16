@@ -1,4 +1,4 @@
-import { AdminUser } from '@/types/admin';
+import { AdminUser } from '@/types';
 import adminAPI from './admin-api';
 
 const TOKEN_KEY = 'admin_token';

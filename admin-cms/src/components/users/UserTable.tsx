@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Table, Tag, Button, Avatar, Typography, Space, Tooltip, Popconfirm, message } from 'antd';
 import { EyeOutlined, UserOutlined, LockOutlined, UnlockOutlined, CheckCircleOutlined, CloseCircleOutlined, MailOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { User } from '@/types/admin';
+import { User } from '@/types';
 import { formatDate, formatNumber } from '@/lib/admin-utils';
 import adminAPI from '@/lib/admin-api';
 
@@ -104,7 +104,7 @@ export default function UserTable({ users, loading, pagination, onChange, onRefr
       key: 'status',
       width: 180,
       render: (_: unknown, record: User) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           {record.isLocked ? (
             <Tag icon={<LockOutlined />} color="red">Khóa</Tag>
           ) : (

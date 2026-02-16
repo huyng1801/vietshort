@@ -1,38 +1,41 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, message } from 'antd';
+import { message } from 'antd';
 import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
-import type { Video, VideoStatus } from '@/types/admin';
+import type { Video, VideoStatus } from '@/types';
 import VideoHeader from '@/components/videos/VideoHeader';
 import VideoFilters from '@/components/videos/VideoFilters';
 import VideoTable from '@/components/videos/VideoTable';
-
-const { Text } = Typography;
+import { usePagination } from '@/hooks/usePagination';
 
 export default function VideosPage() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [genreFilter, setGenreFilter] = useState<string>('');
   const [genres, setGenres] = useState<{ label: string; value: string }[]>([]);
+  const {
+    params,
+    setParams,
+    total,
+    setTotal,
+    handleTableChange,
+    paginationConfig,
+  } = usePagination();
 
   const handleSearch = () => {
-    setPage(1);
-    fetchVideos();
+    setParams((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleReset = () => {
     setSearch('');
     setStatusFilter('');
     setGenreFilter('');
-    setPage(1);
+    setParams((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleSearchChange = (value: string) => {
@@ -88,14 +91,12 @@ export default function VideosPage() {
   const fetchVideos = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, unknown> = { page, limit };
-      if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
-      if (genreFilter) params.genre = genreFilter;
+      const apiParams: Record<string, unknown> = { page: params.page, limit: params.limit };
+      if (search) apiParams.search = search;
+      if (statusFilter) apiParams.status = statusFilter;
+      if (genreFilter) apiParams.genre = genreFilter;
 
-      const res = await adminAPI.getVideos(params);
-      console.log('🎥 Videos API Response:', res.data);
-      console.log('🎬 First video genres (videos page):', res.data?.data?.items?.[0]?.genres || res.data?.items?.[0]?.genres);
+      const res = await adminAPI.getVideos(apiParams);
       const data = res.data?.data || res.data || {};
       setVideos(Array.isArray(data.items) ? data.items : []);
       setTotal(data.total || 0);
@@ -106,7 +107,7 @@ export default function VideosPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, statusFilter, genreFilter]);
+  }, [params.page, params.limit, search, statusFilter, genreFilter]);
 
   useEffect(() => { 
     fetchVideos(); 
@@ -115,13 +116,6 @@ export default function VideosPage() {
   useEffect(() => {
     fetchGenres();
   }, [fetchGenres]);
-
-  // Reset effect to trigger fetch
-  useEffect(() => {
-    if (!search && !statusFilter && !genreFilter) {
-      fetchVideos();
-    }
-  }, [search, statusFilter, genreFilter, fetchVideos]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -172,14 +166,8 @@ export default function VideosPage() {
       <VideoTable
         videos={videos}
         loading={loading}
-        pagination={{
-          current: page,
-          pageSize: limit,
-          total,
-          showSizeChanger: false,
-          showTotal: (t: number) => `Tổng ${t} phim`,
-          onChange: (p: number) => setPage(p),
-        }}
+        pagination={{ ...paginationConfig, total }}
+        onChange={handleTableChange}
         onRefresh={fetchVideos}
         onDelete={handleDelete}
         onPublish={handlePublish}

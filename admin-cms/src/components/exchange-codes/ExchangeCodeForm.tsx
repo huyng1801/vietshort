@@ -5,7 +5,7 @@ import { Form, Input, Button, Space, Select, InputNumber, DatePicker, Card, mess
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import adminAPI from '@/lib/admin-api';
-import type { ExchangeCode } from '@/types/admin';
+import type { ExchangeCode } from '@/types';
 
 interface ExchangeCodeFormProps {
   code?: ExchangeCode | null;

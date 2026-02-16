@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { TableParams } from '@/types/admin';
+import { TableParams } from '@/types';
 
 interface UsePaginationOptions {
   defaultPage?: number;

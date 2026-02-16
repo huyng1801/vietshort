@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { message, Form } from 'antd';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import type { Genre } from '@/types/admin';
+import type { Genre } from '@/types';
 import GenresHeader from '@/components/genres/GenresHeader';
 import GenresFilters from '@/components/genres/GenresFilters';
 import GenresTable from '@/components/genres/GenresTable';

@@ -5,7 +5,7 @@ import { message } from 'antd';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
 import { useFilters } from '@/hooks/useFilters';
-import type { User } from '@/types/admin';
+import type { User } from '@/types';
 import UsersHeader from '@/components/users/UsersHeader';
 import UserFilters from '@/components/users/UserFilters';
 import UserTable from '@/components/users/UserTable';

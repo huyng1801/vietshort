@@ -20,7 +20,7 @@ import { ArrowLeftOutlined, DownloadOutlined, StopOutlined } from '@ant-design/i
 import CodeRedemptionTable from '@/components/exchange-codes/CodeRedemptionTable';
 import adminAPI from '@/lib/admin-api';
 import { formatDate } from '@/lib/admin-utils';
-import type { CodeBatch, ExchangeCode } from '@/types/admin';
+import type { CodeBatch, ExchangeCode } from '@/types';
 
 const { Title } = Typography;
 
@@ -59,7 +59,7 @@ export default function BatchDetailPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `codes_${batch.batchName.replace(/\s+/g, '_')}.xlsx`;
+      a.download = `codes_${(batch.batchName ?? batch.name ?? '').replace(/\s+/g, '_')}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
       message.success('Đã tải file Excel');
@@ -128,7 +128,7 @@ export default function BatchDetailPage() {
       width: 100,
       render: (active: boolean, record: ExchangeCode) => {
         if (!active) return <Tag color="red">Tắt</Tag>;
-        if (record.usedCount >= record.usageLimit) return <Tag color="volcano">Hết lượt</Tag>;
+        if (record.usedCount >= (record.usageLimit ?? record.maxUses ?? 0)) return <Tag color="volcano">Hết lượt</Tag>;
         return <Tag color="green">Hoạt động</Tag>;
       },
     },
@@ -146,7 +146,7 @@ export default function BatchDetailPage() {
       <div className="page-header">
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => router.push('/exchange-codes')}
+          onClick={() => router.push('/exchange-codes/batches')}
           style={{ marginBottom: 16 }}
         >
           Quay lại
@@ -191,8 +191,8 @@ export default function BatchDetailPage() {
           <Descriptions.Item label="Giá trị">
             <span style={{ fontWeight: 'bold', color: '#1890ff' }}>
               {batch.rewardType === 'GOLD'
-                ? `${batch.rewardValue.toLocaleString()} xu`
-                : `${batch.rewardValue} ngày`}
+                ? `${(batch.rewardValue ?? 0).toLocaleString()} xu`
+                : `${batch.rewardValue ?? 0} ngày`}
             </span>
           </Descriptions.Item>
 
@@ -218,11 +218,11 @@ export default function BatchDetailPage() {
           <Descriptions.Item label="Tiến độ sử dụng" span={2}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Progress
-                percent={batch.usagePercentage}
-                status={batch.usagePercentage >= 100 ? 'exception' : 'active'}
+                percent={batch.usagePercentage ?? 0}
+                status={(batch.usagePercentage ?? 0) >= 100 ? 'exception' : 'active'}
                 style={{ flex: 1 }}
               />
-              <span style={{ minWidth: 60, textAlign: 'right' }}>{batch.usagePercentage}%</span>
+              <span style={{ minWidth: 60, textAlign: 'right' }}>{batch.usagePercentage ?? 0}%</span>
             </div>
           </Descriptions.Item>
         </Descriptions>

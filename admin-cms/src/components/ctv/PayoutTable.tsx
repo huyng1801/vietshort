@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Tag, Button, Space, Popconfirm, Typography, message } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { CtvPayout, PayoutStatus } from '@/types/admin';
+import { CtvPayout, PayoutStatus } from '@/types';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/admin-utils';
 import { usePagination } from '@/hooks/usePagination';
 import adminAPI from '@/lib/admin-api';

@@ -169,7 +169,6 @@ model Video {
   likes            Like[]
   ratings          Rating[]
   comments         Comment[]
-  videoGenres      VideoGenre[]
   
   @@map("videos")
   @@index([slug])
@@ -261,22 +260,10 @@ model Genre {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  videos      VideoGenre[]
   
   @@map("genres")
   @@index([slug])
   @@index([isActive])
-}
-
-model VideoGenre {
-  videoId  String
-  genreId  String
-  
-  video    Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
-  genre    Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
-  
-  @@id([videoId, genreId])
-  @@map("video_genres")
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -309,6 +296,7 @@ model WatchHistory {
   episode     Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
   
   @@map("watch_history")
+  @@unique([userId, episodeId])
   @@index([userId])
   @@index([deviceId])
   @@index([videoId])
@@ -350,6 +338,7 @@ model Rating {
   userId    String
   videoId   String
   rating    Int      // 1-5 stars
+  review    String?  @db.Text // User review text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -932,6 +921,100 @@ model AuditLog {
 }
 
 // ═══════════════════════════════════════════════════════════
+// ADS MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+// Global ads configuration (single-row table)
+model AdConfig {
+  id                      String   @id @default(cuid())
+  
+  // Global toggles
+  adsEnabled              Boolean  @default(true)
+  showAdsToGuest          Boolean  @default(true)
+  showAdsToFree           Boolean  @default(true)
+  showAdsToVipFreeads     Boolean  @default(false)  // VIP FreeAds = no ads by default
+  showAdsToVipGold        Boolean  @default(false)  // VIP Gold = no ads by default
+  
+  // AdMob App IDs
+  admobAppIdAndroid       String?  // ca-app-pub-xxx~yyy
+  admobAppIdIos           String?  // ca-app-pub-xxx~yyy
+  
+  // Test mode
+  testMode                Boolean  @default(true)
+  testDeviceIds           String?  @db.Text  // JSON array of device IDs
+  
+  // Global frequency limits
+  globalMaxAdsPerHour     Int      @default(6)
+  globalMaxAdsPerDay      Int      @default(30)
+  minIntervalBetweenAds   Int      @default(60)  // seconds
+  
+  // Banner defaults
+  bannerEnabled           Boolean  @default(true)
+  bannerRefreshInterval   Int      @default(30)  // seconds
+  
+  // Interstitial defaults
+  interstitialEnabled     Boolean  @default(true)
+  interstitialAfterEpisodes Int    @default(3)   // Show after every N episodes
+  
+  // Reward Video defaults
+  rewardVideoEnabled      Boolean  @default(true)
+  defaultRewardGold       Int      @default(2)
+  maxRewardAdsPerDay      Int      @default(10)
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  @@map("ad_config")
+}
+
+// Individual ad placement positions
+model AdPlacement {
+  id               String            @id @default(cuid())
+  name             String            // "Banner trang chủ", "Interstitial xem tập"
+  type             AdPlacementType
+  platform         AdPlatform        @default(ADMOB)
+  adUnitId         String            // AdMob unit ID (ca-app-pub-xxx/yyy)
+  position         String            // "home_top", "player_pre", "episode_unlock"
+  description      String?           @db.Text
+  
+  // Frequency controls
+  frequency        Int               @default(0)    // Show every N minutes (0 = every time)
+  maxPerSession    Int               @default(0)    // Max per session (0 = unlimited)
+  maxPerDay        Int               @default(0)    // Max per day (0 = unlimited)
+  cooldownSeconds  Int               @default(30)   // Cooldown between displays
+  
+  // Targeting
+  targetPlatforms  String            @default("android,ios") // Comma-separated: android,ios,web
+  excludeVip       Boolean           @default(true)  // Don't show to VIP users
+  
+  // Reward config (only for REWARD_VIDEO)
+  rewardGold       Int?              // Gold reward for watching
+  rewardMultiplier Float?            // Multiplier (e.g. 2x)
+  
+  // Status
+  isActive         Boolean           @default(true)
+  status           AdPlacementStatus @default(ACTIVE)
+  priority         Int               @default(0)     // Higher = show first
+  
+  // Stats (denormalized for performance)
+  impressions      Int               @default(0)
+  clicks           Int               @default(0)
+  revenue          Float             @default(0)
+  ctr              Float             @default(0)     // Click-through rate %
+  fillRate         Float             @default(0)     // Fill rate %
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  
+  @@map("ad_placements")
+  @@index([type])
+  @@index([position])
+  @@index([isActive])
+  @@index([status])
+  @@index([platform])
+}
+
+// ═══════════════════════════════════════════════════════════
 // ENUMS
 // ═══════════════════════════════════════════════════════════
 
@@ -1080,4 +1163,26 @@ enum NotificationChannel {
   IN_APP     // Thông báo trong app
   PUSH       // Push notification
   EMAIL      // Email
+}
+
+// ═══ Ads Enums ═══
+
+enum AdPlacementType {
+  BANNER
+  INTERSTITIAL
+  REWARD_VIDEO
+  NATIVE
+}
+
+enum AdPlatform {
+  ADMOB
+  FACEBOOK
+  UNITY
+  CUSTOM
+}
+
+enum AdPlacementStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
 }

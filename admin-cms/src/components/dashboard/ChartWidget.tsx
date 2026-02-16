@@ -4,17 +4,19 @@ import React from 'react';
 import { Card, Spin } from 'antd';
 import dynamic from 'next/dynamic';
 
-const AreaChart = dynamic(() => import('recharts').then(mod => ({ default: mod.AreaChart })), { ssr: false });
-const Area = dynamic(() => import('recharts').then(mod => ({ default: mod.Area })), { ssr: false });
-const BarChart = dynamic(() => import('recharts').then(mod => ({ default: mod.BarChart })), { ssr: false });
-const Bar = dynamic(() => import('recharts').then(mod => ({ default: mod.Bar })), { ssr: false });
-const LineChart = dynamic(() => import('recharts').then(mod => ({ default: mod.LineChart })), { ssr: false });
-const Line = dynamic(() => import('recharts').then(mod => ({ default: mod.Line })), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => ({ default: mod.XAxis })), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => ({ default: mod.YAxis })), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => ({ default: mod.CartesianGrid })), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => ({ default: mod.Tooltip })), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })), { ssr: false });
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const AreaChart: any = dynamic(() => import('recharts').then(mod => ({ default: mod.AreaChart })) as any, { ssr: false });
+const Area: any = dynamic(() => import('recharts').then(mod => ({ default: mod.Area })) as any, { ssr: false });
+const BarChart: any = dynamic(() => import('recharts').then(mod => ({ default: mod.BarChart })) as any, { ssr: false });
+const Bar: any = dynamic(() => import('recharts').then(mod => ({ default: mod.Bar })) as any, { ssr: false });
+const LineChart: any = dynamic(() => import('recharts').then(mod => ({ default: mod.LineChart })) as any, { ssr: false });
+const Line: any = dynamic(() => import('recharts').then(mod => ({ default: mod.Line })) as any, { ssr: false });
+const XAxis: any = dynamic(() => import('recharts').then(mod => ({ default: mod.XAxis })) as any, { ssr: false });
+const YAxis: any = dynamic(() => import('recharts').then(mod => ({ default: mod.YAxis })) as any, { ssr: false });
+const CartesianGrid: any = dynamic(() => import('recharts').then(mod => ({ default: mod.CartesianGrid })) as any, { ssr: false });
+const Tooltip: any = dynamic(() => import('recharts').then(mod => ({ default: mod.Tooltip })) as any, { ssr: false });
+const ResponsiveContainer: any = dynamic(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })) as any, { ssr: false });
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 interface ChartWidgetProps {
   title: string;

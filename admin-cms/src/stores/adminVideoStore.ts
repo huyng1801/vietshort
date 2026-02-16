@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Video, EncodingJob } from '@/types/admin';
+import { Video, EncodingJob } from '@/types';
 
 interface AdminVideoState {
   videos: Video[];

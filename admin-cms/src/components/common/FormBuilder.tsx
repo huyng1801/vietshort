@@ -18,7 +18,8 @@ export interface FormField {
 
 interface FormBuilderProps {
   fields: FormField[];
-  form: ReturnType<typeof Form.useForm>[0];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: any;
   onFinish: (values: Record<string, unknown>) => void;
   loading?: boolean;
   layout?: 'horizontal' | 'vertical' | 'inline';

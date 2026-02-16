@@ -8,7 +8,7 @@ import adminAPI from '@/lib/admin-api';
 import { generateSlug } from '@/lib/admin-utils';
 import SEOAnalyzer from '@/components/videos/SEOAnalyzer';
 import SEOTips from '@/components/videos/SEOTips';
-import type { Video } from '@/types/admin';
+import type { Video } from '@/types';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -273,7 +273,7 @@ export default function EditVideoPage() {
             >
               {/* Poster Upload */}
               <Form.Item label="Poster phim">
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
                   {posterUrl && (
                     <div style={{ marginBottom: 12 }}>
                       <img 

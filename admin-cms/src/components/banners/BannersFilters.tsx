@@ -43,9 +43,7 @@ export default function BannersFilters({
           { label: 'Đã ẩn', value: false },
         ]}
       />
-      <Button icon={<SearchOutlined />} type="primary" onClick={onSearch}>
-        Tìm kiếm
-      </Button>
+
       <Button icon={<ReloadOutlined />} onClick={onReset}>
         Đặt lại
       </Button>

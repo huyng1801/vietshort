@@ -25,7 +25,7 @@ interface FilterBarProps {
 
 export default function FilterBar({ fields, values, onChange, onReset, onSearch }: FilterBarProps) {
   return (
-    <Space wrap style={{ marginBottom: 16 }}>
+    <Space wrap className="mb-4">
       {fields.map((field) => {
         switch (field.type) {
           case 'search':
@@ -37,7 +37,7 @@ export default function FilterBar({ fields, values, onChange, onReset, onSearch 
                 value={values[field.key] as string}
                 onChange={(e) => onChange(field.key, e.target.value)}
                 onPressEnter={onSearch}
-                style={{ width: field.width || 250 }}
+                style={{ width: field.width || 280 }}
                 allowClear
               />
             );

@@ -9,7 +9,7 @@ import {
 import type { DataNode } from 'antd/es/tree';
 import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
-import { Affiliate } from '@/types/admin';
+import { Affiliate } from '@/types';
 import { formatCurrency } from '@/lib/admin-utils';
 
 interface NetworkTreeProps {
@@ -27,8 +27,8 @@ const TIER_COLORS: Record<number, string> = { 1: 'purple', 2: 'blue', 3: 'green'
 function affiliateToTreeNode(affiliate: Affiliate): DataNode {
   const title = (
     <Space size={4}>
-      <Tag color={TIER_COLORS[affiliate.tier]} style={{ fontSize: 10 }}>
-        Cấp {affiliate.tier}
+      <Tag color={TIER_COLORS[affiliate.tier ?? 1]} style={{ fontSize: 10 }}>
+        Cấp {affiliate.tier ?? 1}
       </Tag>
       <Typography.Text strong>{affiliate.companyName || affiliate.realName}</Typography.Text>
       <Typography.Text type="secondary" style={{ fontSize: 11 }}>
@@ -49,7 +49,7 @@ function affiliateToTreeNode(affiliate: Affiliate): DataNode {
   return {
     key: affiliate.id,
     title,
-    icon: TIER_ICONS[affiliate.tier],
+    icon: TIER_ICONS[affiliate.tier ?? 1],
     children: affiliate.children?.map(affiliateToTreeNode) || [],
   };
 }

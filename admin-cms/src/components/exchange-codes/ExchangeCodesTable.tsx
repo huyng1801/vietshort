@@ -3,7 +3,7 @@
 import React from 'react';
 import { Table, Tag, Button, Space, Progress, Tooltip } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { ExchangeCode } from '@/types/admin';
+import { ExchangeCode } from '@/types';
 import { formatDate } from '@/lib/admin-utils';
 
 interface ExchangeCodesTableProps {
@@ -72,8 +72,8 @@ export default function ExchangeCodesTable({
       key: 'usage',
       width: 120,
       render: (_: unknown, record: ExchangeCode) => {
-        const percent = record.usageLimit > 0 ? Math.round((record.usedCount / record.usageLimit) * 100) : 0;
-        const isCompleted = record.usedCount >= record.usageLimit;
+        const percent = (record.usageLimit ?? 0) > 0 ? Math.round((record.usedCount / (record.usageLimit ?? 1)) * 100) : 0;
+        const isCompleted = record.usedCount >= (record.usageLimit ?? 0);
         
         return (
           <div>
@@ -84,7 +84,7 @@ export default function ExchangeCodesTable({
               showInfo={false}
             />
             <div style={{ fontSize: 12, textAlign: 'center' }}>
-              {record.usedCount}/{record.usageLimit}
+              {record.usedCount}/{record.usageLimit ?? 0}
             </div>
           </div>
         );
@@ -100,7 +100,7 @@ export default function ExchangeCodesTable({
         if (record.expiresAt && new Date(record.expiresAt) < new Date()) {
           return <Tag color="orange">Hết hạn</Tag>;
         }
-        if (record.usedCount >= record.usageLimit) {
+        if (record.usedCount >= (record.usageLimit ?? 0)) {
           return <Tag color="volcano">Hết lượt</Tag>;
         }
         return <Tag color="green">Hoạt động</Tag>;

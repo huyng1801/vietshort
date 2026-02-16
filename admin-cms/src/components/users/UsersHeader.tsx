@@ -9,7 +9,7 @@ interface UsersHeaderProps {
 
 export default function UsersHeader({ onRefresh }: UsersHeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-4">
+    <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold m-0">Quản lý người dùng</h1>
       <Button icon={<ReloadOutlined />} onClick={onRefresh}>
         Làm mới

@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { message, Tabs } from 'antd';
+import { message } from 'antd';
 import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
 import { useFilters } from '@/hooks/useFilters';
-import type { Affiliate, CtvPayout } from '@/types/admin';
+import type { Affiliate } from '@/types';
 import CTVHeader from '@/components/ctv/CTVHeader';
 import CTVFilters from '@/components/ctv/CTVFilters';
 import CTVTable from '@/components/ctv/CTVTable';
-import PayoutTable from '@/components/ctv/PayoutTable';
 
 export default function CTVManagementPage() {
   const router = useRouter();
@@ -99,35 +98,18 @@ export default function CTVManagementPage() {
         onAdd={() => router.push('/ctv-management/create')}
       />
 
-      <Tabs
-        defaultActiveKey="affiliates"
-        items={[
-          {
-            key: 'affiliates',
-            label: 'Danh sách CTV',
-            children: (
-              <>
-                <CTVFilters
-                  values={filters}
-                  onChange={updateFilter as (key: string, value: unknown) => void}
-                  onReset={resetFilters}
-                />
-                <CTVTable
-                  affiliates={affiliates}
-                  loading={loading}
-                  pagination={{ ...paginationConfig, total }}
-                  onChange={handleTableChange}
-                  onRefresh={fetchAffiliates}
-                />
-              </>
-            ),
-          },
-          {
-            key: 'payouts',
-            label: 'Yêu cầu rút tiền',
-            children: <PayoutTable />,
-          },
-        ]}
+      <CTVFilters
+        values={filters}
+        onChange={updateFilter as (key: string, value: unknown) => void}
+        onReset={resetFilters}
+      />
+
+      <CTVTable
+        affiliates={affiliates}
+        loading={loading}
+        pagination={{ ...paginationConfig, total }}
+        onChange={handleTableChange}
+        onRefresh={fetchAffiliates}
       />
     </div>
   );

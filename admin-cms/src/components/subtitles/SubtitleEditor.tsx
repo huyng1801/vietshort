@@ -126,16 +126,16 @@ export default function SubtitleEditor({ subtitleId, content, language, label, o
       {/* Stats bar */}
       <Row gutter={16} style={{ marginBottom: 12 }}>
         <Col span={6}>
-          <Statistic title="Đoạn phụ đề" value={stats.entries} valueStyle={{ fontSize: 18 }} />
+          <Statistic title="Đoạn phụ đề" value={stats.entries} styles={{ content: { fontSize: 18 } }} />
         </Col>
         <Col span={6}>
-          <Statistic title="Tổng ký tự" value={stats.charCount} valueStyle={{ fontSize: 18 }} />
+          <Statistic title="Tổng ký tự" value={stats.charCount} styles={{ content: { fontSize: 18 } }} />
         </Col>
         <Col span={6}>
-          <Statistic title="Số dòng" value={stats.lineCount} valueStyle={{ fontSize: 18 }} />
+          <Statistic title="Số dòng" value={stats.lineCount} styles={{ content: { fontSize: 18 } }} />
         </Col>
         <Col span={6}>
-          <Statistic title="Thời lượng (s)" value={stats.totalDuration} valueStyle={{ fontSize: 18 }} />
+          <Statistic title="Thời lượng (s)" value={stats.totalDuration} styles={{ content: { fontSize: 18 } }} />
         </Col>
       </Row>
 

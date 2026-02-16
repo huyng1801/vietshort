@@ -10,7 +10,7 @@ import ReferralTable from '@/components/ctv/ReferralTable';
 import PayoutTable from '@/components/ctv/PayoutTable';
 import NetworkTree from '@/components/ctv/NetworkTree';
 import adminAPI from '@/lib/admin-api';
-import type { Affiliate } from '@/types/admin';
+import type { Affiliate } from '@/types';
 
 export default function CTVDetailPage() {
   const params = useParams();
@@ -52,7 +52,7 @@ export default function CTVDetailPage() {
       children: <PayoutTable affiliateId={affiliateId} />,
     },
     // Show network tree tab for Tier 1/2
-    ...(affiliate.tier < 3
+    ...((affiliate.tier ?? 1) < 3
       ? [
           {
             key: 'network',

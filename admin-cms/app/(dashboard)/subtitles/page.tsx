@@ -1,15 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, Button, Space, message, Table, Tag, Input, Card, Statistic, Row, Col, Progress, Badge, Tooltip, Select } from 'antd';
+import { Button, Space, message, Table, Tag, Input, Card, Statistic, Row, Col, Progress, Badge, Tooltip, Select } from 'antd';
 import { ReloadOutlined, SearchOutlined, SoundOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import type { SubtitleQueueStatus, SubtitleStatusType } from '@/types/admin';
+import type { SubtitleQueueStatus, SubtitleStatusType } from '@/types';
 import SubtitleFilters from '@/components/subtitles/SubtitleFilters';
-
-const { Title } = Typography;
 
 const SUBTITLE_STATUS_MAP: Record<SubtitleStatusType, { color: string; label: string }> = {
   READY: { color: 'green', label: 'Sẵn sàng' },
@@ -225,7 +223,7 @@ export default function SubtitlesPage() {
         );
 
         return (
-          <Space direction="vertical" size={0} style={{ textAlign: 'center' }}>
+          <Space orientation="vertical" size={0} style={{ textAlign: 'center' }}>
             <span style={{ fontSize: 18, fontWeight: 600 }}>{totalSubs}</span>
             <span style={{ fontSize: 11, color: '#888' }}>{completedSubs} hoàn thành</span>
           </Space>
@@ -252,7 +250,7 @@ export default function SubtitlesPage() {
   return (
     <div>
       <div className="page-header">
-        <Title level={3}>Quản lý phụ đề</Title>
+        <h1>Quản lý phụ đề</h1>
       </div>
 
     

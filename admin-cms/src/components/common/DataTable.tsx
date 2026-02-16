@@ -4,7 +4,7 @@ import React from 'react';
 import { Table, Card } from 'antd';
 import type { TableProps } from 'antd';
 
-interface DataTableProps<T> extends TableProps<T> {
+interface DataTableProps<T> extends Omit<TableProps<T>, 'title'> {
   title?: string;
   extra?: React.ReactNode;
 }

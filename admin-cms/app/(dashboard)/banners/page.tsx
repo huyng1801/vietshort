@@ -8,7 +8,7 @@ import BannerTable from '@/components/banners/BannerTable';
 import BannerFormModal from '@/components/banners/BannerFormModal';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import type { Banner } from '@/types/admin';
+import type { Banner } from '@/types';
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -38,9 +38,7 @@ export default function BannersPage() {
       setBanners(bannersData);
       setTotal(totalCount);
 
-      if (bannersData.length === 0 && (search || filterActive !== undefined)) {
-        message.info('Không tìm thấy banner nào với bộ lọc hiện tại');
-      }
+
     } catch (err: any) {
       console.error('Fetch banners error:', err);
       const errorMessage = err?.response?.data?.message || err?.message || 'Không thể tải danh sách banner';

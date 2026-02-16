@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, Table, Avatar, Typography, Tag } from 'antd';
 import { EyeOutlined, HeartOutlined, DollarOutlined } from '@ant-design/icons';
-import { TopVideo } from '@/types/dashboard';
+import { TopVideo } from '@/types';
 import { formatNumber, formatCurrency } from '@/lib/admin-utils';
 
 interface TopVideosProps {

@@ -258,10 +258,10 @@ export default function ProfilePage() {
   return (
     <div>
       <div className="page-header">
-        <Title level={3}>Thông tin cá nhân</Title>
+        <h1>Thông tin cá nhân</h1>
       </div>
 
-      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={24} style={{ width: '100%' }}>
         <ProfileInfo profile={profile} onRefresh={fetchProfile} />
         <ChangePassword />
       </Space>

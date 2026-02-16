@@ -21,7 +21,6 @@ export class GenresManagementService {
 
   async getGenres(search?: string, isActive?: boolean, page: number = 1, limit: number = 20) {
     const skip = (page - 1) * limit;
-    
     const where: any = {};
     if (isActive !== undefined) {
       where.isActive = isActive;
@@ -43,8 +42,22 @@ export class GenresManagementService {
       this.prisma.genre.count({ where }),
     ]);
 
+    // Get videoCount for each genre
+    const genresWithVideoCount = await Promise.all(
+      genres.map(async (genre) => {
+        const videoCount = await this.prisma.video.count({
+          where: {
+            genres: {
+              contains: genre.name,
+            },
+          },
+        });
+        return { ...genre, videoCount };
+      })
+    );
+
     return {
-      data: genres,
+      data: genresWithVideoCount,
       pagination: {
         page,
         limit,
@@ -57,21 +70,24 @@ export class GenresManagementService {
   async getGenreById(id: string) {
     const genre = await this.prisma.genre.findUnique({
       where: { id },
-      include: {
-        videos: {
-          select: { videoId: true },
-        },
-      },
     });
 
     if (!genre) {
       throw new NotFoundException(`Không tìm thấy thể loại với ID: ${id}`);
     }
 
+    // Count videos by searching Video.genres string (comma separated)
+    const videoCount = await this.prisma.video.count({
+      where: {
+        genres: {
+          contains: genre.name,
+        },
+      },
+    });
+
     return {
       ...genre,
-      videoCount: genre.videos.length,
-      videos: undefined,
+      videoCount,
     };
   }
 
@@ -154,17 +170,6 @@ export class GenresManagementService {
     const genre = await this.prisma.genre.findUnique({ where: { id } });
     if (!genre) {
       throw new NotFoundException(`Không tìm thấy thể loại với ID: ${id}`);
-    }
-
-    // Check if genre is used by any videos
-    const videoCount = await this.prisma.videoGenre.count({
-      where: { genreId: id },
-    });
-
-    if (videoCount > 0) {
-      throw new BadRequestException(
-        `Không thể xóa thể loại "${genre.name}" vì nó đang được sử dụng bởi ${videoCount} video(s)`,
-      );
     }
 
     const deleted = await this.prisma.genre.delete({ where: { id } });
