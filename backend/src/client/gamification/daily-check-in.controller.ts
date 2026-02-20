@@ -28,4 +28,10 @@ export class DailyCheckInController {
   async getHistory(@CurrentUser('id') userId: string) {
     return this.service.getHistory(userId);
   }
+
+  @Get('rewards')
+  @ApiOperation({ summary: 'Lấy cấu hình phần thưởng điểm danh' })
+  async getRewards() {
+    return this.service.getRewards();
+  }
 }

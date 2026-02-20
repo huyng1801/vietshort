@@ -1,140 +1,182 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button, Space, message, Modal } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import ExchangeCodesTable from '@/components/exchange-codes/ExchangeCodesTable';
-import ExchangeCodeForm from '@/components/exchange-codes/ExchangeCodeForm';
-import FilterBar, { FilterField } from '@/components/common/FilterBar';
+import CodeBatchTable from '@/components/exchange-codes/CodeBatchTable';
+import CodeBatchFilters from '@/components/exchange-codes/CodeBatchFilters';
+import CodeBatchForm from '@/components/exchange-codes/CodeBatchForm';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import { useFilters } from '@/hooks/useFilters';
-import type { ExchangeCode } from '@/types';
-
-const filterFields: FilterField[] = [
-  {
-    key: 'search',
-    label: 'Tìm kiếm',
-    type: 'search',
-    placeholder: 'Tìm kiếm mã...',
-    width: 280,
-  },
-];
-
-const defaultFilters = {
-  search: '',
-};
+import type { CodeBatch } from '@/types';
+import type { Dayjs } from 'dayjs';
+import type { CodeBatchFormHandle } from '@/components/exchange-codes/CodeBatchForm';
 
 export default function ExchangeCodesPage() {
   const router = useRouter();
-  const [codes, setCodes] = useState<ExchangeCode[]>([]);
+  const formRef = useRef<CodeBatchFormHandle>(null);
+  const [batches, setBatches] = useState<CodeBatch[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState('');
+  const [isActive, setIsActive] = useState<string | undefined>();
+  const [rewardType, setRewardType] = useState<string | undefined>();
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const {
     params,
-    setParams,
     total,
     setTotal,
     handleTableChange,
     paginationConfig,
   } = usePagination();
-  const { filters, updateFilter, resetFilters } = useFilters(defaultFilters);
 
-  const fetchCodes = useCallback(async () => {
+  const fetchBatches = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminAPI.getExchangeCodes({
+      const apiParams: Record<string, any> = {
         page: params.page,
         limit: params.limit,
-        search: filters.search || undefined,
-      });
+      };
+      if (search && search.trim()) {
+        apiParams.search = search;
+      }
+      if (isActive && isActive !== '') {
+        apiParams.isActive = isActive;
+      }
+      if (rewardType && rewardType !== '') {
+        apiParams.rewardType = rewardType;
+      }
+      if (dateRange && dateRange.length === 2) {
+        // Convert Dayjs objects to ISO date strings (YYYY-MM-DD)
+        apiParams.dateFrom = dateRange[0].toISOString().split('T')[0];
+        apiParams.dateTo = dateRange[1].toISOString().split('T')[0];
+      }
+
+      const res = await adminAPI.getCodeBatches(apiParams);
       if (res.data?.data) {
-        setCodes(res.data.data);
+        setBatches(res.data.data);
         setTotal(res.data.pagination?.total || res.data.data.length);
       } else if (Array.isArray(res.data)) {
-        setCodes(res.data);
+        setBatches(res.data);
         setTotal(res.data.length);
       } else {
-        setCodes([]);
+        setBatches([]);
         setTotal(0);
       }
     } catch (err: any) {
-      message.error(err?.response?.data?.message || 'Không thể tải danh sách mã');
-      setCodes([]);
+      message.error(err?.response?.data?.message || 'Không thể tải danh sách lô mã');
+      setBatches([]);
     } finally {
       setLoading(false);
     }
-  }, [params, filters, setTotal]);
+  }, [params, search, isActive, rewardType, dateRange, setTotal]);
 
   useEffect(() => {
-    fetchCodes();
-  }, [fetchCodes]);
+    fetchBatches();
+  }, [fetchBatches]);
 
-  const handleEdit = (id: string) => {
+  const handleViewBatch = (id: string) => {
     router.push(`/exchange-codes/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: 'Bạn có chắc chắn muốn xóa mã này?',
-      okText: 'Xóa',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        message.warning('Chức năng xóa mã đơn lẻ chưa được hỗ trợ');
-      },
-    });
+  const handleDeactivateBatch = () => {
+    fetchBatches();
+  };
+
+  const handleExportBatch = async (id: string, batchName: string) => {
+    try {
+      const res = await adminAPI.exportCodes(id);
+      const blob = new Blob([res.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `codes_${batchName.replace(/\s+/g, '_')}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      message.success('Đã xuất file Excel thành công');
+    } catch {
+      message.error('Xuất file thất bại');
+    }
+  };
+
+  const handleFormSubmit = async () => {
+    try {
+      setSubmitting(true);
+      await formRef.current?.handleSubmit();
+      setModalOpen(false);
+      fetchBatches();
+    } catch (err) {
+      // Error is already handled by the form
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold m-0">Mã đổi quà</h1>
+        <h1 className="text-2xl font-bold m-0">Lô mã đổi quà</h1>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchCodes}>
-            Làm mới
-          </Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => setModalOpen(true)}
           >
-            Tạo mã đơn lẻ
+            Tạo lô mã mới
           </Button>
         </Space>
       </div>
 
-      <FilterBar
-        fields={filterFields}
-        values={filters}
-        onChange={updateFilter}
-        onReset={resetFilters}
+      <CodeBatchFilters
+        search={search}
+        isActive={isActive}
+        rewardType={rewardType}
+        dateRange={dateRange}
+        onSearchChange={setSearch}
+        onIsActiveChange={setIsActive}
+        onRewardTypeChange={setRewardType}
+        onDateRangeChange={setDateRange}
+        onSearch={fetchBatches}
+        onReset={() => {
+          setSearch('');
+          setIsActive(undefined);
+          setRewardType(undefined);
+          setDateRange(null);
+        }}
       />
 
-      <ExchangeCodesTable
-        codes={codes}
+      <CodeBatchTable
+        data={batches}
         loading={loading}
         pagination={{ ...paginationConfig, total }}
         onChange={handleTableChange}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onView={handleViewBatch}
+        onDeactivate={handleDeactivateBatch}
+        onExport={handleExportBatch}
       />
 
       <Modal
-        title="Tạo mã đổi quà đơn lẻ"
+        title="Tạo lô mã mới"
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
-        footer={null}
-        width={600}
+        onOk={handleFormSubmit}
+        okText="Tạo mã"
+        cancelText="Hủy"
+        confirmLoading={submitting}
+        width={680}
         destroyOnHidden
-        maskClosable
+        maskClosable={!submitting}
+        centered
       >
-        <ExchangeCodeForm
+        <CodeBatchForm
+          ref={formRef}
           onSuccess={() => {
             setModalOpen(false);
-            fetchCodes();
+            fetchBatches();
           }}
         />
       </Modal>

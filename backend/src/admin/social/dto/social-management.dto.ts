@@ -84,6 +84,11 @@ export class QueryRatingsDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  search?: string; // search by user nickname, video title, or rating content
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -116,7 +121,7 @@ export class QueryRatingsDto {
   sortOrder?: 'asc' | 'desc';
 }
 
-// ─── Favorites / Likes ──────────────────────────────
+// ─── Favorites / Likes / Interactions ──────────────────────────────
 
 export class QueryFavoritesDto {
   @ApiPropertyOptional()
@@ -156,3 +161,5 @@ export class QueryFavoritesDto {
 }
 
 export class QueryLikesDto extends QueryFavoritesDto {}
+
+export class QueryVideoInteractionsDto extends QueryFavoritesDto {}

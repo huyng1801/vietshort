@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   Typography, Spin, message, Card, Form, Input, Button, Space,
   InputNumber, Table, Tag, Popconfirm, Progress, Modal, Upload, Tabs, Tooltip,
+  Row, Col, Divider, Image, Rate, Statistic,
 } from 'antd';
 import {
   ArrowLeftOutlined, SaveOutlined, PlusOutlined, UploadOutlined,
@@ -51,6 +52,9 @@ export default function VideoDetailPage() {
   // Upload state per episode
   const [uploadingEpId, setUploadingEpId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Delete state per episode
+  const [deletingEp, setDeletingEp] = useState<string | null>(null);
 
   // Socket for encoding progress
   const socketRef = useRef<Socket | null>(null);
@@ -191,12 +195,22 @@ export default function VideoDetailPage() {
   };
 
   const handleDeleteEpisode = async (episodeId: string) => {
+    if (!episodeId) {
+      message.error('ID tập không hợp lệ');
+      return;
+    }
+
     try {
+      setDeletingEp(episodeId);
       await adminAPI.deleteEpisode(episodeId);
       setEpisodes((prev) => prev.filter((ep) => ep.id !== episodeId));
-      message.success('Đã xóa tập');
-    } catch {
-      message.error('Xóa tập thất bại');
+      message.success('✓ Đã xóa tập thành công!');
+    } catch (err: any) {
+      console.error('Delete episode error:', err);
+      const errorMessage = err?.response?.data?.message || err?.message || 'Xóa tập thất bại';
+      message.error(errorMessage);
+    } finally {
+      setDeletingEp(null);
     }
   };
 
@@ -314,17 +328,25 @@ export default function VideoDetailPage() {
               />
             </Tooltip>
           )}
-          <Tooltip title="Xóa">
-            <Popconfirm title="Xóa tập này?" onConfirm={() => handleDeleteEpisode(ep.id)}>
+          <Popconfirm
+            title="Xác nhận xóa"
+            description="Bạn có chắc chắn muốn xóa tập này?"
+            onConfirm={() => handleDeleteEpisode(ep.id)}
+            okButtonProps={{ danger: true, loading: deletingEp === ep.id }}
+            okText="Xóa"
+            cancelText="Hủy"
+            placement="topRight"
+          >
+            <Tooltip title="Xóa">
               <Button 
-                size="small" 
-                danger 
-                icon={<DeleteOutlined />} 
-                type="text"
-                className="hover:!bg-transparent"
+                type="link" 
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deletingEp === ep.id}
               />
-            </Popconfirm>
-          </Tooltip>
+            </Tooltip>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -355,6 +377,136 @@ export default function VideoDetailPage() {
       </div>
 
       <Card
+        title="Thông tin chung"
+        style={{ marginBottom: 24 }}
+        styles={{ body: { padding: '12px 16px' } }}
+      >
+        <Row gutter={[16, 12]}>
+          {/* Poster */}
+          {video.poster && (
+            <Col xs={24} sm={6} md={4}>
+              <Image
+                src={video.poster}
+                alt={video.title}
+                style={{ borderRadius: 4, maxWidth: '100%', height: 'auto' }}
+                preview
+                width={250}
+              />
+            </Col>
+          )}
+          
+          {/* Video statistics & metadata - compact */}
+          <Col xs={24} sm={video.poster ? 18 : 24} md={video.poster ? 20 : 24}>
+            <Row gutter={[16, 8]}>
+              {/* Key statistics */}
+              <Col xs={6} sm={4}>
+                <div style={{ textAlign: 'center', fontSize: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 'bold' }}>{video.viewCount || 0}</div>
+                  <div style={{ color: '#999', fontSize: 11 }}>👁️ Xem</div>
+                </div>
+              </Col>
+              <Col xs={6} sm={4}>
+                <div style={{ textAlign: 'center', fontSize: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 'bold' }}>{video.likeCount || 0}</div>
+                  <div style={{ color: '#999', fontSize: 11 }}>❤️ Thích</div>
+                </div>
+              </Col>
+              <Col xs={6} sm={4}>
+                <div style={{ textAlign: 'center', fontSize: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 'bold' }}>{video.commentCount || 0}</div>
+                  <div style={{ color: '#999', fontSize: 11 }}>💬 BL</div>
+                </div>
+              </Col>
+              <Col xs={6} sm={4}>
+                <div style={{ textAlign: 'center', fontSize: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 'bold' }}>
+                    {video.ratingCount > 0 ? video.ratingAverage.toFixed(1) : '—'}
+                  </div>
+                  <div style={{ color: '#999', fontSize: 11 }}>⭐ Rating</div>
+                </div>
+              </Col>
+              <Col xs={6} sm={4}>
+                <div style={{ textAlign: 'center', fontSize: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 'bold' }}>{episodes.length}</div>
+                  <div style={{ color: '#999', fontSize: 11 }}>🎬 Tập</div>
+                </div>
+              </Col>
+              <Col xs={6} sm={4}>
+                <div style={{ textAlign: 'center', fontSize: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 'bold' }}>
+                    {video.duration ? `${Math.round(video.duration / 60)}p` : '—'}
+                  </div>
+                  <div style={{ color: '#999', fontSize: 11 }}>⏱️ Thời gian</div>
+                </div>
+              </Col>
+
+              {/* Metadata inline */}
+              <Col xs={24}>
+                <div style={{ fontSize: 13, lineHeight: '1.6' }}>
+                  {video.releaseYear && (
+                    <span style={{ marginRight: 20 }}>
+                      <span style={{ color: '#999' }}>📅</span> {video.releaseYear}
+                    </span>
+                  )}
+                  {video.ageRating && (
+                    <span style={{ marginRight: 20 }}>
+                      <span style={{ color: '#999' }}>🔞</span> {video.ageRating}
+                    </span>
+                  )}
+                  {video.isVipOnly && (
+                    <Tag color="gold" style={{ marginRight: 8 }}>VIP Only</Tag>
+                  )}
+                  {video.director && (
+                    <span style={{ marginRight: 20 }}>
+                      <span style={{ color: '#999' }}>🎥</span> {video.director}
+                    </span>
+                  )}
+                  {video.country && (
+                    <span style={{ marginRight: 20 }}>
+                      <span style={{ color: '#999' }}>🌍</span> {video.country}
+                    </span>
+                  )}
+                  {video.language && (
+                    <span>
+                      <span style={{ color: '#999' }}>🗣️</span> {video.language}
+                    </span>
+                  )}
+                </div>
+              </Col>
+
+              {/* Genres */}
+              {video.genres && (
+                <Col xs={24}>
+                  <div style={{ fontSize: 11 }}>
+                    {video.genres.split(',').map((genre, idx) => (
+                      <Tag key={idx} style={{ marginRight: 4, marginBottom: 4 }}>
+                        {genre.trim()}
+                      </Tag>
+                    ))}
+                  </div>
+                </Col>
+              )}
+
+              {/* Short description */}
+              {video.description && (
+                <Col xs={24}>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                    📝 Mô tả
+                  </Text>
+                  <Paragraph 
+                    ellipsis={{ rows: 2 }} 
+                    style={{ margin: 0, fontSize: 12 }}
+                  >
+                    {video.description}
+                  </Paragraph>
+                </Col>
+              )}
+            </Row>
+          </Col>
+        </Row>
+      </Card>
+
+      <Card
         title={`Danh sách tập — ${completedEpisodes}/${episodes.length} đã mã hóa`}
         extra={(
           <Button icon={<PlusOutlined />} type="primary" onClick={() => {
@@ -383,6 +535,12 @@ export default function VideoDetailPage() {
         onCancel={() => setEpModalOpen(false)}
         onOk={() => epForm.submit()}
         confirmLoading={creatingEp}
+        okText="Tạo mới"
+        cancelText="Hủy"
+        width={600}
+        destroyOnHidden
+        maskClosable={!creatingEp}
+        centered
       >
         <Form form={epForm} layout="vertical" onFinish={handleCreateEpisode}>
           <Form.Item name="episodeNumber" label="Số tập" rules={[{ required: true, message: 'Vui lòng nhập số tập' }]}>

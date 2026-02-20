@@ -3,52 +3,22 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Button, Space, Table, Tag, Typography, Popconfirm, message } from 'antd';
 import { ReloadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import dayjs, { type Dayjs } from 'dayjs';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import { useFilters } from '@/hooks/useFilters';
 import { formatCurrency, formatDate } from '@/lib/admin-utils';
-import FilterBar, { FilterField } from '@/components/common/FilterBar';
+import PayoutsFilters from '@/components/ctv/PayoutsFilters';
 import type { CtvPayout, PayoutStatus } from '@/types';
-
-const filterFields: FilterField[] = [
-  {
-    key: 'search',
-    label: 'Tìm kiếm',
-    type: 'search',
-    placeholder: 'Tên CTV, ngân hàng, số tài khoản...',
-    width: 280,
-  },
-  {
-    key: 'status',
-    label: 'Trạng thái',
-    type: 'select',
-    options: [
-      { label: 'Tất cả', value: '' },
-      { label: 'Chờ duyệt', value: 'PENDING' },
-      { label: 'Đã duyệt', value: 'APPROVED' },
-      { label: 'Đang xử lý', value: 'PROCESSING' },
-      { label: 'Hoàn thành', value: 'COMPLETED' },
-      { label: 'Từ chối', value: 'REJECTED' },
-    ],
-  },
-  {
-    key: 'dateRange',
-    label: 'Ngày yêu cầu',
-    type: 'dateRange',
-  },
-];
-
-const defaultFilters = {
-  search: '',
-  status: '',
-  dateRange: [] as any[],
-};
 
 export default function PayoutsPage() {
   const [payouts, setPayouts] = useState<CtvPayout[]>([]);
   const [loading, setLoading] = useState(false);
   const { params, total, setTotal, paginationConfig, handleTableChange } = usePagination({ defaultLimit: 20 });
-  const { filters, updateFilter, resetFilters } = useFilters(defaultFilters);
+
+  // Filter state
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>();
 
   const fetchPayouts = useCallback(async () => {
     setLoading(true);
@@ -57,15 +27,15 @@ export default function PayoutsPage() {
         page: params.page,
         limit: params.limit,
       };
-      if (filters.search && filters.search.trim()) {
-        apiParams.search = filters.search;
+      if (search && search.trim()) {
+        apiParams.search = search;
       }
-      if (filters.status && filters.status !== '') {
-        apiParams.status = filters.status;
+      if (status && status !== '') {
+        apiParams.status = status;
       }
-      if (filters.dateRange && filters.dateRange.length === 2) {
-        apiParams.dateFrom = filters.dateRange[0];
-        apiParams.dateTo = filters.dateRange[1];
+      if (dateRange && dateRange.length === 2) {
+        apiParams.dateFrom = dateRange[0].format('YYYY-MM-DD');
+        apiParams.dateTo = dateRange[1].format('YYYY-MM-DD');
       }
 
       const res = await adminAPI.getPendingPayouts(apiParams);
@@ -78,7 +48,7 @@ export default function PayoutsPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.page, params.limit, filters, setTotal]);
+  }, [params.page, params.limit, search, status, dateRange, setTotal]);
 
   useEffect(() => {
     fetchPayouts();
@@ -203,18 +173,22 @@ export default function PayoutsPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold m-0">Yêu cầu rút tiền</h1>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchPayouts}>
-            Làm mới
-          </Button>
-        </Space>
+
       </div>
 
-      <FilterBar
-        fields={filterFields}
-        values={filters}
-        onChange={updateFilter}
-        onReset={resetFilters}
+      <PayoutsFilters
+        search={search}
+        status={status}
+        dateRange={dateRange}
+        onSearchChange={setSearch}
+        onStatusChange={setStatus}
+        onDateRangeChange={setDateRange}
+        onSearch={fetchPayouts}
+        onReset={() => {
+          setSearch('');
+          setStatus('');
+          setDateRange(undefined);
+        }}
       />
 
       <Table
@@ -224,8 +198,7 @@ export default function PayoutsPage() {
         pagination={{ ...paginationConfig, total }}
         onChange={handleTableChange}
         rowKey="id"
-        size="small"
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1200 }}
       />
     </div>
   );

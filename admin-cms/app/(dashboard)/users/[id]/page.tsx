@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, Button, Space, message, Spin, Tabs, Breadcrumb } from 'antd';
+import { Typography, Button, Space, message, Spin, Tabs } from 'antd';
 import {
   ArrowLeftOutlined,
   UserOutlined,
@@ -19,7 +19,6 @@ import {
   CrownOutlined,
 } from '@ant-design/icons';
 import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
 import adminAPI from '@/lib/admin-api';
 import type { User, WalletTransaction } from '@/types';
 
@@ -181,15 +180,6 @@ export default function UserDetailPage() {
 
   return (
     <div>
-      <Breadcrumb
-        className="mb-4"
-        items={[
-          { title: <Link href="/">Trang chủ</Link> },
-          { title: <Link href="/users">Người dùng</Link> },
-          { title: user.nickname || user.email },
-        ]}
-      />
-
       <div className="flex items-center gap-4 mb-6">
         <Button
           icon={<ArrowLeftOutlined />}

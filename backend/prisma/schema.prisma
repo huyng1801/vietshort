@@ -473,6 +473,31 @@ model VipPlan {
 }
 
 // ═══════════════════════════════════════════════════════════
+// GOLD PACKAGES (Bảng giá nạp Gold)
+// ═══════════════════════════════════════════════════════════
+
+model GoldPackage {
+  id           String   @id @default(cuid())
+  name         String   // "Gói 50 Gold", "Gói 300 Gold"
+  goldAmount   Int      // Số Gold nhận được (50, 100, 300, ...)
+  bonusGold    Int      @default(0)  // Bonus thêm (30, 60, 150, ...)
+  priceVnd     Int      // Giá VND (10000, 19000, 49000, ...)
+  
+  isPopular    Boolean  @default(false)  // Đánh dấu gói phổ biến
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  
+  description  String?  @db.Text
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("gold_packages")
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+// ═══════════════════════════════════════════════════════════
 // GAMIFICATION
 // ═══════════════════════════════════════════════════════════
 

@@ -19,6 +19,35 @@ export class WalletService {
   }
 
   /**
+   * Get active gold packages from database (with Redis cache)
+   */
+  async getGoldPackages() {
+    const cacheKey = 'gold_packages:active';
+    let packages = await this.redisService.get<any[]>(cacheKey);
+
+    if (!packages) {
+      const dbPackages = await this.prisma.goldPackage.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+      });
+
+      packages = dbPackages.map(pkg => ({
+        id: pkg.id,
+        gold: pkg.goldAmount,
+        price: pkg.priceVnd,
+        bonus: pkg.bonusGold || undefined,
+        popular: pkg.isPopular || undefined,
+        name: pkg.name,
+        description: pkg.description,
+      }));
+
+      await this.redisService.set(cacheKey, packages, 3600); // Cache 1 hour
+    }
+
+    return packages;
+  }
+
+  /**
    * Spend gold with optimistic locking to prevent race conditions
    */
   async spendGold(userId: string, amount: number, description: string, referenceId?: string) {

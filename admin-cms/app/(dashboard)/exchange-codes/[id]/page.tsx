@@ -68,24 +68,7 @@ export default function BatchDetailPage() {
     }
   };
 
-  const handleDeactivate = () => {
-    Modal.confirm({
-      title: 'Xác nhận vô hiệu hóa lô mã',
-      content: `Tất cả mã trong lô "${batch?.batchName}" sẽ bị vô hiệu hóa. Hành động không thể hoàn tác.`,
-      okText: 'Vô hiệu hóa',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await adminAPI.deactivateCodeBatch(batchId);
-          message.success('Đã vô hiệu hóa lô mã');
-          fetchBatch();
-        } catch (err: any) {
-          message.error(err?.response?.data?.message || 'Không thể vô hiệu hóa');
-        }
-      },
-    });
-  };
+ 
 
   if (loading) {
     return (
@@ -146,24 +129,20 @@ export default function BatchDetailPage() {
       <div className="page-header">
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => router.push('/exchange-codes/batches')}
+          onClick={() => router.push('/exchange-codes')}
           style={{ marginBottom: 16 }}
         >
           Quay lại
         </Button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Title level={3} style={{ marginBottom: 0 }}>
-            📦 {batch.batchName}
+            {batch.batchName}
           </Title>
           <Space>
             <Button icon={<DownloadOutlined />} onClick={handleExport}>
               Xuất Excel
             </Button>
-            {batch.isActive && (
-              <Button danger icon={<StopOutlined />} onClick={handleDeactivate}>
-                Vô hiệu hóa
-              </Button>
-            )}
+           
           </Space>
         </div>
       </div>
@@ -241,7 +220,6 @@ export default function BatchDetailPage() {
                 rowKey="id"
                 pagination={{ pageSize: 20, showTotal: (t) => `Tổng ${t} mã` }}
                 scroll={{ x: 600 }}
-                size="middle"
               />
             ),
           },

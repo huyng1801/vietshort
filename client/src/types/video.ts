@@ -80,7 +80,7 @@ export interface Episode {
 }
 
 export interface VideoQuality {
-  quality: string; // e.g., '360p', '720p', '1080p'
+  quality: string; // e.g., '540p', '720p', '1080p'
   url: string;
   bitrate: number;
 }

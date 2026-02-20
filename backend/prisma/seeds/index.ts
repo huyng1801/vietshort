@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { seedAdmins } from './admin.seed';
 import { seedGenres } from './genres.seed';
 import { seedVipPlans } from './vip-plans.seed';
+import { seedGoldPackages } from './gold-packages.seed';
 import { seedGamification } from './gamification.seed';
 import { seedBanners } from './banners.seed';
 import { seedCtvAffiliates } from './ctv-affiliates.seed';
@@ -27,6 +28,7 @@ async function main() {
     await seedAdmins(prisma);
     await seedGenres(prisma);
     await seedVipPlans(prisma);
+    await seedGoldPackages(prisma);
     await seedGamification(prisma);
 
     // PHASE 1.5: Ads Configuration
@@ -61,6 +63,7 @@ async function main() {
     console.log('  ✓ 4 Admin Accounts');
     console.log('  ✓ 20 Genre Tags');
     console.log('  ✓ 6 VIP Plans (FreeAds & Gold)');
+    console.log('  ✓ 6 Gold Packages (Bảng giá nạp Gold)');
     console.log('  ✓ 7 Daily Tasks');
     console.log('  ✓ 7 Check-in Reward Configurations');
     console.log('  ✓ 13 Achievements');

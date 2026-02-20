@@ -191,12 +191,12 @@ export default function AdsRevenueStats() {
                     <Statistic
                       title={
                         type === 'BANNER'
-                          ? '🏷️ Banner'
+                          ? 'Banner'
                           : type === 'INTERSTITIAL'
-                            ? '📺 Interstitial'
+                            ? 'Interstitial'
                             : type === 'REWARD_VIDEO'
-                              ? '🎁 Reward Video'
-                              : '📰 Native'
+                              ? 'Reward Video'
+                              : 'Native'
                       }
                       value={stats.revenue || 0}
                       precision={2}

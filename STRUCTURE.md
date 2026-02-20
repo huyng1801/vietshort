@@ -489,10 +489,9 @@ vietshort/
 │   │   │   │   │   └── commissions-approval/
 │   │   │   │   │       └── page.tsx
 │   │   │   │   ├── exchange-codes/
-│   │   │   │   │   ├── page.tsx           # Mã trao đổi
-│   │   │   │   │   ├── create/
-│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── page.tsx           # Quản lý lô mã đổi quà
 │   │   │   │   │   └── [id]/
+│   │   │   │   │       └── page.tsx       # Chi tiết lô mã
 │   │   │   │   │       ├── page.tsx
 │   │   │   │   │       └── redemptions/
 │   │   │   │   │           └── page.tsx
@@ -546,10 +545,10 @@ vietshort/
 │   │   │   │   ├── CommissionCalculator.tsx
 │   │   │   │   └── CTVPerformanceChart.tsx
 │   │   │   ├── exchange-codes/
-│   │   │   │   ├── CodeBatchForm.tsx
-│   │   │   │   ├── CodeBatchTable.tsx
-│   │   │   │   ├── CodeRedemptionTable.tsx
-│   │   │   │   └── CodeExportButton.tsx
+│   │   │   │   ├── CodeBatchForm.tsx          # Form tạo/sửa lô mã
+│   │   │   │   ├── CodeBatchTable.tsx         # Bảng danh sách lô mã
+│   │   │   │   ├── CodeBatchFilters.tsx       # Bộ lọc lô mã
+│   │   │   │   └── CodeRedemptionTable.tsx    # Bảng lịch sử đổi mã
 │   │   │   └── common/
 │   │   │       ├── DataTable.tsx
 │   │   │       ├── FormBuilder.tsx

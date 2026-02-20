@@ -44,14 +44,14 @@ export class HlsStreamingService {
   /**
    * Generate manifest with signed segment URLs
    */
-  generateSignedManifest(episodeId: string, qualities: string[] = ['360p', '480p', '720p', '1080p']): string {
+  generateSignedManifest(episodeId: string, qualities: string[] = ['540p', '720p', '1080p']): string {
     const masterPlaylist = ['#EXTM3U', '#EXT-X-VERSION:3'];
 
     const bandwidths: Record<string, number> = {
-      '360p': 800000, '480p': 1400000, '720p': 2800000, '1080p': 5000000,
+      '540p': 1800000, '720p': 2800000, '1080p': 5000000,
     };
     const resolutions: Record<string, string> = {
-      '360p': '640x360', '480p': '854x480', '720p': '1280x720', '1080p': '1920x1080',
+      '540p': '960x540', '720p': '1280x720', '1080p': '1920x1080',
     };
 
     for (const quality of qualities) {

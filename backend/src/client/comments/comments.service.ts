@@ -9,7 +9,7 @@ export class CommentsService {
   async create(userId: string, dto: CreateCommentDto) {
     return this.prisma.comment.create({
       data: { userId, videoId: dto.videoId, parentId: dto.parentId, content: dto.content },
-      include: { user: { select: { id: true, nickname: true, avatar: true } } },
+      include: { user: { select: { id: true, nickname: true, avatar: true, vipTier: true } } },
     });
   }
 
@@ -19,10 +19,10 @@ export class CommentsService {
       where: { videoId, parentId: null, isApproved: true },
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { id: true, nickname: true, avatar: true } },
+        user: { select: { id: true, nickname: true, avatar: true, vipTier: true } },
         replies: {
           where: { isApproved: true },
-          include: { user: { select: { id: true, nickname: true, avatar: true } } },
+          include: { user: { select: { id: true, nickname: true, avatar: true, vipTier: true } } },
           orderBy: { createdAt: 'asc' },
           take: 3,
         },
@@ -36,7 +36,7 @@ export class CommentsService {
       page, limit,
       where: { parentId, isApproved: true },
       orderBy: { createdAt: 'asc' },
-      include: { user: { select: { id: true, nickname: true, avatar: true } } },
+      include: { user: { select: { id: true, nickname: true, avatar: true, vipTier: true } } },
     });
   }
 

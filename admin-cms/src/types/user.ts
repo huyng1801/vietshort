@@ -272,3 +272,19 @@ export interface VipPlan {
   createdAt: string;
   updatedAt: string;
 }
+
+// ===== Gold Packages =====
+
+export interface GoldPackage {
+  id: string;
+  name: string;
+  goldAmount: number;
+  bonusGold: number;
+  priceVnd: number;
+  isPopular: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

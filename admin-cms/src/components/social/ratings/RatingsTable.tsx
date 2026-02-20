@@ -1,6 +1,7 @@
 'use client';
 
 import { memo } from 'react';
+import Link from 'next/link';
 import { Table, Tag, Space, Button, Popconfirm, Avatar, Typography } from 'antd';
 import { StarOutlined, StarFilled, DeleteOutlined } from '@ant-design/icons';
 import type { TablePaginationConfig } from 'antd';
@@ -44,12 +45,20 @@ export default memo(function RatingsTable({
         <Space>
           <Avatar src={record.user?.avatar} size="small">{record.user?.nickname?.[0]}</Avatar>
           <div>
-            <Text strong>{record.user?.nickname || '—'}</Text>
+            {record.user?.id ? (
+              <Link href={`/users/${record.user.id}`}>
+                <Text strong className="hover:text-blue-600 transition-colors cursor-pointer">
+                  {record.user?.nickname || '—'}
+                </Text>
+              </Link>
+            ) : (
+              <Text strong>{record.user?.nickname || '—'}</Text>
+            )}
             {record.user?.vipTier === "VIP_GOLD" && (
               <Tag color="gold" className="ml-1" style={{ fontSize: 10 }}>VIP Gold</Tag>
             )}
-            {record.user?.vipTier === "VIP_FREE_ADS" && (
-              <Tag color="blue" className="ml-1" style={{ fontSize: 10 }}>VIP Free Ads</Tag>
+            {record.user?.vipTier === "VIP_FREEADS" && (
+              <Tag color="blue" className="ml-1" style={{ fontSize: 10 }}>VIP FreeAds</Tag>
             )}
           </div>
         </Space>
@@ -61,7 +70,15 @@ export default memo(function RatingsTable({
       width: 220,
       ellipsis: true,
       render: (_: any, record: RatingItem) => (
-        <Text>{record.video?.title || '—'}</Text>
+        record.video?.id ? (
+          <Link href={`/videos/${record.video.id}`}>
+            <Text className="hover:text-blue-600 transition-colors cursor-pointer">
+              {record.video?.title || '—'}
+            </Text>
+          </Link>
+        ) : (
+          <Text>{record.video?.title || '—'}</Text>
+        )
       ),
     },
     {

@@ -19,16 +19,16 @@ interface AdPlacementsFiltersProps {
 }
 
 const AD_TYPES = [
-  { label: '🏷️ Banner', value: 'BANNER' },
-  { label: '📺 Interstitial', value: 'INTERSTITIAL' },
-  { label: '🎁 Reward Video', value: 'REWARD_VIDEO' },
-  { label: '📰 Native', value: 'NATIVE' },
+  { label: 'Banner', value: 'BANNER' },
+  { label: 'Interstitial', value: 'INTERSTITIAL' },
+  { label: 'Reward Video', value: 'REWARD_VIDEO' },
+  { label: 'Native', value: 'NATIVE' },
 ];
 
 const AD_STATUSES = [
-  { label: '✅ Hoạt động', value: 'ACTIVE' },
-  { label: '⏸️ Tạm dừng', value: 'PAUSED' },
-  { label: '🗄️ Lưu trữ', value: 'ARCHIVED' },
+  { label: 'Hoạt động', value: 'ACTIVE' },
+  { label: 'Tạm dừng', value: 'PAUSED' },
+  { label: 'Lưu trữ', value: 'ARCHIVED' },
 ];
 
 export default function AdPlacementsFilters({

@@ -12,6 +12,12 @@ import NetworkTree from '@/components/ctv/NetworkTree';
 import adminAPI from '@/lib/admin-api';
 import type { Affiliate } from '@/types';
 
+const TIER_CONFIG: Record<number, { color: string; label: string }> = {
+  1: { color: 'purple', label: 'Cấp 1 - Công ty' },
+  2: { color: 'blue', label: 'Cấp 2 - CTV' },
+  3: { color: 'green', label: 'Cấp 3 - CTV phụ' },
+};
+
 export default function CTVDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -71,8 +77,8 @@ export default function CTVDetailPage() {
             Quay lại
           </Button>
           <Space>
-            <Tag icon={<BankOutlined />} color="purple" style={{ fontSize: 13, fontWeight: 600 }}>
-              Cấp 1 - Công ty
+            <Tag icon={<BankOutlined />} color={TIER_CONFIG[affiliate.tier ?? 1]?.color || 'purple'} style={{ fontSize: 13, fontWeight: 600 }}>
+              {TIER_CONFIG[affiliate.tier ?? 1]?.label || 'Cấp 1 - Công ty'}
             </Tag>
             <h1 className="text-2xl font-bold m-0">
               {affiliate.companyName || affiliate.realName} ({affiliate.nickname})

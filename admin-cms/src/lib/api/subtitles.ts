@@ -18,7 +18,7 @@ export const subtitlesAPI = {
   },
 
   getSubtitle(id: string) {
-    return apiClient.get(`/admin/subtitles/${id}`);
+    return apiClient.get(`/admin/subtitles/detail/${id}`);
   },
 
   uploadSubtitle(episodeId: string, data: { language: string; content: string; label?: string; isAuto?: boolean }) {
@@ -34,10 +34,10 @@ export const subtitlesAPI = {
   },
 
   updateSubtitleContent(id: string, content: string) {
-    return apiClient.patch(`/admin/subtitles/${id}`, { content });
+    return apiClient.patch(`/admin/subtitles/detail/${id}`, { content });
   },
 
   deleteSubtitle(id: string) {
-    return apiClient.delete(`/admin/subtitles/${id}`);
+    return apiClient.delete(`/admin/subtitles/detail/${id}`);
   },
 };

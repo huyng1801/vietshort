@@ -5,7 +5,7 @@ import { message } from 'antd';
 import { useRouter } from 'next/navigation';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import { useFilters } from '@/hooks/useFilters';
+import type { Dayjs } from 'dayjs';
 import type { Affiliate } from '@/types';
 import CTVHeader from '@/components/ctv/CTVHeader';
 import CTVFilters from '@/components/ctv/CTVFilters';
@@ -17,14 +17,10 @@ export default function CTVManagementPage() {
   const [loading, setLoading] = useState(false);
   const { params, setParams, total, setTotal, paginationConfig, handleTableChange } = usePagination({ defaultLimit: 20 });
 
-  const defaultFilters = {
-    search: '',
-    isActive: '',
-    isVerified: '',
-    dateRange: [] as any[],
-  };
-
-  const { filters, updateFilter, resetFilters } = useFilters(defaultFilters);
+  const [search, setSearch] = useState('');
+  const [isActive, setIsActive] = useState<boolean | undefined>(undefined);
+  const [isVerified, setIsVerified] = useState<boolean | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>(undefined);
 
   const fetchAffiliates = useCallback(async () => {
     setLoading(true);
@@ -35,18 +31,18 @@ export default function CTVManagementPage() {
         tier: '1', // Admin chỉ quản lý tier 1 (công ty)
       };
 
-      if (filters.search && filters.search.trim()) {
-        apiParams.search = filters.search;
+      if (search && search.trim()) {
+        apiParams.search = search;
       }
-      if (filters.isActive && filters.isActive !== '') {
-        apiParams.isActive = filters.isActive;
+      if (isActive !== undefined) {
+        apiParams.isActive = isActive;
       }
-      if (filters.isVerified && filters.isVerified !== '') {
-        apiParams.isVerified = filters.isVerified;
+      if (isVerified !== undefined) {
+        apiParams.isVerified = isVerified;
       }
-      if (filters.dateRange && filters.dateRange.length === 2) {
-        apiParams.dateFrom = filters.dateRange[0];
-        apiParams.dateTo = filters.dateRange[1];
+      if (dateRange && dateRange.length === 2) {
+        apiParams.dateFrom = dateRange[0].toISOString();
+        apiParams.dateTo = dateRange[1].toISOString();
       }
 
       const res = await adminAPI.getAffiliates(apiParams);
@@ -76,7 +72,7 @@ export default function CTVManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.page, params.limit, filters, setTotal]);
+  }, [params.page, params.limit, search, isActive, isVerified, dateRange, setTotal]);
 
   useEffect(() => {
     fetchAffiliates();
@@ -91,6 +87,18 @@ export default function CTVManagementPage() {
     }
   }, [affiliates.length, loading, params.page, total, setParams]);
 
+  const handleReset = () => {
+    setSearch('');
+    setIsActive(undefined);
+    setIsVerified(undefined);
+    setDateRange(undefined);
+    setParams((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleSearch = () => {
+    setParams((prev) => ({ ...prev, page: 1 }));
+  };
+
   return (
     <div>
       <CTVHeader
@@ -99,9 +107,16 @@ export default function CTVManagementPage() {
       />
 
       <CTVFilters
-        values={filters}
-        onChange={updateFilter as (key: string, value: unknown) => void}
-        onReset={resetFilters}
+        search={search}
+        isActive={isActive}
+        isVerified={isVerified}
+        dateRange={dateRange}
+        onSearchChange={setSearch}
+        onActiveChange={setIsActive}
+        onVerifiedChange={setIsVerified}
+        onDateRangeChange={setDateRange}
+        onSearch={handleSearch}
+        onReset={handleReset}
       />
 
       <CTVTable

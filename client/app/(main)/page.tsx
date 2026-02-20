@@ -1,20 +1,32 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Flame, Clock, Sparkles, TrendingUp } from 'lucide-react';
+import { Clock, Play, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import { videoApi } from '@/lib/api';
+import { videoApi, bannerApi, watchHistoryApi, recommendApi } from '@/lib/api';
 import { HeroBanner, BannerItem } from '@/components/home/HeroBanner';
-import { VideoRow } from '@/components/home/VideoRow';
+import { VideoGrid } from '@/components/home/VideoGrid';
 import { VideoCardData } from '@/components/video/VideoCard';
 import { Loading } from '@/components/common/Loading';
+
+interface GenreData {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface GenreSection {
+  genre: GenreData;
+  videos: VideoCardData[];
+}
 
 export default function HomePage() {
   const { isAuthenticated, guestLogin, isLoading: authLoading } = useAuthStore();
   const [bannerItems, setBannerItems] = useState<BannerItem[]>([]);
-  const [trending, setTrending] = useState<VideoCardData[]>([]);
+  const [continueWatching, setContinueWatching] = useState<VideoCardData[]>([]);
   const [newReleases, setNewReleases] = useState<VideoCardData[]>([]);
-  const [allVideos, setAllVideos] = useState<VideoCardData[]>([]);
+  const [recommended, setRecommended] = useState<VideoCardData[]>([]);
+  const [genreSections, setGenreSections] = useState<GenreSection[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Auto guest login
@@ -24,68 +36,58 @@ export default function HomePage() {
         try {
           await guestLogin();
         } catch {
-          // Silent fail - user can still browse
+          // Silent fail
         }
       }
     };
     autoLogin();
   }, [isAuthenticated, guestLogin, authLoading]);
 
-  // Fetch videos from API
+  // Fetch all data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // For testing, load all videos regardless of status
-        const [trendingRes, newReleasesRes, allRes] = await Promise.allSettled([
-          videoApi.trending(12).catch(() => []),
+        // Fetch banners, new releases, genres in parallel
+        const [bannersRes, newReleasesRes, genresRes] = await Promise.allSettled([
+          bannerApi.list(5).catch(() => ({ success: false, data: [] })),
           videoApi.newReleases(12).catch(() => []),
-          videoApi.list({ limit: 20, sort: 'createdAt', order: 'desc' }),
+          videoApi.genres().catch(() => []),
         ]);
 
-        // Process trending (fallback to recent videos if trending fails)
-        if (trendingRes.status === 'fulfilled' && Array.isArray(trendingRes.value) && trendingRes.value.length > 0) {
-          setTrending(trendingRes.value);
-          setBannerItems(trendingRes.value.slice(0, 5).map(mapToBanner));
-        } else {
-          console.log('No trending videos, will use recent videos');
+        // Process banners
+        if (bannersRes.status === 'fulfilled') {
+          const bannerData = bannersRes.value;
+          if (bannerData?.success && Array.isArray(bannerData.data) && bannerData.data.length > 0) {
+            setBannerItems(bannerData.data.map(mapBannerToBannerItem));
+          }
         }
 
-        // Process new releases (fallback if fails)
-        if (newReleasesRes.status === 'fulfilled' && Array.isArray(newReleasesRes.value) && newReleasesRes.value.length > 0) {
-          setNewReleases(newReleasesRes.value);
-        } else {
-          console.log('No new releases, will use recent videos');
+        // Process new releases
+        if (newReleasesRes.status === 'fulfilled') {
+          const data = newReleasesRes.value;
+          setNewReleases(Array.isArray(data) ? data : []);
         }
 
-        // Process all videos (main content)
-        if (allRes.status === 'fulfilled') {
-          const result = allRes.value as any;
-          const data = Array.isArray(result) ? result : result?.items || result?.data || [];
-          console.log('All videos loaded:', data.length, 'videos');
-          setAllVideos(data);
-
-          // Fallback: if no trending/new releases, use all videos
-          if (trending.length === 0 && newReleases.length === 0 && data.length > 0) {
-            console.log('Using all videos for banner and sections');
-            setBannerItems(data.slice(0, 5).map(mapToBanner));
-            setTrending(data.slice(0, 12));
-            setNewReleases(data.slice(0, 12));
+        // Process genres and fetch videos per genre
+        if (genresRes.status === 'fulfilled') {
+          const genres: GenreData[] = Array.isArray(genresRes.value) ? genresRes.value : [];
+          if (genres.length > 0) {
+            const genreVideoPromises = genres.slice(0, 6).map(async (genre) => {
+              try {
+                const res = await videoApi.byGenre(genre.name, 6);
+                const videos = res?.data || (Array.isArray(res) ? res : []);
+                return { genre, videos };
+              } catch {
+                return { genre, videos: [] };
+              }
+            });
+            const results = await Promise.all(genreVideoPromises);
+            setGenreSections(results.filter((s) => s.videos.length > 0));
           }
         }
       } catch (err) {
-        console.error('Failed to fetch videos:', err);
-        // Try to load at least some fallback content
-        try {
-          const fallback = await videoApi.list({ limit: 10 });
-          const data = Array.isArray(fallback) ? fallback : fallback?.items || [];
-          if (data.length > 0) {
-            setAllVideos(data);
-            setBannerItems(data.slice(0, 3).map(mapToBanner));
-          }
-        } catch (fallbackErr) {
-          console.error('Fallback fetch also failed:', fallbackErr);
-        }
+        console.error('Failed to fetch data:', err);
       } finally {
         setLoading(false);
       }
@@ -93,6 +95,56 @@ export default function HomePage() {
 
     fetchData();
   }, []);
+
+  // Fetch continue watching (requires auth)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setContinueWatching([]);
+      return;
+    }
+    const fetchWatch = async () => {
+      try {
+        const res = await watchHistoryApi.list(1, 6);
+        const items = res?.data || [];
+        // Map watch history items to VideoCardData
+        const mapped: VideoCardData[] = items
+          .filter((item: any) => item.video)
+          .map((item: any) => ({
+            id: item.video.id,
+            title: item.video.title,
+            slug: item.video.slug,
+            poster: item.video.poster,
+            duration: item.video.duration,
+            viewCount: item.video.viewCount,
+            ratingAverage: item.video.ratingAverage,
+            isVipOnly: item.video.isVipOnly,
+            genres: item.video.genres,
+          }));
+        setContinueWatching(mapped);
+      } catch {
+        setContinueWatching([]);
+      }
+    };
+    fetchWatch();
+  }, [isAuthenticated]);
+
+  // Fetch recommendations (requires auth)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecommended([]);
+      return;
+    }
+    const fetchRecommend = async () => {
+      try {
+        const res = await recommendApi.forUser(14);
+        const videos = Array.isArray(res) ? res : [];
+        setRecommended(videos);
+      } catch {
+        setRecommended([]);
+      }
+    };
+    fetchRecommend();
+  }, [isAuthenticated]);
 
   if (loading && !bannerItems.length) {
     return (
@@ -104,67 +156,79 @@ export default function HomePage() {
 
   return (
     <div className="pb-16 lg:pb-0">
-      {/* Hero Banner */}
+      {/* Hero Banner - full width */}
       {bannerItems.length > 0 && <HeroBanner items={bannerItems} />}
 
-      {/* Trending */}
-      {trending.length > 0 && (
-        <VideoRow
-          title="Xu hướng"
-          videos={trending}
-          href="/category/trending"
-          icon={<Flame className="w-5 h-5 text-orange-500" />}
-          badge="HOT"
-          showRank
-        />
-      )}
+      {/* Main content: grid + ranking sidebar */}
+      <div className="mx-auto px-2 lg:px-32 mt-6 lg:mt-8">
+        <div className="flex gap-6 lg:gap-8">
+          {/* Left: Video sections */}
+          <div className="flex-1 min-w-0">
+            {/* Tiếp tục xem */}
+            {continueWatching.length > 0 && (
+              <VideoGrid
+                title="Tiếp tục xem"
+                videos={continueWatching}
+                maxItems={6}
+              />
+            )}
 
-      {/* New Releases */}
-      {newReleases.length > 0 && (
-        <VideoRow
-          title="Mới cập nhật"
-          videos={newReleases}
-          href="/category/new"
-          icon={<Clock className="w-5 h-5 text-green-500" />}
-        />
-      )}
+            {/* Mới phát hành */}
+            {newReleases.length > 0 && (
+              <VideoGrid
+                title="Mới cập nhật"
+                videos={newReleases}
+                href="/category/new"
+                maxItems={12}
+              />
+            )}
 
-      {/* Popular */}
-      {allVideos.length > 0 && (
-        <VideoRow
-          title="Phổ biến"
-          videos={allVideos}
-          icon={<TrendingUp className="w-5 h-5 text-blue-500" />}
-          variant="landscape"
-        />
-      )}
+            {/* Thể loại sections */}
+            {genreSections.map((section) => (
+              <VideoGrid
+                key={section.genre.id}
+                title={section.genre.name}
+                videos={section.videos}
+                href={`/category/${section.genre.slug}`}
+                maxItems={6}
+              />
+            ))}
 
-      {/* Empty state */}
-      {!loading && !trending.length && !newReleases.length && !allVideos.length && (
-        <div className="max-w-[1800px] mx-auto px-4 lg:px-8 py-20 text-center">
-          <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Chưa có phim nào</h2>
-          <p className="text-gray-500">Hệ thống đang được cập nhật nội dung. Quay lại sau nhé!</p>
+            {/* Gợi ý cho bạn */}
+            {recommended.length > 0 && (
+              <VideoGrid
+                title="Gợi ý cho bạn"
+                videos={recommended}
+                maxItems={14}
+              />
+            )}
+
+            {/* Empty state */}
+            {!loading && !newReleases.length && !genreSections.length && !continueWatching.length && (
+              <div className="py-20 text-center">
+                <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-white mb-2">Chưa có phim nào</h2>
+                <p className="text-gray-500">Hệ thống đang được cập nhật nội dung. Quay lại sau nhé!</p>
+              </div>
+            )}
+          </div>
+
+
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// Helper: map API video object to BannerItem
-function mapToBanner(v: any): BannerItem {
+// Helper: map backend Banner object to HeroBanner's BannerItem
+// Backend trả về: { id, title, imageUrl, linkType, linkTarget, sortOrder }
+function mapBannerToBannerItem(banner: any): BannerItem {
   return {
-    id: v.id,
-    title: v.title,
-    description: v.description || '',
-    poster: v.poster,
-    banner: v.banner,
-    genres: v.genres,
-    releaseYear: v.releaseYear,
-    ratingAverage: v.ratingAverage,
-    ratingCount: v.ratingCount,
-    viewCount: v.viewCount,
-    isVipOnly: v.isVipOnly,
-    slug: v.slug || v.id,
+    id: banner.id,
+    title: banner.title || 'Banner',
+    imageUrl: banner.imageUrl || '/images/placeholder.jpg',
+    linkType: banner.linkType, // "video" | "external" | "promotion" | null
+    linkTarget: banner.linkTarget, // Video ID/slug hoặc external URL
+    sortOrder: banner.sortOrder,
   };
 }

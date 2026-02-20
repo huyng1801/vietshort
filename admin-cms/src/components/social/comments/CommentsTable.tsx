@@ -1,6 +1,7 @@
 'use client';
 
 import { memo } from 'react';
+import Link from 'next/link';
 import { Table, Tag, Badge, Space, Button, Popconfirm, Avatar, Typography, Tooltip } from 'antd';
 import {
   CheckOutlined,
@@ -43,7 +44,15 @@ export default memo(function CommentsTable({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Avatar src={record.user?.avatar} size="small">{record.user?.nickname?.[0]}</Avatar>
-            <Text strong>{record.user?.nickname || '—'}</Text>
+            {record.user?.id ? (
+              <Link href={`/users/${record.user.id}`}>
+                <Text strong className="hover:text-blue-600 transition-colors cursor-pointer">
+                  {record.user?.nickname || '—'}
+                </Text>
+              </Link>
+            ) : (
+              <Text strong>{record.user?.nickname || '—'}</Text>
+            )}
           </div>
           <Text type="secondary" className="text-xs">{record.user?.email || '—'}</Text>
         </div>
@@ -65,7 +74,15 @@ export default memo(function CommentsTable({
       width: 180,
       ellipsis: true,
       render: (_: any, record: Comment) => (
-        <Text type="secondary">{record.video?.title || '—'}</Text>
+        record.video?.id ? (
+          <Link href={`/videos/${record.video.id}`}>
+            <Text className="hover:text-blue-600 transition-colors cursor-pointer">
+              {record.video?.title || '—'}
+            </Text>
+          </Link>
+        ) : (
+          <Text type="secondary">{record.video?.title || '—'}</Text>
+        )
       ),
     },
     {

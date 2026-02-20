@@ -154,7 +154,7 @@ export default function SubtitlesPage() {
           <div>
             <div style={{ fontWeight: 500 }}>{title}</div>
             <Space size={4} style={{ fontSize: 12, color: '#888' }}>
-              <span>{record.isSerial ? `📺 ${record._count?.episodes || 0} tập` : '🎬 Phim lẻ'}</span>
+              <span>{record.isSerial ? `${record._count?.episodes || 0} tập` : 'Phim lẻ'}</span>
               {record.releaseYear && <span>• {record.releaseYear}</span>}
             </Space>
           </div>

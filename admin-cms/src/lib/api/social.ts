@@ -51,21 +51,8 @@ export const socialAPI = {
     return apiClient.delete(`/admin/social/ratings/${id}`);
   },
 
-  // Favorites
-  getFavoriteStats(params?: Record<string, unknown>) {
-    return apiClient.get('/admin/social/favorites', { params: sanitizeParams(params) });
-  },
-
-  getVideoFavorites(videoId: string, params?: Record<string, unknown>) {
-    return apiClient.get(`/admin/social/favorites/video/${videoId}`, { params: sanitizeParams(params) });
-  },
-
-  // Likes
-  getLikeStats(params?: Record<string, unknown>) {
-    return apiClient.get('/admin/social/likes', { params: sanitizeParams(params) });
-  },
-
-  getVideoLikes(videoId: string, params?: Record<string, unknown>) {
-    return apiClient.get(`/admin/social/likes/video/${videoId}`, { params: sanitizeParams(params) });
+  // Video Interactions (Favorites + Likes combined)
+  getVideoInteractions(params?: Record<string, unknown>) {
+    return apiClient.get('/admin/social/video-interactions', { params: sanitizeParams(params) });
   },
 };

@@ -39,19 +39,29 @@ export default function VideoTable({
   const videoList = Array.isArray(videos) ? videos : [];
   const [uploadingPosterId, setUploadingPosterId] = useState<string | null>(null);
   const [posterPreview, setPosterPreview] = useState<{ visible: boolean; url: string; videoId: string }>({ visible: false, url: '', videoId: '' });
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
+    if (!id) {
+      message.error('ID video không hợp lệ');
+      return;
+    }
+
     try {
+      setDeleting(id);
       if (onDeleteCallback) {
         await onDeleteCallback(id);
       } else {
         await adminAPI.deleteVideo(id);
-        message.success('Xóa thành công');
       }
+      message.success('✓ Đã xóa video thành công!');
       onRefresh?.();
-    } catch (error) {
-      console.error('Error deleting video:', error);
-      message.error('Xóa thất bại');
+    } catch (error: any) {
+      console.error('Delete video error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Xóa video thất bại';
+      message.error(errorMessage);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -284,18 +294,21 @@ export default function VideoTable({
           )}
           
           <Popconfirm
-            title="Xóa video này?"
-            description="Hành động không thể hoàn tác."
+            title="Xác nhận xóa"
+            description="Bạn có chắc chắn muốn xóa video này?"
             onConfirm={() => handleDelete(record.id)}
-            
+            okButtonProps={{ danger: true, loading: deleting === record.id }}
+            okText="Xóa"
+            cancelText="Hủy"
+            placement="topRight"
           >
             <Tooltip title="Xóa">
               <Button 
-                icon={<DeleteOutlined />} 
-                size="small" 
-                type="text" 
-                style={{ color: '#ff4d4f', border: 'none' }}
-                className="action-btn-delete"
+                type="link" 
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deleting === record.id}
               />
             </Tooltip>
           </Popconfirm>

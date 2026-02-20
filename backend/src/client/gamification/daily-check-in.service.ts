@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../config/database.config';
 import { WalletService } from '../wallet/wallet.service';
+import { RedisService } from '../../config/redis.config';
 
 @Injectable()
 export class DailyCheckInService {
   constructor(
     private prisma: PrismaService,
     private walletService: WalletService,
+    private redisService: RedisService,
   ) {}
 
   async checkIn(userId: string) {
@@ -35,8 +37,9 @@ export class DailyCheckInService {
     }
     if (day > 7) day = 1;
 
-    const rewards = [0, 5, 5, 10, 10, 15, 15, 30];
-    const goldReward = rewards[day] || 5;
+    // Fetch reward from database
+    const rewardConfig = await this.getRewardForDay(day);
+    const goldReward = rewardConfig?.rewardGold || 5;
 
     const checkIn = await this.prisma.checkIn.create({
       data: { userId, date: new Date(), day, rewardGold: goldReward },
@@ -68,5 +71,40 @@ export class DailyCheckInService {
     });
 
     return { checkedInToday: !!todayCheckIn, currentStreak: lastCheckIn?.day || 0 };
+  }
+
+  async getRewards() {
+    const cacheKey = 'checkin:rewards';
+    const cached = await this.redisService.get<any[]>(cacheKey);
+    if (cached) return cached;
+
+    const rewards = await this.prisma.checkInReward.findMany({
+      where: { isActive: true },
+      orderBy: { day: 'asc' },
+      select: {
+        id: true,
+        day: true,
+        rewardGold: true,
+        description: true,
+      },
+    });
+
+    await this.redisService.set(cacheKey, rewards, 3600);
+    return rewards;
+  }
+
+  private async getRewardForDay(day: number) {
+    const cacheKey = `checkin:reward:${day}`;
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) return cached;
+
+    const reward = await this.prisma.checkInReward.findFirst({
+      where: { day, isActive: true },
+    });
+
+    if (reward) {
+      await this.redisService.set(cacheKey, reward, 3600);
+    }
+    return reward;
   }
 }

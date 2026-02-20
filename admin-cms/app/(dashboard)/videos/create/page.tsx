@@ -18,6 +18,8 @@ export default function CreateVideoPage() {
   const [loading, setLoading] = useState(false);
   const [genres, setGenres] = useState<{ label: string; value: string; id: string }[]>([]);
   const [genresLoading, setGenresLoading] = useState(true);
+  const [vipTiers, setVipTiers] = useState<{ label: string; value: string }[]>([]);
+  const [vipTiersLoading, setVipTiersLoading] = useState(true);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   
   // Fallback genres data nếu API fails
@@ -57,6 +59,51 @@ export default function CreateVideoPage() {
       }
     };
     loadGenres();
+  }, []);
+
+  // Load VIP tiers from API
+  useEffect(() => {
+    const loadVipTiers = async () => {
+      setVipTiersLoading(true);
+      try {
+        const res = await adminAPI.getVipPlans();
+        const plans = res.data?.data || res.data || [];
+        
+        if (Array.isArray(plans) && plans.length > 0) {
+          // Extract unique VIP tier types (VIP_FREEADS, VIP_GOLD)
+          const uniqueTiers = new Map<string, string>();
+          plans.forEach((plan: { id: string; name: string; type?: string }) => {
+            if (plan.type && !uniqueTiers.has(plan.type)) {
+              const label = plan.type === 'VIP_FREEADS' ? 'VIP FreeAds' : 
+                           plan.type === 'VIP_GOLD' ? 'VIP Gold' : plan.type;
+              uniqueTiers.set(plan.type, label);
+            }
+          });
+          
+          const vipData = Array.from(uniqueTiers.entries()).map(([value, label]) => ({
+            label,
+            value
+          }));
+          setVipTiers(vipData);
+        } else {
+          // Fallback to correct VipType enum values
+          setVipTiers([
+            { label: 'VIP FreeAds', value: 'VIP_FREEADS' },
+            { label: 'VIP Gold', value: 'VIP_GOLD' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading VIP tiers:', error);
+        // Fallback to correct VipType enum values if API fails
+        setVipTiers([
+          { label: 'VIP FreeAds', value: 'VIP_FREEADS' },
+          { label: 'VIP Gold', value: 'VIP_GOLD' },
+        ]);
+      } finally {
+        setVipTiersLoading(false);
+      }
+    };
+    loadVipTiers();
   }, []);
 
   const generateSEOSuggestions = (title: string, description: string) => {
@@ -216,11 +263,13 @@ export default function CreateVideoPage() {
                 <Form.Item noStyle shouldUpdate={(prev, cur) => prev.isVipOnly !== cur.isVipOnly}>
                   {({ getFieldValue }) => getFieldValue('isVipOnly') && (
                     <Form.Item name="vipTier" label="Hạng VIP yêu cầu">
-                      <Select allowClear style={{ width: 160 }} placeholder="Tất cả VIP" options={[
-                        { label: 'VIP 1', value: 'VIP1' },
-                        { label: 'VIP 2', value: 'VIP2' },
-                        { label: 'VIP 3', value: 'VIP3' },
-                      ]} />
+                      <Select 
+                        allowClear 
+                        style={{ width: 160 }} 
+                        placeholder={vipTiersLoading ? "Đang tải..." : "Tất cả VIP"} 
+                        options={vipTiers}
+                        loading={vipTiersLoading}
+                      />
                     </Form.Item>
                   )}
                 </Form.Item>

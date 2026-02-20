@@ -75,13 +75,30 @@ export class AffiliateService {
   }
 
   async addCommission(affiliateId: string, amount: number) {
-    await this.prisma.ctvAffiliate.update({
+    const affiliate = await this.prisma.ctvAffiliate.update({
       where: { id: affiliateId },
       data: {
         totalEarned: { increment: amount },
         pendingPayout: { increment: amount },
       },
     });
+
+    // Propagate networkEarned to all ancestors
+    await this.propagateNetworkEarned(affiliate.parentId, amount);
+  }
+
+  /**
+   * Increment networkEarned for all ancestor affiliates up the tree
+   */
+  private async propagateNetworkEarned(parentId: string | null, amount: number) {
+    let currentParentId = parentId;
+    while (currentParentId) {
+      const parent = await this.prisma.ctvAffiliate.update({
+        where: { id: currentParentId },
+        data: { networkEarned: { increment: amount } },
+      });
+      currentParentId = parent.parentId;
+    }
   }
 
   async requestPayout(affiliateId: string, dto: RequestPayoutDto) {

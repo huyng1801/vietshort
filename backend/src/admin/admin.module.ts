@@ -4,7 +4,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 // Core admin
 import { AdminController } from './core/admin.controller';
+import { AdminSettingsController } from './core/admin-settings.controller';
 import { AdminService } from './core/admin.service';
+import { AdminSettingsService } from './core/admin-settings.service';
 
 // Users sub-module
 import { AdminUsersController } from './users/users.controller';
@@ -67,6 +69,7 @@ import { SocialManagementService } from './social/social-management.service';
   ],
   controllers: [
     AdminController,
+    AdminSettingsController,
     AdminUsersController,
     AdminVideoController,
     AdminVideoReviewController,
@@ -81,6 +84,7 @@ import { SocialManagementService } from './social/social-management.service';
   ],
   providers: [
     AdminService,
+    AdminSettingsService,
     UserManagementService,
     AdminVideoService,
     VideoManagementService,
@@ -103,6 +107,7 @@ import { SocialManagementService } from './social/social-management.service';
   ],
   exports: [
     AdminService,
+    AdminSettingsService,
     UserManagementService,
     AdminVideoService,
     VideoManagementService,

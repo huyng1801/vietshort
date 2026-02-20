@@ -29,10 +29,13 @@ export class SocialManagementService {
     if (userId) where.userId = userId;
     if (isApproved !== undefined) where.isApproved = isApproved === 'true';
     if (isReported !== undefined) where.isReported = isReported === 'true';
-    if (search) {
+    
+    // Search across: user nickname, video title, comment content
+    if (search && search.trim()) {
       where.OR = [
         { content: { contains: search } },
         { user: { nickname: { contains: search } } },
+        { video: { title: { contains: search } } },
       ];
     }
 
@@ -40,23 +43,35 @@ export class SocialManagementService {
     const allowedSorts = ['createdAt', 'reportCount', 'likeCount'];
     orderBy[allowedSorts.includes(sortBy) ? sortBy : 'createdAt'] = sortOrder;
 
-    const [comments, total] = await Promise.all([
-      this.prisma.comment.findMany({
+    // When using nested relation filters in OR, count() doesn't work
+    // So we need to get the total count differently
+    let total: number;
+    if (search) {
+      // For search queries with nested relations, get all matching IDs to count
+      const allMatchingIds = await this.prisma.comment.findMany({
         where,
-        skip,
-        take: limit,
-        orderBy,
-        include: {
-          user: { select: { id: true, nickname: true, avatar: true, email: true } },
-          video: { select: { id: true, title: true, slug: true } },
-          parent: {
-            select: { id: true, content: true, user: { select: { nickname: true } } },
-          },
-          _count: { select: { replies: true } },
+        select: { id: true },
+      });
+      total = allMatchingIds.length;
+    } else {
+      // For simple queries, use count()
+      total = await this.prisma.comment.count({ where });
+    }
+
+    const comments = await this.prisma.comment.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: {
+        user: { select: { id: true, nickname: true, avatar: true, email: true } },
+        video: { select: { id: true, title: true, slug: true } },
+        parent: {
+          select: { id: true, content: true, user: { select: { nickname: true } } },
         },
-      }),
-      this.prisma.comment.count({ where }),
-    ]);
+        _count: { select: { replies: true } },
+      },
+    });
 
     return {
       data: comments,
@@ -166,6 +181,7 @@ export class SocialManagementService {
   async getRatings(
     videoId?: string,
     userId?: string,
+    search?: string,
     rating?: number,
     page = 1,
     limit = 20,
@@ -175,27 +191,45 @@ export class SocialManagementService {
     const skip = (page - 1) * limit;
     const where: any = {};
 
-    if (videoId) where.videoId = videoId;
-    if (userId) where.userId = userId;
-    if (rating) where.rating = rating;
+    // Search across: user nickname, video title, rating review
+    // Only use search param, ignore videoId and userId filters
+    if (search && search.trim()) {
+      where.OR = [
+        { user: { nickname: { contains: search } } },
+        { video: { title: { contains: search } } },
+        { review: { contains: search } },
+      ];
+    }
 
     const orderBy: any = {};
     const allowedSorts = ['createdAt', 'rating'];
     orderBy[allowedSorts.includes(sortBy) ? sortBy : 'createdAt'] = sortOrder;
 
-    const [ratings, total] = await Promise.all([
-      this.prisma.rating.findMany({
+    // When using nested relation filters in OR, count() doesn't work
+    // So we need to get the total count differently
+    let total: number;
+    if (search) {
+      // For search queries with nested relations, get all matching IDs to count
+      const allMatchingIds = await this.prisma.rating.findMany({
         where,
-        skip,
-        take: limit,
-        orderBy,
-        include: {
-          user: { select: { id: true, nickname: true, avatar: true, email: true, vipTier: true } },
-          video: { select: { id: true, title: true, slug: true, poster: true, ratingAverage: true, ratingCount: true } },
-        },
-      }),
-      this.prisma.rating.count({ where }),
-    ]);
+        select: { id: true },
+      });
+      total = allMatchingIds.length;
+    } else {
+      // For simple queries, use count()
+      total = await this.prisma.rating.count({ where });
+    }
+
+    const ratings = await this.prisma.rating.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: {
+        user: { select: { id: true, nickname: true, avatar: true, email: true, vipTier: true } },
+        video: { select: { id: true, title: true, slug: true, poster: true, ratingAverage: true, ratingCount: true } },
+      },
+    });
 
     return {
       data: ratings,
@@ -276,6 +310,82 @@ export class SocialManagementService {
       total,
       ...distribution,
       topRatedVideos,
+    };
+  }
+
+  // ═══════════════════════════════════════════════════
+  // VIDEO INTERACTIONS (FAVORITES + LIKES)
+  // ═══════════════════════════════════════════════════
+
+  async getVideoInteractions(search?: string, page = 1, limit = 20, sortBy = 'totalInteractions', sortOrder: 'asc' | 'desc' = 'desc') {
+    const skip = (page - 1) * limit;
+
+    // Get videos with both favorites and likes
+    const where: any = {
+      OR: [
+        { favoriteCount: { gt: 0 } },
+        { likeCount: { gt: 0 } },
+      ],
+    };
+    
+    if (search) {
+      where.title = { contains: search };
+    }
+
+    // Map sortBy to actual field
+    let actualSortField = 'createdAt';
+    if (sortBy === 'totalInteractions') {
+      // We'll sort this in memory after fetching
+      actualSortField = 'favoriteCount';
+    } else if (['favoriteCount', 'likeCount', 'viewCount', 'createdAt'].includes(sortBy)) {
+      actualSortField = sortBy;
+    }
+
+    const orderBy: any = {};
+    orderBy[actualSortField] = sortOrder;
+
+    const [videosRaw, total] = await Promise.all([
+      this.prisma.video.findMany({
+        where,
+        skip: sortBy === 'totalInteractions' ? 0 : skip, // Fetch all if sorting by total
+        take: sortBy === 'totalInteractions' ? undefined : limit,
+        orderBy,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          poster: true,
+          favoriteCount: true,
+          likeCount: true,
+          viewCount: true,
+          commentCount: true,
+          ratingAverage: true,
+          ratingCount: true,
+          status: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.video.count({ where }),
+    ]);
+
+    // Add totalInteractions field and sort if needed
+    let videos = videosRaw.map((v) => ({
+      ...v,
+      totalInteractions: v.favoriteCount + v.likeCount,
+    }));
+
+    if (sortBy === 'totalInteractions') {
+      videos.sort((a, b) => {
+        const diff = a.totalInteractions - b.totalInteractions;
+        return sortOrder === 'asc' ? diff : -diff;
+      });
+      // Apply pagination after sorting
+      videos = videos.slice(skip, skip + limit);
+    }
+
+    return {
+      data: videos,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     };
   }
 

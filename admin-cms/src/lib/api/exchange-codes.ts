@@ -9,6 +9,10 @@ export const exchangeCodesAPI = {
     return apiClient.post('/exchange-codes', data);
   },
 
+  updateExchangeCode(id: string, data: Record<string, unknown>) {
+    return apiClient.put(`/exchange-codes/${id}`, data);
+  },
+
   // Code Batch Management
   getCodeBatches(params?: Record<string, unknown>) {
     return apiClient.get('/exchange-codes/batches', { params: sanitizeParams(params) });
@@ -32,7 +36,7 @@ export const exchangeCodesAPI = {
     });
   },
 
-  deactivateCodeBatch(id: string) {
-    return apiClient.post(`/exchange-codes/batches/${id}/deactivate`);
+  deactivateCodeBatch(id: string, reason: string) {
+    return apiClient.post(`/exchange-codes/batches/${id}/deactivate`, { reason });
   },
 };

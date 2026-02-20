@@ -233,7 +233,7 @@ export default function AdsConfigForm() {
         </Row>
 
         {/* ── Cấu hình Interstitial ─────────────────── */}
-        <Divider titlePlacement="left">📺 Quảng cáo Interstitial (toàn màn hình)</Divider>
+        <Divider titlePlacement="left">Quảng cáo Interstitial (toàn màn hình)</Divider>
 
         <Row gutter={24}>
           <Col xs={24} sm={12}>

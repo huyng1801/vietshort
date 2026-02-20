@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Compass, Play, User } from 'lucide-react';
+import { Home, Search, Compass, Gift, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Trang chủ' },
   { href: '/search', icon: Search, label: 'Tìm kiếm' },
   { href: '/category/trending', icon: Compass, label: 'Khám phá' },
-  { href: '/category/phim-bo', icon: Play, label: 'Phim bộ' },
+  { href: '/rewards', icon: Gift, label: 'Phần thưởng' },
 ];
 
 export function MobileNavigation() {
@@ -17,7 +17,7 @@ export function MobileNavigation() {
   const { isAuthenticated } = useAuthStore();
 
   const accountItem = isAuthenticated
-    ? { href: '/account/profile', icon: User, label: 'Tài khoản' }
+    ? { href: '/profile', icon: User, label: 'Tài khoản' }
     : { href: '/login', icon: User, label: 'Đăng nhập' };
 
   const allItems = [...navItems, accountItem];

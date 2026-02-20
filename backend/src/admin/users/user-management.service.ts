@@ -20,8 +20,8 @@ export class UserManagementService {
     
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { nickname: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search } },
+        { nickname: { contains: search } },
         { phone: { contains: search } },
         { id: search },
       ];

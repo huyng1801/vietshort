@@ -119,9 +119,9 @@ export class AdminSubtitleController {
     return this.subtitleService.getEpisodeSubtitles(episodeId);
   }
 
-  // ═══ SINGLE SUBTITLE ═══
+  // ═══ SINGLE SUBTITLE (DETAIL) ═══
 
-  @Get(':id')
+  @Get('detail/:id')
   @ApiOperation({ summary: 'Chi tiết phụ đề (kèm nội dung)' })
   async getSubtitle(@Param('id') id: string) {
     return this.subtitleService.getSubtitle(id);
@@ -160,7 +160,7 @@ export class AdminSubtitleController {
 
   // ═══ UPDATE / DELETE ═══
 
-  @Patch(':id')
+  @Patch('detail/:id')
   @ApiOperation({ summary: 'Cập nhật nội dung phụ đề' })
   async updateSubtitleContent(
     @Param('id') id: string,
@@ -169,7 +169,7 @@ export class AdminSubtitleController {
     return this.subtitleService.updateSubtitleContent(id, dto.content);
   }
 
-  @Delete(':id')
+  @Delete('detail/:id')
   @ApiOperation({ summary: 'Xóa phụ đề' })
   async deleteSubtitle(@Param('id') id: string) {
     return this.subtitleService.deleteSubtitle(id);

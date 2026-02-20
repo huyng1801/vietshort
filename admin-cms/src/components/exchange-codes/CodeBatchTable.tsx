@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
-import { Table, Tag, Button, Progress, Space, Tooltip } from 'antd';
+import React, { useState } from 'react';
+import { Table, Tag, Button, Progress, Space, Tooltip, Popconfirm, message } from 'antd';
 import { EyeOutlined, StopOutlined, DownloadOutlined } from '@ant-design/icons';
 import { CodeBatch } from '@/types';
 import { formatDate } from '@/lib/admin-utils';
+import adminAPI from '@/lib/admin-api';
 
 interface CodeBatchTableProps {
   data: CodeBatch[];
@@ -25,6 +26,20 @@ export default function CodeBatchTable({
   onDeactivate,
   onExport,
 }: CodeBatchTableProps) {
+  const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+
+  const handleDeactivateConfirm = async (id: string) => {
+    try {
+      setDeactivatingId(id);
+      await adminAPI.deactivateCodeBatch(id, 'Vô hiệu hóa bởi quản trị viên');
+      message.success('Đã vô hiệu hóa lô mã');
+      onDeactivate?.(id);
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Không thể vô hiệu hóa lô mã');
+    } finally {
+      setDeactivatingId(null);
+    }
+  };
   const columns = [
     {
       title: 'Tên lô mã',
@@ -32,6 +47,13 @@ export default function CodeBatchTable({
       key: 'batchName',
       width: 200,
       render: (name: string) => <span style={{ fontWeight: 500 }}>{name}</span>,
+    },
+    {
+      title: 'Prefix',
+      dataIndex: 'codePrefix',
+      key: 'codePrefix',
+      width: 120,
+      render: (prefix: string | null) => prefix ? <code style={{ backgroundColor: '#f0f0f0', padding: '2px 6px', borderRadius: 3 }}>{prefix}</code> : <span style={{ color: '#999' }}>-</span>,
     },
     {
       title: 'Loại thưởng',
@@ -135,15 +157,25 @@ export default function CodeBatchTable({
             />
           </Tooltip>
           {record.isActive && (
-            <Tooltip title="Vô hiệu hóa">
-              <Button
-                type="link"
-                size="small"
-                danger
-                icon={<StopOutlined />}
-                onClick={() => onDeactivate?.(record.id)}
-              />
-            </Tooltip>
+            <Popconfirm
+              title="Xác nhận vô hiệu hóa"
+              description="Tất cả mã trong lô này sẽ bị vô hiệu hóa. Hành động không thể hoàn tác."
+              onConfirm={() => handleDeactivateConfirm(record.id)}
+              okText="Vô hiệu hóa"
+              cancelText="Hủy"
+              okButtonProps={{ danger: true }}
+              placement="topRight"
+            >
+              <Tooltip title="Vô hiệu hóa">
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  icon={<StopOutlined />}
+                  loading={deactivatingId === record.id}
+                />
+              </Tooltip>
+            </Popconfirm>
           )}
         </Space>
       ),
@@ -158,8 +190,7 @@ export default function CodeBatchTable({
       rowKey="id"
       pagination={pagination}
       onChange={onChange}
-      scroll={{ x: 1200 }}
-      size="middle"
+      scroll={{ x: 1400 }}
     />
   );
 }

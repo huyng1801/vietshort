@@ -4,42 +4,75 @@ import { RedisService } from '../../config/redis.config';
 
 @Injectable()
 export class AchievementsService {
-  private readonly achievements = [
-    { id: 'first_comment', name: 'Bình luận đầu tiên', description: 'Viết bình luận đầu tiên', reward: 10 },
-    { id: 'watch_10', name: 'Người xem chăm chỉ', description: 'Xem 10 tập phim', reward: 20 },
-    { id: 'watch_50', name: 'Fan cuồng', description: 'Xem 50 tập phim', reward: 50 },
-    { id: 'watch_100', name: 'Collector', description: 'Xem 100 tập phim', reward: 100 },
-    { id: 'streak_7', name: 'Điểm danh 7 ngày', description: 'Điểm danh liên tục 7 ngày', reward: 30 },
-    { id: 'first_share', name: 'Người chia sẻ', description: 'Chia sẻ phim lần đầu', reward: 10 },
-    { id: 'first_rating', name: 'Nhà phê bình', description: 'Đánh giá phim lần đầu', reward: 10 },
-  ];
-
   constructor(
     private prisma: PrismaService,
     private redisService: RedisService,
   ) {}
 
   async getAchievements(userId: string) {
-    const claimedKey = `achievements:${userId}`;
-    const claimed = await this.redisService.get<string[]>(claimedKey) || [];
+    // Get achievements from database with cache
+    const cacheKey = 'achievements:all';
+    let achievements = await this.redisService.get<any[]>(cacheKey);
+    
+    if (!achievements) {
+      achievements = await this.prisma.achievement.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          category: true,
+          conditionType: true,
+          conditionValue: true,
+          rewardGold: true,
+        },
+      });
+      await this.redisService.set(cacheKey, achievements, 3600);
+    }
 
-    return this.achievements.map((a) => ({
-      ...a,
-      claimed: claimed.includes(a.id),
+    // Get user's claimed achievements
+    const userAchievements = await this.prisma.userAchievement.findMany({
+      where: { userId, rewardClaimed: true },
+      select: { achievementId: true },
+    });
+    const claimedIds = new Set(userAchievements.map((ua) => ua.achievementId));
+
+    return achievements.map((a) => ({
+      id: a.id,
+      name: a.name,
+      description: a.description || '',
+      category: a.category || 'watch',
+      reward: a.rewardGold,
+      claimed: claimedIds.has(a.id),
     }));
   }
 
   async checkAndAward(userId: string, achievementId: string): Promise<boolean> {
-    const claimedKey = `achievements:${userId}`;
-    const claimed = await this.redisService.get<string[]>(claimedKey) || [];
-
-    if (claimed.includes(achievementId)) return false;
-
-    const achievement = this.achievements.find((a) => a.id === achievementId);
+    // Check if achievement exists and is active
+    const achievement = await this.prisma.achievement.findFirst({
+      where: { id: achievementId, isActive: true },
+    });
     if (!achievement) return false;
 
-    claimed.push(achievementId);
-    await this.redisService.set(claimedKey, claimed);
+    // Check if already claimed
+    const existing = await this.prisma.userAchievement.findUnique({
+      where: { userId_achievementId: { userId, achievementId } },
+    });
+    if (existing?.rewardClaimed) return false;
+
+    // Create or update user achievement
+    await this.prisma.userAchievement.upsert({
+      where: { userId_achievementId: { userId, achievementId } },
+      create: {
+        userId,
+        achievementId,
+        rewardClaimed: true,
+      },
+      update: {
+        rewardClaimed: true,
+      },
+    });
 
     return true;
   }

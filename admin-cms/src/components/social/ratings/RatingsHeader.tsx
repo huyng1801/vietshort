@@ -7,13 +7,8 @@ import type { RatingStats } from '@/types';
 
 const { Text } = Typography;
 
-const STAR_COLORS: Record<number, string> = {
-  1: '#ff4d4f',
-  2: '#fa8c16',
-  3: '#fadb14',
-  4: '#52c41a',
-  5: '#1890ff',
-};
+// Use a single color for all stars in the distribution
+const STAR_COLOR = '#fadb14';
 
 interface RatingsHeaderProps {
   stats: RatingStats | null;
@@ -61,13 +56,13 @@ export default memo(function RatingsHeader({ stats, loading }: RatingsHeaderProp
                   <div key={d.star} className="flex items-center gap-3">
                     <div className="w-12 flex items-center gap-1">
                       <Text className="font-semibold">{d.star}</Text>
-                      <StarFilled style={{ color: STAR_COLORS[d.star ?? d.score], fontSize: 14 }} />
+                      <StarFilled style={{ color: STAR_COLOR, fontSize: 14 }} />
                     </div>
                     <Progress
                       percent={percent}
                       size="small"
                       className="flex-1 mb-0"
-                      strokeColor={STAR_COLORS[d.star ?? d.score]}
+                      strokeColor={STAR_COLOR}
                       format={() => `${d.count}`}
                     />
                     <Text type="secondary" className="text-xs w-8 text-right">{percent}%</Text>

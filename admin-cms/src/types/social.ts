@@ -106,6 +106,7 @@ export interface VideoSocialStats {
   commentCount: number;
   ratingAverage: number;
   ratingCount: number;
+  totalInteractions?: number; // favoriteCount + likeCount
 }
 
 export interface SocialOverview {

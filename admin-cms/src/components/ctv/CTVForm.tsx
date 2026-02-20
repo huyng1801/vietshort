@@ -37,6 +37,9 @@ export default function CTVForm({ affiliate, onSuccess }: CTVFormProps) {
         message.success('Cập nhật CTV thành công');
       } else {
         const createData = { ...values };
+        // Remove fields not accepted by CreateAffiliateDto
+        delete createData.isActive;
+        delete createData.isVerified;
         if (createData.contractStartAt) createData.contractStartAt = (createData.contractStartAt as any).toISOString();
         if (createData.contractEndAt) createData.contractEndAt = (createData.contractEndAt as any).toISOString();
         // Admin chỉ tạo tier 1 - công ty
@@ -213,20 +216,20 @@ export default function CTVForm({ affiliate, onSuccess }: CTVFormProps) {
           </Col>
         </Row>
 
-        <Row gutter={16}>
-          <Col span={6}>
-            <Form.Item name="isActive" label="Hoạt động" valuePropName="checked">
-              <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
-            </Form.Item>
-          </Col>
-          {isEdit && (
+        {isEdit && (
+          <Row gutter={16}>
+            <Col span={6}>
+              <Form.Item name="isActive" label="Hoạt động" valuePropName="checked">
+                <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
+              </Form.Item>
+            </Col>
             <Col span={6}>
               <Form.Item name="isVerified" label="Xác thực" valuePropName="checked">
                 <Switch checkedChildren="Đã xác thực" unCheckedChildren="Chưa" />
               </Form.Item>
             </Col>
-          )}
-        </Row>
+          </Row>
+        )}
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>

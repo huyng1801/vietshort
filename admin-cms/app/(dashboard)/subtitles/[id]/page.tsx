@@ -1,246 +1,526 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Card, Table, Tag, Space, Button, Select, message, Popconfirm, Avatar, Typography, Row, Col, Statistic, Tooltip, Progress } from 'antd';
+import { useParams, useRouter } from 'next/navigation';
 import {
-  StarOutlined,
-  StarFilled,
+  Typography,
+  Spin,
+  message,
+  Button,
+  Card,
+  Tag,
+  Space,
+  Popconfirm,
+  Alert,
+  Table,
+  Tabs,
+  Select,
+  Collapse,
+  Progress,
+  Tooltip,
+  Empty,
+  Badge,
+} from 'antd';
+import {
+  ArrowLeftOutlined,
   DeleteOutlined,
+  EditOutlined,
+  GlobalOutlined,
+  VideoCameraOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  LoadingOutlined,
+  UploadOutlined,
+  ThunderboltOutlined,
   ReloadOutlined,
-  TrophyOutlined,
+  EyeOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
+import SubtitleEditor from '@/components/subtitles/SubtitleEditor';
+import SubtitleUpload from '@/components/subtitles/SubtitleUpload';
+import SubtitleMapping from '@/components/subtitles/SubtitleMapping';
 import adminAPI from '@/lib/admin-api';
-import { usePagination } from '@/hooks/usePagination';
-import type { RatingItem, RatingStats } from '@/types';
+import { formatDate } from '@/lib/admin-utils';
+import type { Subtitle } from '@/types';
 
-const { Text } = Typography;
+const { Title, Text } = Typography;
 
-const STAR_COLORS: Record<number, string> = {
-  1: '#ff4d4f',
-  2: '#fa8c16',
-  3: '#fadb14',
-  4: '#52c41a',
-  5: '#1890ff',
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  READY: { label: 'Sẵn sàng', color: 'green', icon: <CheckCircleOutlined /> },
+  QUEUED: { label: 'Chờ xử lý', color: 'blue', icon: <ClockCircleOutlined /> },
+  EXTRACTING: { label: 'Đang trích xuất', color: 'processing', icon: <LoadingOutlined /> },
+  TRANSCRIBING: { label: 'Đang phiên âm', color: 'processing', icon: <LoadingOutlined /> },
+  TRANSLATING: { label: 'Đang dịch', color: 'processing', icon: <LoadingOutlined /> },
+  UPLOADING: { label: 'Đang tải lên', color: 'processing', icon: <LoadingOutlined /> },
+  COMPLETED: { label: 'Hoàn thành', color: 'success', icon: <CheckCircleOutlined /> },
+  FAILED: { label: 'Thất bại', color: 'error', icon: <ExclamationCircleOutlined /> },
 };
 
-function StarDisplay({ rating }: { rating: number }) {
-  return (
-    <Space size={2}>
-      {[1, 2, 3, 4, 5].map((s) => (
-        s <= rating
-          ? <StarFilled key={s} style={{ color: '#fadb14', fontSize: 14 }} />
-          : <StarOutlined key={s} style={{ color: '#d9d9d9', fontSize: 14 }} />
-      ))}
-    </Space>
-  );
+const LANGUAGE_LABELS: Record<string, string> = {
+  vi: '🇻🇳 Tiếng Việt',
+  en: '🇺🇸 English',
+};
+
+const LANGUAGE_OPTIONS = [
+  { label: '🇻🇳 Tiếng Việt', value: 'vi' },
+  { label: '🇺🇸 English', value: 'en' },
+];
+
+interface VideoSubtitleData {
+  id: string;
+  title: string;
+  slug: string;
+  episodes: Array<{
+    id: string;
+    episodeNumber: number;
+    subtitles: Subtitle[];
+  }>;
 }
 
-export default function RatingsPage() {
-  const [ratings, setRatings] = useState<RatingItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState<RatingStats | null>(null);
-  const [filterRating, setFilterRating] = useState<number | undefined>(undefined);
+export default function VideoSubtitlePage() {
+  const params = useParams();
+  const router = useRouter();
+  const videoId = params.id as string;
 
-  const { params, setParams, total, setTotal, paginationConfig, handleTableChange } = usePagination({ defaultLimit: 20 });
+  const [video, setVideo] = useState<VideoSubtitleData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editingSubtitle, setEditingSubtitle] = useState<Subtitle | null>(null);
+  const [generatingEpisodeId, setGeneratingEpisodeId] = useState<string | null>(null);
+  const [generateLang, setGenerateLang] = useState('vi');
+  const [deletingSubId, setDeletingSubId] = useState<string | null>(null);
 
-  const fetchRatings = useCallback(async () => {
+  const fetchVideo = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminAPI.getRatings({
-        page: params.page,
-        limit: params.limit,
-        rating: filterRating,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      });
-      const result = res.data?.data || res.data;
-      setRatings(Array.isArray(result) ? result : result?.data || []);
-      setTotal(res.data?.pagination?.total || res.data?.total || 0);
-    } catch {
-      message.error('Không thể tải danh sách đánh giá');
+      const res = await adminAPI.getVideoSubtitles(videoId);
+      const data = res.data?.data || res.data;
+      setVideo(data);
+    } catch (err: any) {
+      console.error('Fetch video subtitles error:', err);
+      message.error('Không thể tải thông tin phụ đề video');
+      router.push('/subtitles');
     } finally {
       setLoading(false);
     }
-  }, [params.page, params.limit, filterRating, setTotal]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await adminAPI.getRatingStats();
-      setStats(res.data?.data || res.data);
-    } catch {
-      // ignore
-    }
-  }, []);
+  }, [videoId, router]);
 
   useEffect(() => {
-    fetchRatings();
-  }, [fetchRatings]);
+    fetchVideo();
+  }, [fetchVideo]);
 
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
-  const handleDelete = async (id: string) => {
+  const handleDeleteSubtitle = async (subtitleId: string) => {
+    setDeletingSubId(subtitleId);
     try {
-      await adminAPI.deleteRating(id);
-      message.success('Đã xóa đánh giá');
-      fetchRatings();
-      fetchStats();
+      await adminAPI.deleteSubtitle(subtitleId);
+      message.success('Đã xóa phụ đề');
+      fetchVideo();
     } catch {
-      message.error('Xóa thất bại');
+      message.error('Xóa phụ đề thất bại');
+    } finally {
+      setDeletingSubId(null);
     }
   };
 
-  const columns = [
+  const handleGenerateAI = async (episodeId: string) => {
+    setGeneratingEpisodeId(episodeId);
+    try {
+      await adminAPI.generateSubtitle(episodeId, { targetLanguage: generateLang });
+      message.success('Đã thêm vào hàng đợi xử lý AI');
+      fetchVideo();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Tạo phụ đề AI thất bại');
+    } finally {
+      setGeneratingEpisodeId(null);
+    }
+  };
+
+  const handleBack = () => {
+    router.push('/subtitles');
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 100 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!video) return null;
+
+  // If we're editing a subtitle, show the editor
+  if (editingSubtitle) {
+    return (
+      <div>
+        <div className="page-header">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => setEditingSubtitle(null)}
+            style={{ marginBottom: 16 }}
+          >
+            Quay lại danh sách
+          </Button>
+          <Title level={3} style={{ marginBottom: 0 }}>
+            <EditOutlined className="mr-2" />
+            Chỉnh sửa phụ đề — {video.title}
+          </Title>
+        </div>
+        <SubtitleEditor
+          subtitleId={editingSubtitle.id}
+          content={editingSubtitle.content || ''}
+          language={editingSubtitle.language}
+          label={editingSubtitle.label}
+          onSave={() => {
+            setEditingSubtitle(null);
+            fetchVideo();
+          }}
+          onClose={() => setEditingSubtitle(null)}
+        />
+      </div>
+    );
+  }
+
+  const episodes = video.episodes || [];
+  const totalSubtitles = episodes.reduce((sum, ep) => sum + (ep.subtitles?.length || 0), 0);
+  const completedSubtitles = episodes.reduce(
+    (sum, ep) => sum + (ep.subtitles?.filter(s => s.status === 'READY' || s.status === 'COMPLETED').length || 0),
+    0,
+  );
+  const processingSubtitles = episodes.reduce(
+    (sum, ep) =>
+      sum +
+      (ep.subtitles?.filter(s =>
+        ['QUEUED', 'EXTRACTING', 'TRANSCRIBING', 'TRANSLATING', 'UPLOADING'].includes(s.status),
+      ).length || 0),
+    0,
+  );
+  const failedSubtitles = episodes.reduce(
+    (sum, ep) => sum + (ep.subtitles?.filter(s => s.status === 'FAILED').length || 0),
+    0,
+  );
+
+  const subtitleColumns = [
     {
-      title: 'Người dùng',
-      key: 'user',
-      width: 180,
-      render: (_: any, record: RatingItem) => (
+      title: 'Ngôn ngữ',
+      key: 'language',
+      width: 160,
+      render: (_: any, sub: Subtitle) => (
         <Space>
-          <Avatar src={record.user?.avatar} size="small">{record.user?.nickname?.[0]}</Avatar>
-          <div>
-            <Text strong>{record.user?.nickname || '—'}</Text>
-            {record.user?.vipTier && (
-              <Tag color="gold" className="ml-1" style={{ fontSize: 10 }}>VIP</Tag>
-            )}
-          </div>
+          <GlobalOutlined />
+          <span>{LANGUAGE_LABELS[sub.language] || sub.language.toUpperCase()}</span>
         </Space>
       ),
     },
     {
-      title: 'Video',
-      key: 'video',
-      width: 220,
-      ellipsis: true,
-      render: (_: any, record: RatingItem) => (
-        <Text>{record.video?.title || '—'}</Text>
+      title: 'Trạng thái',
+      key: 'status',
+      width: 160,
+      render: (_: any, sub: Subtitle) => {
+        const cfg = STATUS_CONFIG[sub.status] || STATUS_CONFIG.READY;
+        return (
+          <Space>
+            <Tag color={cfg.color} icon={cfg.icon}>
+              {cfg.label}
+            </Tag>
+            {sub.progress > 0 && sub.progress < 100 && (
+              <Progress percent={sub.progress} size="small" style={{ width: 60 }} />
+            )}
+          </Space>
+        );
+      },
+    },
+    {
+      title: 'Loại',
+      key: 'type',
+      width: 130,
+      render: (_: any, sub: Subtitle) => (
+        <Tag color={sub.isAuto ? 'purple' : 'green'}>
+          {sub.isAuto ? '🤖 AI' : '📤 Thủ công'}
+        </Tag>
       ),
     },
     {
-      title: 'Đánh giá',
-      key: 'rating',
-      width: 150,
-      align: 'center' as const,
-      render: (_: any, record: RatingItem) => <StarDisplay rating={record.rating ?? record.score} />,
+      title: 'Nhãn',
+      key: 'label',
+      width: 120,
+      render: (_: any, sub: Subtitle) =>
+        sub.label ? <Tag>{sub.label}</Tag> : <Text type="secondary">—</Text>,
     },
     {
-      title: 'Ngày đánh giá',
-      dataIndex: 'createdAt',
+      title: 'Ngày tạo',
       key: 'createdAt',
-      width: 140,
-      render: (v: string) => new Date(v).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      width: 150,
+      render: (_: any, sub: Subtitle) => (
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          {formatDate(sub.createdAt)}
+        </Text>
+      ),
     },
     {
       title: 'Thao tác',
-      key: 'action',
-      width: 80,
-      align: 'center' as const,
-      render: (_: any, record: RatingItem) => (
-        <Popconfirm title="Xóa đánh giá này?" onConfirm={() => handleDelete(record.id)} okText="Xóa" cancelText="Hủy">
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
+      key: 'actions',
+      width: 150,
+      render: (_: any, sub: Subtitle) => {
+        const canEdit = (sub.status === 'COMPLETED' || sub.status === 'READY') && sub.content;
+        return (
+          <Space size={4}>
+            {canEdit && (
+              <Tooltip title="Chỉnh sửa nội dung">
+                <Button
+                  size="small"
+                  type="link"
+                  icon={<EditOutlined />}
+                  onClick={() => setEditingSubtitle(sub)}
+                />
+              </Tooltip>
+            )}
+            {sub.srtUrl && (
+              <Tooltip title="Xem file SRT">
+                <Button
+                  size="small"
+                  type="link"
+                  icon={<EyeOutlined />}
+                  onClick={() => window.open(sub.srtUrl, '_blank')}
+                />
+              </Tooltip>
+            )}
+            <Popconfirm
+              title="Xóa phụ đề này?"
+              description="Hành động này không thể hoàn tác"
+              onConfirm={() => handleDeleteSubtitle(sub.id)}
+              okText="Xóa"
+              cancelText="Hủy"
+              okButtonProps={{ danger: true }}
+            >
+              <Tooltip title="Xóa">
+                <Button
+                  size="small"
+                  type="link"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deletingSubId === sub.id}
+                />
+              </Tooltip>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
-  return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">
-        <StarOutlined className="mr-2" />
-        Quản lý đánh giá
-      </h2>
+  const episodeItems = episodes.map((ep) => {
+    const subs = ep.subtitles || [];
+    const completedCount = subs.filter(s => s.status === 'READY' || s.status === 'COMPLETED').length;
+    const hasProcessing = subs.some(s =>
+      ['QUEUED', 'EXTRACTING', 'TRANSCRIBING', 'TRANSLATING', 'UPLOADING'].includes(s.status),
+    );
+    const hasFailed = subs.some(s => s.status === 'FAILED');
 
-      {/* Stats */}
-      <Row gutter={16} className="mb-4">
-        <Col span={6}>
-          <Card size="small">
-            <Statistic title="Tổng đánh giá" value={stats?.total || 0} prefix={<StarOutlined />} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card size="small">
-            <Statistic
-              title="Trung bình"
-              value={stats?.averageRating || 0}
-              precision={1}
-              suffix="/ 5"
-              prefix={<StarFilled style={{ color: '#fadb14' }} />}
-            />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card size="small" title="Phân bố đánh giá">
-            <div className="space-y-1">
-              {stats?.distribution?.map((d) => {
-                const percent = stats.totalRatings > 0 ? Math.round((d.count / stats.totalRatings) * 100) : 0;
-                return (
-                  <div key={d.star} className="flex items-center gap-2">
-                    <Text className="w-8">{d.star} ⭐</Text>
-                    <Progress
-                      percent={percent}
-                      size="small"
-                      className="flex-1 mb-0"
-                      strokeColor={STAR_COLORS[d.star ?? d.score]}
-                      format={() => `${d.count}`}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        </Col>
-      </Row>
+    let statusBadge: 'success' | 'processing' | 'error' | 'default' = 'default';
+    if (completedCount > 0) statusBadge = 'success';
+    if (hasProcessing) statusBadge = 'processing';
+    if (hasFailed) statusBadge = 'error';
 
-      {/* Top rated videos */}
-      {stats?.topRatedVideos && stats.topRatedVideos.length > 0 && (
-        <Card size="small" title={<><TrophyOutlined className="mr-1" /> Top 10 video được đánh giá cao nhất</>} className="mb-4">
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {stats.topRatedVideos.map((v, i) => (
-              <div key={v.id} className="flex-shrink-0 text-center" style={{ width: 100 }}>
-                <Tag color={i < 3 ? 'gold' : 'default'}>#{i + 1}</Tag>
-                <Tooltip title={v.title}>
-                  <Text ellipsis className="block text-xs mt-1">{v.title}</Text>
-                </Tooltip>
-                <Text type="secondary" className="text-xs">
-                  ⭐ {v.ratingAverage?.toFixed(1)} ({v.ratingCount})
-                </Text>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Filters */}
-      <Card size="small" className="mb-4">
+    return {
+      key: ep.id,
+      label: (
         <Space>
-          <Select
-            placeholder="Lọc theo sao"
-            value={filterRating}
-            onChange={(v) => { setFilterRating(v); setParams((p) => ({ ...p, page: 1 })); }}
-            style={{ width: 160 }}
-            allowClear
-          >
-            {[5, 4, 3, 2, 1].map((s) => (
-              <Select.Option key={s} value={s}>{s} sao</Select.Option>
-            ))}
-          </Select>
-          <Button icon={<ReloadOutlined />} onClick={() => { fetchRatings(); fetchStats(); }}>
+          <Badge status={statusBadge} />
+          <span style={{ fontWeight: 500 }}>Tập {ep.episodeNumber}</span>
+          <Tag>{subs.length} phụ đề</Tag>
+          {completedCount > 0 && (
+            <Tag color="success">{completedCount} hoàn thành</Tag>
+          )}
+          {hasProcessing && <Tag color="processing">Đang xử lý</Tag>}
+          {hasFailed && <Tag color="error">Có lỗi</Tag>}
+        </Space>
+      ),
+      children: (
+        <div>
+          {subs.length > 0 ? (
+            <>
+              <Table
+                columns={subtitleColumns}
+                dataSource={subs}
+                rowKey="id"
+                pagination={false}
+                size="small"
+              />
+              {subs.some(s => s.error) && (
+                <div style={{ marginTop: 8 }}>
+                  {subs.filter(s => s.error).map(s => (
+                    <Alert
+                      key={s.id}
+                      type="error"
+                      showIcon
+                      style={{ marginBottom: 4 }}
+                      message={`Lỗi phụ đề ${LANGUAGE_LABELS[s.language] || s.language}: ${s.error}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <Empty
+              description="Chưa có phụ đề cho tập này"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+          )}
+
+          {/* Generate AI subtitle for this episode */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+            <Space>
+              <Select
+                value={generateLang}
+                onChange={setGenerateLang}
+                options={LANGUAGE_OPTIONS}
+                style={{ width: 180 }}
+                size="small"
+              />
+              <Popconfirm
+                title="Tạo phụ đề AI?"
+                description={`Hệ thống sẽ dùng Whisper để tạo phụ đề ${LANGUAGE_LABELS[generateLang]} cho tập ${ep.episodeNumber}`}
+                onConfirm={() => handleGenerateAI(ep.id)}
+                okText="Tạo"
+                cancelText="Hủy"
+              >
+                <Button
+                  size="small"
+                  icon={<ThunderboltOutlined />}
+                  loading={generatingEpisodeId === ep.id}
+                >
+                  Tạo phụ đề AI
+                </Button>
+              </Popconfirm>
+            </Space>
+          </div>
+        </div>
+      ),
+    };
+  });
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="page-header">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={handleBack}
+          style={{ marginBottom: 16 }}
+        >
+          Quay lại
+        </Button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Title level={3} style={{ marginBottom: 0 }}>
+            <FileTextOutlined className="mr-2" />
+            {video.title}
+          </Title>
+          <Button icon={<ReloadOutlined />} onClick={fetchVideo}>
             Làm mới
           </Button>
+        </div>
+      </div>
+
+      {/* Video Info Card */}
+      <Card style={{ marginBottom: 24 }} size="small">
+        <Space size="large" wrap>
+          <Space>
+            <VideoCameraOutlined style={{ fontSize: 18, color: '#1890ff' }} />
+            <div>
+              <Text strong style={{ fontSize: 14 }}>{video.title}</Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: 12 }}>{episodes.length} tập phim</Text>
+            </div>
+          </Space>
+          <Space split={<span style={{ color: '#d9d9d9' }}>|</span>}>
+            <span>
+              <Badge status="success" /> <span style={{ fontSize: 13 }}>{completedSubtitles} hoàn thành</span>
+            </span>
+            {processingSubtitles > 0 && (
+              <span>
+                <Badge status="processing" /> <span style={{ fontSize: 13 }}>{processingSubtitles} đang xử lý</span>
+              </span>
+            )}
+            {failedSubtitles > 0 && (
+              <span>
+                <Badge status="error" /> <span style={{ fontSize: 13 }}>{failedSubtitles} lỗi</span>
+              </span>
+            )}
+            <span style={{ fontSize: 13 }}>
+              Tổng: <strong>{totalSubtitles}</strong> phụ đề
+            </span>
+          </Space>
         </Space>
       </Card>
 
-      {/* Table */}
-      <Table
-        columns={columns}
-        dataSource={ratings}
-        rowKey="id"
-        loading={loading}
-        pagination={paginationConfig}
-        onChange={handleTableChange}
-        scroll={{ x: 800 }}
-        size="middle"
+      {/* Tabs */}
+      <Tabs
+        defaultActiveKey="list"
+        type="card"
+        size="large"
+        destroyInactiveTabPane
+        items={[
+          {
+            key: 'list',
+            label: (
+              <Space size={6}>
+                <FileTextOutlined />
+                <span>Danh sách phụ đề ({totalSubtitles})</span>
+              </Space>
+            ),
+            children: episodes.length > 0 ? (
+              <Collapse
+                defaultActiveKey={episodes.slice(0, 3).map(e => e.id)}
+                items={episodeItems}
+              />
+            ) : (
+              <Empty description="Video chưa có tập phim nào" />
+            ),
+          },
+          {
+            key: 'upload',
+            label: (
+              <Space size={6}>
+                <UploadOutlined />
+                <span>Tải phụ đề</span>
+              </Space>
+            ),
+            children: episodes.length > 0 ? (
+              <SubtitleUpload
+                videoId={videoId}
+                episodes={episodes.map(ep => ({
+                  id: ep.id,
+                  episodeNumber: ep.episodeNumber,
+                }))}
+                onSuccess={fetchVideo}
+              />
+            ) : (
+              <Empty description="Video chưa có tập phim nào" />
+            ),
+          },
+          {
+            key: 'bulk',
+            label: (
+              <Space size={6}>
+                <ThunderboltOutlined />
+                <span>Upload hàng loạt</span>
+              </Space>
+            ),
+            children: episodes.length > 0 ? (
+              <SubtitleMapping
+                videoId={videoId}
+                episodes={episodes.map(ep => ({
+                  id: ep.id,
+                  episodeNumber: ep.episodeNumber,
+                }))}
+                onSuccess={fetchVideo}
+              />
+            ) : (
+              <Empty description="Video chưa có tập phim nào" />
+            ),
+          },
+        ]}
       />
     </div>
   );

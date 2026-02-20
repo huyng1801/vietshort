@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export type VipType = 'NORMAL' | 'VIP_FREEADS' | 'VIP_GOLD';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
+export type VipType = 'VIP_FREEADS' | 'VIP_GOLD';
 
 export interface User {
   id: string;
@@ -9,8 +11,8 @@ export interface User {
   nickname: string;
   avatar?: string;
   birthYear?: number;
-  vipType: VipType;
-  vipExpiredAt?: string;
+  vipTier?: VipType | null;
+  vipExpiresAt?: string | null;
   goldBalance: number;
   createdAt: string;
 }
@@ -77,11 +79,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       login: async (email: string, password: string, rememberMe = false) => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Replace with actual API call
-          const response = await fetch('/api/auth/login', {
+          const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ login: email, password }),
           });
 
           if (!response.ok) {
@@ -111,8 +112,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       register: async (data: RegisterData) => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Replace with actual API call
-          const response = await fetch('/api/auth/register', {
+          const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -154,7 +154,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           // Store device ID for future use
           localStorage.setItem('vietshort-device-id', finalDeviceId);
           
-          const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
           const response = await fetch(`${API_BASE_URL}/auth/guest/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -189,8 +188,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         try {
           const { accessToken } = get();
           if (accessToken) {
-            // TODO: Call logout API to invalidate token
-            await fetch('/api/auth/logout', {
+            await fetch(`${API_BASE_URL}/auth/logout`, {
               method: 'POST',
               headers: { 
                 'Authorization': `Bearer ${accessToken}`,
@@ -209,7 +207,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       forgotPassword: async (email: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch('/api/auth/forgot-password', {
+          const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
@@ -234,7 +232,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       resetPassword: async (token: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch('/api/auth/reset-password', {
+          const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, password }),
@@ -258,14 +256,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       // OAuth Login (redirect to provider)
       loginWithOAuth: async (provider: 'google' | 'facebook' | 'apple' | 'tiktok') => {
         // Redirect to OAuth provider
-        window.location.href = `/api/auth/oauth/${provider}`;
+        window.location.href = `${API_BASE_URL}/auth/oauth/${provider}`;
       },
 
       // Handle OAuth callback
       handleOAuthCallback: async (provider: string, code: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`/api/auth/oauth/${provider}/callback`, {
+          const response = await fetch(`${API_BASE_URL}/auth/oauth/${provider}/callback`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code }),
@@ -303,7 +301,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         }
 
         try {
-          const response = await fetch('/api/auth/refresh', {
+          const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken }),

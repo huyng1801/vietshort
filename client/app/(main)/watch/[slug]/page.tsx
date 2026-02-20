@@ -1,26 +1,25 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { 
-  Play, 
-  ChevronLeft, 
-  ChevronRight, 
-  List, 
-  Settings, 
-  Volume2, 
-  Maximize,
-  Heart,
-  Star,
-  Share2,
-  Lock,
-  ArrowLeft
+import {
+  Play, Lock, ArrowLeft, Eye, Calendar,
+  Film, Crown, Loader2
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { videoApi } from '@/lib/api';
+import { videoApi, recommendApi, unlockApi } from '@/lib/api';
 import { Loading } from '@/components/common/Loading';
+import { VideoPlayer, SubtitleTrack } from '@/components/video/VideoPlayer';
+import { LikeButton, BookmarkButton } from '@/components/video/LikeButton';
+import { RatingStars } from '@/components/video/RatingStars';
+import { ShareButton } from '@/components/video/ShareButton';
+import { CommentSection } from '@/components/video/CommentSection';
+import { VideoCardData } from '@/components/video/VideoCard';
+import { UnlockModal } from '@/components/payment/UnlockModal';
+import { recordWatchActivity } from '@/components/gamification/RetentionWidgets';
+import { dailyTasksApi } from '@/lib/api';
 import Link from 'next/link';
 
+// ─── Types ────────────────────────────────────────────────────
 interface VideoData {
   id: string;
   title: string;
@@ -33,6 +32,11 @@ interface VideoData {
   actors?: string;
   isSerial: boolean;
   totalEpisodes?: number;
+  viewCount?: number;
+  likeCount?: number;
+  ratingAverage?: number;
+  ratingCount?: number;
+  isVipOnly?: boolean;
   episodes: EpisodeData[];
 }
 
@@ -43,9 +47,8 @@ interface EpisodeData {
   hlsManifest?: string;
   duration?: number;
   encodingStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  subtitles?: SubtitleTrack[];
 }
-
-const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export default function WatchPage() {
   const params = useParams();
@@ -53,44 +56,66 @@ export default function WatchPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const epParam = searchParams.get('ep');
-  
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const [video, setVideo] = useState<VideoData | null>(null);
   const [currentEpisode, setCurrentEpisode] = useState<EpisodeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [fullscreen, setFullscreen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [similarVideos, setSimilarVideos] = useState<VideoCardData[]>([]);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [lockedEpisodeId, setLockedEpisodeId] = useState<string | null>(null);
+  const [pendingEpisode, setPendingEpisode] = useState<EpisodeData | null>(null);
+  const [episodeAccessMap, setEpisodeAccessMap] = useState<Record<string, boolean>>({});
 
+  // ─── Fetch Video ──────────────────────────────────────────
   useEffect(() => {
     const fetchVideo = async () => {
       try {
         setLoading(true);
         const videoData = await videoApi.bySlug(slug);
         setVideo(videoData);
-        
-        // Set episode from query param or default to first
+
+        // Set episode
         let targetEp = null;
         if (epParam) {
           targetEp = videoData.episodes?.find((ep: EpisodeData) => ep.episodeNumber === parseInt(epParam));
         }
-
         if (!targetEp) {
-          const completedEpisodes = videoData.episodes?.filter((ep: EpisodeData) => 
+          const completed = videoData.episodes?.filter((ep: EpisodeData) =>
             ep.encodingStatus === 'COMPLETED' && ep.hlsManifest
           ) || [];
-          targetEp = completedEpisodes.length > 0 ? completedEpisodes[0] : videoData.episodes?.[0];
+          targetEp = completed.length > 0 ? completed[0] : videoData.episodes?.[0];
         }
-        
         setCurrentEpisode(targetEp || null);
-        
+
+        // Increment view & track watch activity
+        try { await videoApi.incrementView(videoData.id); } catch {}
+        try { recordWatchActivity(); dailyTasksApi.trackWatch().catch(() => {}); } catch {}
+
+        // Load similar videos
+        try {
+          const similar = await recommendApi.similar(videoData.id, 8);
+          setSimilarVideos(similar || []);
+        } catch {}
+
+        // Check access for all episodes
+        if (videoData.episodes && videoData.episodes.length > 0) {
+          const accessMap: Record<string, boolean> = {};
+          await Promise.all(
+            videoData.episodes.map(async (ep: EpisodeData) => {
+              try {
+                const access = await unlockApi.checkAccess(ep.id);
+                accessMap[ep.id] = access.hasAccess;
+              } catch {
+                // If check fails, assume has access
+                accessMap[ep.id] = true;
+              }
+            })
+          );
+          setEpisodeAccessMap(accessMap);
+        }
       } catch (err) {
         console.error('Failed to fetch video:', err);
         setError('Không thể tải video. Vui lòng thử lại sau.');
@@ -99,11 +124,10 @@ export default function WatchPage() {
       }
     };
 
-    if (slug) {
-      fetchVideo();
-    }
+    if (slug) fetchVideo();
   }, [slug, epParam]);
 
+  // ─── Episode Chunks ───────────────────────────────────────
   const episodeChunks = useMemo(() => {
     if (!video?.episodes) return [];
     const chunks = [];
@@ -120,57 +144,82 @@ export default function WatchPage() {
     }
   }, [currentEpisode, video?.episodes]);
 
-  // Setup video element and playback speed
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = playbackSpeed;
-    }
-  }, [playbackSpeed]);
+  // ─── Episode Navigation ───────────────────────────────────
+  const currentIndex = useMemo(() => {
+    if (!video?.episodes || !currentEpisode) return -1;
+    return video.episodes.findIndex(ep => ep.id === currentEpisode.id);
+  }, [video?.episodes, currentEpisode]);
 
-  // Handle volume change
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.volume = volume;
-    }
-  }, [volume]);
+  const hasPrev = currentIndex > 0;
+  const hasNext = video?.episodes ? currentIndex < video.episodes.length - 1 : false;
 
-  const playEpisode = (episode: EpisodeData) => {
+  const playEpisode = useCallback(async (episode: EpisodeData) => {
+    // Check access before playing (gold/VIP lock)
+    try {
+      const access = await unlockApi.checkAccess(episode.id);
+      if (!access.hasAccess) {
+        setLockedEpisodeId(episode.id);
+        setPendingEpisode(episode);
+        setShowUnlockModal(true);
+        return;
+      }
+    } catch {
+      // If check fails, let them try to play anyway
+    }
     setCurrentEpisode(episode);
-    router.replace(`/watch/${slug}?ep=${episode.episodeNumber}`);
-  };
+    router.replace(`/watch/${slug}?ep=${episode.episodeNumber}`, { scroll: false });
+  }, [slug, router]);
 
-  const nextEpisode = () => {
-    if (!video?.episodes || !currentEpisode) return;
-    const currentIndex = video.episodes.findIndex(ep => ep.id === currentEpisode.id);
-    const nextEp = video.episodes[currentIndex + 1];
-    if (nextEp) playEpisode(nextEp);
-  };
-
-  const prevEpisode = () => {
-    if (!video?.episodes || !currentEpisode) return;
-    const currentIndex = video.episodes.findIndex(ep => ep.id === currentEpisode.id);
-    const prevEp = video.episodes[currentIndex - 1];
-    if (prevEp) playEpisode(prevEp);
-  };
-
-  const toggleFullscreen = () => {
-    if (!containerRef.current) return;
-    if (!fullscreen) {
-      if (containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen();
-      }
-    } else {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
+  const handleUnlockSuccess = useCallback(() => {
+    setShowUnlockModal(false);
+    if (pendingEpisode) {
+      setCurrentEpisode(pendingEpisode);
+      router.replace(`/watch/${slug}?ep=${pendingEpisode.episodeNumber}`, { scroll: false });
+      setPendingEpisode(null);
+      // Update access map
+      if (lockedEpisodeId) {
+        setEpisodeAccessMap(prev => ({ ...prev, [lockedEpisodeId]: true }));
       }
     }
-    setFullscreen(!fullscreen);
-  };
+    setLockedEpisodeId(null);
+  }, [pendingEpisode, slug, router, lockedEpisodeId]);
 
+  const nextEpisode = useCallback(() => {
+    if (!video?.episodes || !hasNext) return;
+    playEpisode(video.episodes[currentIndex + 1]);
+  }, [video?.episodes, currentIndex, hasNext, playEpisode]);
+
+  const prevEpisode = useCallback(() => {
+    if (!video?.episodes || !hasPrev) return;
+    playEpisode(video.episodes[currentIndex - 1]);
+  }, [video?.episodes, currentIndex, hasPrev, playEpisode]);
+
+  // ─── Progress Reporting ───────────────────────────────────
+  const handleProgress = useCallback((currentTime: number, duration: number) => {
+    if (!video?.id || !currentEpisode?.id) return;
+    videoApi.updateProgress(video.id, {
+      episodeId: currentEpisode.id,
+      progressive: duration > 0 ? currentTime / duration : 0,
+    }).catch(() => {});
+  }, [video?.id, currentEpisode?.id]);
+
+  // ─── Subtitles ────────────────────────────────────────────
+  const subtitles: SubtitleTrack[] = useMemo(() => {
+    if (!currentEpisode?.subtitles) return [];
+    return currentEpisode.subtitles;
+  }, [currentEpisode?.subtitles]);
+
+  // ─── Stream URL ───────────────────────────────────────────
+  const streamSrc = useMemo(() => {
+    if (!currentEpisode?.hlsManifest || currentEpisode.encodingStatus !== 'COMPLETED') return null;
+    return currentEpisode.hlsManifest;
+  }, [currentEpisode]);
+
+  // ─── Loading / Error ──────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <Loading size="xl" text="Đ lifestyle video..." />
+        <Loading size="xl" text="Đang tải video..." />
       </div>
     );
   }
@@ -195,275 +244,262 @@ export default function WatchPage() {
   return (
     <div className="h-[calc(100vh-56px)] lg:h-[calc(100vh-64px)] mt-14 lg:mt-16 bg-black flex flex-col lg:flex-row overflow-hidden">
       {/* Back button for mobile */}
-      <button 
+      <button
         onClick={() => router.back()}
         className="absolute top-4 left-4 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white lg:hidden"
       >
         <ArrowLeft className="w-6 h-6" />
       </button>
 
-      {/* Left Column: Video Player - Centered in remaining space */}
-      <div 
-        ref={containerRef}
-        className="flex-1 bg-black relative flex items-center justify-center"
-      >
-        <div className="h-full aspect-[9/16] relative group flex items-center justify-center bg-black overflow-hidden">
-          {currentEpisode?.hlsManifest && currentEpisode.encodingStatus === 'COMPLETED' ? (
-            <>
-              <video
-                ref={videoRef}
-                key={currentEpisode.id}
-                className="h-full w-auto max-w-full object-contain"
-                poster={video.poster}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={nextEpisode}
-                playsInline
-                autoPlay
-              >
-                <source src={currentEpisode.hlsManifest} type="application/x-mpegURL" />
-              </video>
+      {/* ─── Left Column: Video Player ─────────────────────── */}
+      <div className="flex-1 bg-black relative flex items-center justify-center">
+        {/* Desktop back button */}
+        <button
+          onClick={() => router.back()}
+          className="absolute top-6 left-12 z-50 p-5 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white hidden lg:flex items-center justify-center shadow-lg transition-colors"
+        >
+          <ArrowLeft className="w-8 h-8 text-white" />
+        </button>
 
-              {/* Overlay: Back button desktop */}
-              <button 
-                onClick={() => router.back()}
-                className="absolute top-6 left-6 z-50 p-3 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-full text-white hidden lg:flex items-center justify-center transition-all border border-white/5"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-
-              {/* Video Controls Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-20 pb-8 px-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <input
-                  type="range"
-                  min="0"
-                  max={videoRef.current?.duration || 0}
-                  value={videoRef.current?.currentTime || 0}
-                  step="0.1"
-                  onChange={(e) => {
-                    if (videoRef.current) videoRef.current.currentTime = parseFloat(e.target.value);
-                  }}
-                  className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer mb-6"
-                  style={{
-                    background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${
-                      ((videoRef.current?.currentTime || 0) / (videoRef.current?.duration || 1)) * 100
-                    }%, rgba(255,255,255,0.2) ${
-                      ((videoRef.current?.currentTime || 0) / (videoRef.current?.duration || 1)) * 100
-                    }%, rgba(255,255,255,0.2) 100%)`
-                  }}
-                />
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
-                    <button onClick={() => isPlaying ? videoRef.current?.pause() : videoRef.current?.play()} className="text-white hover:scale-110 transition-transform">
-                      {isPlaying ? <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> : <Play className="w-7 h-7 fill-white" />}
-                    </button>
-                    <div className="hidden sm:flex items-center gap-3">
-                      <Volume2 className="w-5 h-5 text-white" />
-                      <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-20 h-1 bg-white/20 rounded cursor-pointer" />
-                    </div>
-                    <span className="text-white text-sm font-medium">{formatTime(videoRef.current?.currentTime || 0)} / {formatTime(videoRef.current?.duration || 0)}</span>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                     {/* Speed selector */}
-                     <div className="relative">
-                      <button
-                        onClick={() => setShowSpeedMenu(!showSpeedMenu)}
-                        className="px-3 py-1 text-white text-xs font-bold border border-white/30 rounded uppercase tracking-wider hover:bg-white/10 transition-colors"
-                      >
-                        {playbackSpeed}x
-                      </button>
-                      {showSpeedMenu && (
-                        <div className="absolute bottom-full mb-3 right-0 bg-[#1a1a1a] border border-white/10 rounded-xl py-2 w-24 overflow-hidden shadow-2xl z-50">
-                          {PLAYBACK_SPEEDS.map((speed) => (
-                            <button
-                              key={speed}
-                              onClick={() => {
-                                setPlaybackSpeed(speed);
-                                setShowSpeedMenu(false);
-                              }}
-                              className={`block w-full px-4 py-2 text-xs font-medium text-left transition-colors ${
-                                playbackSpeed === speed ? 'text-red-500 bg-red-500/10' : 'text-gray-300 hover:bg-white/5'
-                              }`}
-                            >
-                              {speed}x
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <button onClick={toggleFullscreen} className="text-white hover:scale-110 transition-transform">
-                      <Maximize className="w-6 h-6" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer" onClick={() => videoRef.current?.play()}>
-                  <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-105">
-                    <Play className="w-10 h-10 text-white fill-white ml-1" />
-                  </div>
-                </div>
-              )}
-            </>
+        <div className="h-full aspect-[9/16] relative bg-black overflow-hidden">
+          {streamSrc ? (
+            <VideoPlayer
+              key={currentEpisode?.id}
+              src={streamSrc}
+              poster={video.poster}
+              title={video.title}
+              episodeNumber={currentEpisode?.episodeNumber}
+              subtitles={subtitles}
+              onEnded={nextEpisode}
+              onPrevEpisode={prevEpisode}
+              onNextEpisode={nextEpisode}
+              onProgress={handleProgress}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              autoPlay
+              initialTime={0}
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center px-10 text-center">
+            <div className="h-full flex flex-col items-center justify-center px-10 text-center">
               <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-full flex items-center justify-center mb-6">
-                <Play className="w-10 h-10 text-gray-500" />
+                {currentEpisode?.encodingStatus === 'PROCESSING' ? (
+                  <Loader2 className="w-10 h-10 text-gray-500 animate-spin" />
+                ) : (
+                  <Play className="w-10 h-10 text-gray-500" />
+                )}
               </div>
-              <h3 className="text-white text-xl font-bold mb-2">
+              <h3 className="text-white text-2xl font-bold mb-2">
                 {currentEpisode?.encodingStatus === 'PROCESSING' ? 'Đang mã hóa tập phim...' : 'Tập phim chưa sẵn sàng'}
               </h3>
-              <p className="text-gray-500 text-sm">Vui lòng quay lại sau ít phút hoặc thử tập phim khác.</p>
+              <p className="text-gray-500 text-base">Vui lòng quay lại sau ít phút hoặc thử tập phim khác.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Right Column: Content & Metadata - Fixed width on large screens */}
+      {/* ─── Right Column: Content & Metadata ─────────────── */}
       <div className="w-full lg:w-[450px] xl:w-[500px] bg-[#0a0a0a] border-l border-white/5 flex-shrink-0 flex flex-col h-full">
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-10">
+        <div className="flex-1 overflow-y-auto lg:overflow-hidden custom-scrollbar px-3 py-8">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-500 mb-8">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <nav className="flex items-center gap-2 text-base uppercase tracking-wider text-gray-500 mb-6">
+            <Link href="/" className="hover:text-white transition-colors">Trang chủ</Link>
             <span>/</span>
-            <Link href={`/video/${video.slug}`} className="hover:text-white transition-colors">{video.title}</Link>
+            <Link href={`/video/${video.slug}`} className="hover:text-white transition-colors line-clamp-1 max-w-[140px]">{video.title}</Link>
             <span>/</span>
-            <span className="text-gray-300 font-medium">Episode {currentEpisode?.episodeNumber}</span>
+            <span className="text-gray-300 font-medium">Tập {currentEpisode?.episodeNumber}</span>
           </nav>
 
           {/* Video Title */}
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-6">
-            Episode {currentEpisode?.episodeNumber} - {video.title} Full Movie
+          <h1 className="text-xl lg:text-2xl font-bold text-white mb-2">
+            {video.title}
           </h1>
+          <p className="text-gray-400 text-base mb-4">
+            Tập {currentEpisode?.episodeNumber}{video.totalEpisodes ? ` / ${video.totalEpisodes}` : ''}
+            {currentEpisode?.title && ` - ${currentEpisode.title}`}
+          </p>
 
-          {/* Description Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold text-white mb-3">Plot of Episode {currentEpisode?.episodeNumber}</h3>
-            <div className="relative">
-              <p className={`text-gray-400 leading-relaxed ${!descExpanded ? 'line-clamp-2' : ''}`}>
-                {video.description || `Aria might not answer Luca at all, but Bound By Honor Episode ${currentEpisode?.episodeNumber} shows how Luca pays no compromises to the creepy Raffaele! He cuts Raffaele's pinky to make people understand that Aria is only his. But how will Aria and Luca progress their love story?`}
-              </p>
-              <button 
-                onClick={() => setDescExpanded(!descExpanded)}
-                className="mt-1 text-red-500 font-bold hover:text-red-400 text-sm"
-              >
-                {descExpanded ? 'Less' : 'More'}
-              </button>
-            </div>
+          {/* Stats row */}
+          <div className="flex items-center gap-4 mb-6 text-xl text-gray-500">
+            {video.viewCount != null && (
+              <span className="flex items-center gap-1"><Eye className="w-5 h-5" /> {formatCount(video.viewCount)} lượt xem</span>
+            )}
+            {video.releaseYear && (
+              <span className="flex items-center gap-1"><Calendar className="w-5 h-5" /> {video.releaseYear}</span>
+            )}
+            {video.isVipOnly && (
+              <span className="flex items-center gap-1 text-yellow-500"><Crown className="w-5 h-5" /> VIP</span>
+            )}
           </div>
+
+          {/* Description */}
+          {video.description && (
+            <div className="mb-6">
+              <div className="relative">
+                <p className={`text-gray-400 text-lg leading-relaxed ${!descExpanded ? 'line-clamp-2' : ''}`}>
+                  {video.description}
+                </p>
+                {video.description.length > 150 && (
+                  <button
+                    onClick={() => setDescExpanded(!descExpanded)}
+                    className="mt-1 text-red-500 font-bold hover:text-red-400 text-base"
+                  >
+                    {descExpanded ? 'Thu gọn' : 'Xem thêm'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Tags / Genres */}
-          <div className="flex flex-wrap gap-2 mb-10">
-            {video.genres?.split(',').map((genre, idx) => (
-              <span key={idx} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-xs font-medium text-gray-300 hover:bg-white/10 transition-colors cursor-default">
-                {genre.trim()}
-              </span>
-            ))}
-          </div>
-
-          {/* Interaction Counters */}
-          <div className="flex items-center gap-10 mb-10 border-b border-white/5 pb-10">
-            <div className="flex flex-col items-center gap-2 group cursor-pointer">
-              <div className="p-3 rounded-full bg-white/5 group-hover:bg-red-500/10 transition-colors">
-                <Heart className="w-6 h-6 text-gray-400 group-hover:text-red-500" />
-              </div>
-              <span className="text-xs font-bold text-gray-500">14.9k</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 group cursor-pointer">
-              <div className="p-3 rounded-full bg-white/5 group-hover:bg-yellow-500/10 transition-colors">
-                <Star className="w-6 h-6 text-gray-400 group-hover:text-yellow-500" />
-              </div>
-              <span className="text-xs font-bold text-gray-500">3.4M</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 group cursor-pointer">
-              <div className="p-3 rounded-full bg-white/5 group-hover:bg-blue-500/10 transition-colors">
-                <Share2 className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
-              </div>
-              <span className="text-xs font-bold text-gray-500">Share</span>
-            </div>
-          </div>
-
-          {/* Episode Selector */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
-              {episodeChunks.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveTab(idx)}
-                  className={`relative py-2 text-sm font-bold transition-colors whitespace-nowrap ${
-                    activeTab === idx ? 'text-white' : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  {idx * 50} - {Math.min((idx + 1) * 50 - 1, video.episodes.length - 1)}
-                  {activeTab === idx && <div className="absolute -bottom-1 left-0 right-0 h-1 bg-red-600 rounded-full" />}
-                </button>
+          {video.genres && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {video.genres.split(',').map((genre, idx) => (
+                <span key={idx} className="px-4 py-2 bg-white/5 border border-white/10 rounded-md text-lg font-medium text-gray-400 hover:bg-white/10 transition-colors cursor-default">
+                  {genre.trim()}
+                </span>
               ))}
             </div>
-            <Link 
-              href={`/video/${video.slug}`} 
-              className="text-gray-400 hover:text-white flex items-center gap-1 text-sm font-medium transition-all group"
-            >
-              All Episodes <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+          )}
+
+          {/* ─── Social Interactions ─────────────────────── */}
+          {/* Rating Section */}
+          <div className="mb-4 py-4 border-t border-white/5 border-b border-white/5">
+            <RatingStars
+              videoId={video.id}
+              averageRating={video.ratingAverage || 0}
+              ratingCount={video.ratingCount || 0}
+              size="md"
+            />
           </div>
 
-          {/* Episode Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-6 gap-3">
-            {activeTab === 0 && (
-              <button className="aspect-[1.5/1] bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors">
-                Trailer
-              </button>
-            )}
-            {episodeChunks[activeTab]?.map((episode) => {
-              const isActive = currentEpisode?.id === episode.id;
-              const isLocked = false; // Add logic for locked episodes if needed
-              
-              return (
-                <button
-                  key={episode.id}
-                  onClick={() => playEpisode(episode)}
-                  className={`relative aspect-[1.5/1] rounded-lg flex items-center justify-center text-sm font-bold transition-all border ${
-                    isActive 
-                      ? 'bg-red-600/10 border-red-600 text-red-600' 
-                      : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:border-white/10'
-                  }`}
-                >
-                  {episode.episodeNumber}
-                  {isLocked && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-[#0a0a0a]">
-                      <Lock className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
-                  {isActive && (
-                    <div className="absolute bottom-1 right-1">
-                      <div className="flex gap-[1px] items-end h-2">
-                        <div className="w-[2px] h-full bg-red-600 animate-pulse" />
-                        <div className="w-[2px] h-2/3 bg-red-600 animate-pulse delay-75" />
-                        <div className="w-[2px] h-1/2 bg-red-600 animate-pulse delay-150" />
-                      </div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+          {/* Like, Bookmark, Share Section */}
+          <div className="flex items-center justify-around mb-6 py-4 border-b border-white/5">
+            <LikeButton videoId={video.id} likeCount={video.likeCount || 0} />
+            <BookmarkButton videoId={video.id} />
+            <ShareButton videoId={video.id} title={video.title} slug={video.slug} />
           </div>
+
+          {/* ─── Episode Selector ────────────────────────── */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Film className="w-5 h-5 text-gray-400" />
+                <h3 className="text-white font-bold text-xl">Danh sách tập</h3>
+              </div>
+              {episodeChunks.length > 1 && (
+                <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+                  {episodeChunks.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveTab(idx)}
+                      className={`relative py-1 text-base font-bold transition-colors whitespace-nowrap ${
+                        activeTab === idx ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+                      }`}
+                    >
+                      {idx * 50 + 1}-{Math.min((idx + 1) * 50, video.episodes.length)}
+                      {activeTab === idx && <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-red-600 rounded-full" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Episode Grid */}
+            <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-7 gap-2">
+              {episodeChunks[activeTab]?.map((episode) => {
+                const isActive = currentEpisode?.id === episode.id;
+                const isReady = episode.encodingStatus === 'COMPLETED' && episode.hlsManifest;
+                const isProcessing = episode.encodingStatus === 'PROCESSING';
+                const hasAccess = episodeAccessMap[episode.id] !== false;
+                const needsUnlock = isReady && !hasAccess;
+
+                return (
+                  <button
+                    key={episode.id}
+                    onClick={() => (isReady || needsUnlock) && playEpisode(episode)}
+                    disabled={!isReady && !needsUnlock}
+                    className={`relative aspect-square rounded-md flex py-2 items-center justify-center text-lg font-semibold transition-all ${
+                      isActive
+                        ? 'bg-white/10 text-white'
+                        : needsUnlock
+                          ? 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                          : isReady
+                            ? 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                            : 'bg-[#111] text-gray-600 cursor-not-allowed'
+                    }`}
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    ) : (
+                      episode.episodeNumber
+                    )}
+                    {needsUnlock && (
+                      <div className="absolute top-1 right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center">
+                        <Lock className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    )}
+                    {!isReady && !isProcessing && !needsUnlock && (
+                      <div className="absolute top-1 right-1 w-4 h-4 bg-gray-700 rounded-full flex items-center justify-center">
+                        <Lock className="w-2.5 h-2.5 text-gray-400" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── Comments Section ────────────────────────── */}
+          <CommentSection videoId={video.id} />
+
+          {/* ─── Unlock Modal ────────────────────────────── */}
+          {showUnlockModal && lockedEpisodeId && (
+            <UnlockModal
+              episodeId={lockedEpisodeId}
+              episodeNumber={pendingEpisode?.episodeNumber ?? 1}
+              videoTitle={video.title}
+              onClose={() => { setShowUnlockModal(false); setPendingEpisode(null); setLockedEpisodeId(null); }}
+              onUnlocked={handleUnlockSuccess}
+            />
+          )}
+
+          {/* ─── Similar Videos ──────────────────────────── */}
+          {similarVideos.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-white/5">
+              <h3 className="text-white font-bold text-xl mb-3 flex items-center gap-2">
+                <Film className="w-5 h-5 text-gray-400" />
+                Phim tương tự
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {similarVideos.slice(0, 6).map((v) => (
+                  <Link
+                    key={v.id}
+                    href={`/watch/${v.slug || v.id}`}
+                    className="group"
+                  >
+                    <div className="aspect-[2/3] rounded-lg overflow-hidden bg-white/5 mb-1.5">
+                      <div
+                        className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                        style={{ backgroundImage: `url(${v.poster || v.thumbnail || '/images/placeholder.jpg'})` }}
+                      />
+                    </div>
+                    <p className="text-base text-gray-300 font-medium line-clamp-2 group-hover:text-white transition-colors">
+                      {v.title}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function formatTime(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return '0:00';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-  return `${m}:${s.toString().padStart(2, '0')}`;
+// ─── Utility ────────────────────────────────────────────────
+function formatCount(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
 }

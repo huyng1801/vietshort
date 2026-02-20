@@ -15,6 +15,7 @@ export default function RatingsPage() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<RatingStats | null>(null);
   const [filterRating, setFilterRating] = useState<number | undefined>(undefined);
+  const [search, setSearch] = useState('');
 
   const { params, setParams, total, setTotal, paginationConfig, handleTableChange } = usePagination({ defaultLimit: 20 });
 
@@ -25,6 +26,7 @@ export default function RatingsPage() {
         page: params.page,
         limit: params.limit,
         rating: filterRating,
+        search: search || undefined,
         sortBy: 'createdAt',
         sortOrder: 'desc',
       });
@@ -36,7 +38,7 @@ export default function RatingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.page, params.limit, filterRating, setTotal]);
+  }, [params.page, params.limit, filterRating, search, setTotal]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -68,10 +70,12 @@ export default function RatingsPage() {
       <RatingsHeader stats={stats} loading={loading} />
 
       <RatingsFilters
+        search={search}
         filterRating={filterRating}
+        onSearchChange={setSearch}
         onRatingChange={(v) => { setFilterRating(v); setParams((p) => ({ ...p, page: 1 })); }}
         onSearch={() => { fetchRatings(); fetchStats(); }}
-        onReset={() => { setFilterRating(undefined); setParams((p) => ({ ...p, page: 1 })); }}
+        onReset={() => { setSearch(''); setFilterRating(undefined); setParams((p) => ({ ...p, page: 1 })); }}
       />
 
       <RatingsTable

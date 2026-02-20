@@ -108,7 +108,7 @@ export default function CTVDetails({ affiliate }: CTVDetailsProps) {
           <Card size="small">
             <Statistic
               title="Tổng thu nhập"
-              value={affiliate.totalEarned || 0}
+              value={(affiliate.totalEarned || 0) + (affiliate.networkEarned || 0)}
               prefix="₫"
               styles={{ content: { color: '#52c41a' } }}
             />

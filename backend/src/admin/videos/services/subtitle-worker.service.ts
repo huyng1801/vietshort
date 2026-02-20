@@ -423,7 +423,7 @@ This is a test`,
           ],
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
           temperature: 0.1,
-          max_tokens: 32768,
+          max_tokens: 8192,
         });
 
         const translatedSrt = completion.choices[0]?.message?.content?.trim();

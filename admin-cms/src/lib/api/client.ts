@@ -25,6 +25,21 @@ export const sanitizeParams = (params?: Record<string, unknown>): Record<string,
     } else if (typeof value === 'boolean' || typeof value === 'number') {
       // Include booleans and numbers
       sanitized[key] = value;
+    } else if (value instanceof Date) {
+      // Convert Date objects to ISO string
+      sanitized[key] = value.toISOString().split('T')[0];
+    } else if (typeof value === 'object' && value !== null && 'toISOString' in value) {
+      // Handle Dayjs objects that have toISOString method
+      try {
+        const isoString = (value as any).toISOString();
+        sanitized[key] = isoString.split('T')[0];
+      } catch {
+        // If conversion fails, try toString()
+        const strValue = String(value).trim();
+        if (strValue) {
+          sanitized[key] = strValue;
+        }
+      }
     }
   }
 

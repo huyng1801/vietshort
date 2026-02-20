@@ -1,4 +1,4 @@
-export type VipType = 'NORMAL' | 'VIP_FREEADS' | 'VIP_GOLD';
+export type VipType = 'VIP_FREEADS' | 'VIP_GOLD';
 
 export interface User {
   id: string;
@@ -6,8 +6,8 @@ export interface User {
   nickname: string;
   avatar?: string;
   birthYear?: number;
-  vipType: VipType;
-  vipExpiredAt?: string;
+  vipTier?: VipType | null;
+  vipExpiresAt?: string | null;
   goldBalance: number;
   createdAt: string;
   updatedAt: string;

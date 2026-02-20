@@ -4,10 +4,11 @@ import { Tabs } from 'antd';
 import {
   SettingOutlined,
   CrownOutlined,
+  GoldOutlined,
   TeamOutlined,
   NotificationOutlined,
 } from '@ant-design/icons';
-import { GeneralSettings, VIPPricingSettings, AdminUsersSettings } from '@/components/settings';
+import { GeneralSettings, VIPPricingSettings, GoldPricingSettings, AdminUsersSettings } from '@/components/settings';
 import { AdsSettingsTab } from '@/components/ads';
 
 export default function SettingsPage() {
@@ -31,6 +32,11 @@ export default function SettingsPage() {
             key: 'vip',
             label: <><CrownOutlined /> Bảng giá VIP</>,
             children: <VIPPricingSettings />,
+          },
+          {
+            key: 'gold',
+            label: <><GoldOutlined /> Bảng giá nạp Gold</>,
+            children: <GoldPricingSettings />,
           },
           {
             key: 'admins',

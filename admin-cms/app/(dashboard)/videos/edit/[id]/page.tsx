@@ -24,6 +24,8 @@ export default function EditVideoPage() {
   const [video, setVideo] = useState<Video | null>(null);
   const [genres, setGenres] = useState<{ label: string; value: string; id: string }[]>([]);
   const [genresLoading, setGenresLoading] = useState(true);
+  const [vipTiers, setVipTiers] = useState<{ label: string; value: string }[]>([]);
+  const [vipTiersLoading, setVipTiersLoading] = useState(true);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [uploadingPoster, setUploadingPoster] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string>('');
@@ -115,6 +117,51 @@ export default function EditVideoPage() {
       }
     };
     loadGenres();
+  }, []);
+
+  // Load VIP tiers from API
+  useEffect(() => {
+    const loadVipTiers = async () => {
+      setVipTiersLoading(true);
+      try {
+        const res = await adminAPI.getVipPlans();
+        const plans = res.data?.data || res.data || [];
+        
+        if (Array.isArray(plans) && plans.length > 0) {
+          // Extract unique VIP tier types (VIP_FREEADS, VIP_GOLD)
+          const uniqueTiers = new Map<string, string>();
+          plans.forEach((plan: { id: string; name: string; type?: string }) => {
+            if (plan.type && !uniqueTiers.has(plan.type)) {
+              const label = plan.type === 'VIP_FREEADS' ? 'VIP FreeAds' : 
+                           plan.type === 'VIP_GOLD' ? 'VIP Gold' : plan.type;
+              uniqueTiers.set(plan.type, label);
+            }
+          });
+          
+          const vipData = Array.from(uniqueTiers.entries()).map(([value, label]) => ({
+            label,
+            value
+          }));
+          setVipTiers(vipData);
+        } else {
+          // Fallback to correct VipType enum values
+          setVipTiers([
+            { label: 'VIP FreeAds', value: 'VIP_FREEADS' },
+            { label: 'VIP Gold', value: 'VIP_GOLD' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading VIP tiers:', error);
+        // Fallback to correct VipType enum values if API fails
+        setVipTiers([
+          { label: 'VIP FreeAds', value: 'VIP_FREEADS' },
+          { label: 'VIP Gold', value: 'VIP_GOLD' },
+        ]);
+      } finally {
+        setVipTiersLoading(false);
+      }
+    };
+    loadVipTiers();
   }, []);
 
   // Fetch video on mount
@@ -271,34 +318,6 @@ export default function EditVideoPage() {
               onFinish={handleSubmit} 
               onValuesChange={(_, allValues) => setFormValues(allValues)}
             >
-              {/* Poster Upload */}
-              <Form.Item label="Poster phim">
-                <Space orientation="vertical" style={{ width: '100%' }}>
-                  {posterUrl && (
-                    <div style={{ marginBottom: 12 }}>
-                      <img 
-                        src={posterUrl} 
-                        alt="Poster" 
-                        style={{ width: 200, height: 280, objectFit: 'cover', borderRadius: 8 }} 
-                      />
-                    </div>
-                  )}
-                  <Upload
-                    accept="image/*"
-                    showUploadList={false}
-                    beforeUpload={handlePosterUpload}
-                  >
-                    <Button icon={<UploadOutlined />} loading={uploadingPoster}>
-                      {posterUrl ? 'Thay đổi Poster' : 'Upload Poster'}
-                    </Button>
-                  </Upload>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Kích thước khuyến nghị: 600x900px, tối đa 5MB
-                  </Text>
-                </Space>
-              </Form.Item>
-
-              <Divider />
 
               <Form.Item name="title" label="Tên phim" rules={[{ required: true, message: 'Vui lòng nhập tên phim' }]}>
                 <Input placeholder="Nhập tên phim" maxLength={255} onChange={handleTitleChange} />
@@ -371,11 +390,13 @@ export default function EditVideoPage() {
                 <Form.Item noStyle shouldUpdate={(prev, cur) => prev.isVipOnly !== cur.isVipOnly}>
                   {({ getFieldValue }) => getFieldValue('isVipOnly') && (
                     <Form.Item name="vipTier" label="Hạng VIP yêu cầu">
-                      <Select allowClear style={{ width: 160 }} placeholder="Tất cả VIP" options={[
-                        { label: 'VIP 1', value: 'VIP1' },
-                        { label: 'VIP 2', value: 'VIP2' },
-                        { label: 'VIP 3', value: 'VIP3' },
-                      ]} />
+                      <Select 
+                        allowClear 
+                        style={{ width: 160 }} 
+                        placeholder={vipTiersLoading ? "Đang tải..." : "Tất cả VIP"} 
+                        options={vipTiers}
+                        loading={vipTiersLoading}
+                      />
                     </Form.Item>
                   )}
                 </Form.Item>

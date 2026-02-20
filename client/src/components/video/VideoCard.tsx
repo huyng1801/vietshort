@@ -53,8 +53,8 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
             style={{ backgroundImage: `url(${image})` }}
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-            <div className="w-10 h-10 bg-red-600/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Play className="w-5 h-5 text-white fill-current ml-0.5" />
+            <div className="w-10 h-10 bg-black/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+              <Play className="w-5 h-5 text-white ml-0.5" />
             </div>
           </div>
           {video.isVipOnly && (
@@ -68,10 +68,10 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
             </div>
           )}
         </div>
-        <h3 className="text-white text-sm font-medium mt-2 line-clamp-2 group-hover:text-red-400 transition-colors">
+        <h3 className="text-white text-xs sm:text-sm lg:text-base font-semibold mt-1.5 sm:mt-2 line-clamp-2 group-hover:text-red-400 transition-colors">
           {video.title}
         </h3>
-        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-[10px] sm:text-xs lg:text-sm text-gray-500">
           <span className="flex items-center gap-0.5">
             <Eye className="w-3 h-3" /> {formatViews(video.viewCount)}
           </span>
@@ -98,8 +98,8 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
 
           {/* Hover play */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center shadow-lg shadow-red-600/30">
-              <Play className="w-6 h-6 text-white fill-current ml-0.5" />
+            <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center shadow-lg">
+              <Play className="w-6 h-6 text-white ml-0.5" />
             </div>
           </div>
 
@@ -112,7 +112,7 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
 
           {/* Rank */}
           {rank != null && rank <= 10 && (
-            <div className={`absolute bottom-2 left-2 w-7 h-7 flex items-center justify-center rounded-md font-bold text-sm ${
+            <div className={`absolute bottom-2 left-2 w-8 h-8 flex items-center justify-center rounded-md font-bold text-xl ${
               rank <= 3
                 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white'
                 : 'bg-gray-800/80 text-gray-300'
@@ -131,12 +131,12 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
       </div>
 
       {/* Title */}
-      <h3 className="text-white text-sm font-medium mt-2 line-clamp-2 group-hover:text-red-400 transition-colors leading-tight">
+      <h3 className="text-white text-xs sm:text-xs lg:text-sm font-semibold mt-1.5 sm:mt-2 line-clamp-2 group-hover:text-red-400 transition-colors leading-tight">
         {video.title}
       </h3>
 
       {/* Meta */}
-      <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+      <div className="flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 text-[10px] sm:text-[10px] lg:text-xs text-gray-500">
         {video.genres && (
           <span className="truncate">{video.genres.split(',')[0]?.trim()}</span>
         )}

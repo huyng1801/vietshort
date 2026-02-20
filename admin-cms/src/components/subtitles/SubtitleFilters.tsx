@@ -77,8 +77,8 @@ export default function SubtitleFilters({
           style={{ width: 140 }}
           allowClear
           options={[
-            { label: '📺 Phim bộ', value: 'SERIAL' },
-            { label: '🎬 Phim lẻ', value: 'MOVIE' },
+            { label: 'Phim bộ', value: 'SERIAL' },
+            { label: 'Phim lẻ', value: 'MOVIE' },
           ]}
         />
         <Select
@@ -88,15 +88,12 @@ export default function SubtitleFilters({
           style={{ width: 160 }}
           allowClear
           options={[
-            { label: '✅ Đã hoàn thành', value: 'COMPLETED' },
-            { label: '⏳ Đang xử lý', value: 'PROCESSING' },
-            { label: '❌ Có lỗi', value: 'FAILED' },
-            { label: '📝 Chưa có phụ đề', value: 'NONE' },
+            { label: 'Đã hoàn thành', value: 'COMPLETED' },
+            { label: 'Đang xử lý', value: 'PROCESSING' },
+            { label: 'Có lỗi', value: 'FAILED' },
+            { label: 'Chưa có phụ đề', value: 'NONE' },
           ]}
         />
-        <Button icon={<SearchOutlined />} type="primary" onClick={onSearch}>
-          Tìm kiếm
-        </Button>
         <Button icon={<ReloadOutlined />} onClick={onReset}>
           Đặt lại
         </Button>

@@ -22,6 +22,13 @@ export class VideosController {
   }
 
   @Public()
+  @Get('genres')
+  @ApiOperation({ summary: 'Danh sách thể loại (public)' })
+  async getGenres() {
+    return this.videosService.getGenres();
+  }
+
+  @Public()
   @Get('trending')
   @ApiOperation({ summary: 'Video trending' })
   async getTrending(@Query('limit') limit?: number) {

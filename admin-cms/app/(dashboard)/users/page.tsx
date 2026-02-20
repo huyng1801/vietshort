@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { message } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import adminAPI from '@/lib/admin-api';
 import { usePagination } from '@/hooks/usePagination';
-import { useFilters } from '@/hooks/useFilters';
 import type { User } from '@/types';
 import UsersHeader from '@/components/users/UsersHeader';
 import UserFilters from '@/components/users/UserFilters';
@@ -15,17 +15,14 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(false);
   const { params, setParams, total, setTotal, paginationConfig, handleTableChange } = usePagination({ defaultLimit: 20 });
   
-  const defaultFilters = {
-    search: '',
-    vipTier: '',
-    isLocked: '',
-    isActive: '',
-    isEmailVerified: '',
-    registrationSource: '',
-    dateRange: [] as any[],
-  };
-  
-  const { filters, updateFilter, resetFilters } = useFilters(defaultFilters);
+  // Filter state
+  const [search, setSearch] = useState('');
+  const [vipTier, setVipTier] = useState('');
+  const [isLocked, setIsLocked] = useState('');
+  const [isActive, setIsActive] = useState('');
+  const [isEmailVerified, setIsEmailVerified] = useState('');
+  const [registrationSource, setRegistrationSource] = useState('');
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>();
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -37,27 +34,27 @@ export default function UsersPage() {
       };
 
       // Only include filters with values
-      if (filters.search && filters.search.trim()) {
-        apiParams.search = filters.search;
+      if (search && search.trim()) {
+        apiParams.search = search;
       }
-      if (filters.vipTier && filters.vipTier !== '') {
-        apiParams.vipTier = filters.vipTier === 'null' ? null : filters.vipTier;
+      if (vipTier && vipTier !== '') {
+        apiParams.vipTier = vipTier === 'null' ? null : vipTier;
       }
-      if (filters.isLocked && filters.isLocked !== '') {
-        apiParams.isLocked = filters.isLocked === 'true';
+      if (isLocked && isLocked !== '') {
+        apiParams.isLocked = isLocked === 'true';
       }
-      if (filters.isActive && filters.isActive !== '') {
-        apiParams.isActive = filters.isActive === 'true';
+      if (isActive && isActive !== '') {
+        apiParams.isActive = isActive === 'true';
       }
-      if (filters.isEmailVerified && filters.isEmailVerified !== '') {
-        apiParams.isEmailVerified = filters.isEmailVerified === 'true';
+      if (isEmailVerified && isEmailVerified !== '') {
+        apiParams.isEmailVerified = isEmailVerified === 'true';
       }
-      if (filters.registrationSource && filters.registrationSource !== '') {
-        apiParams.registrationSource = filters.registrationSource;
+      if (registrationSource && registrationSource !== '') {
+        apiParams.registrationSource = registrationSource;
       }
-      if (filters.dateRange && filters.dateRange.length === 2) {
-        apiParams.dateFrom = filters.dateRange[0];
-        apiParams.dateTo = filters.dateRange[1];
+      if (dateRange && dateRange.length === 2) {
+        apiParams.dateFrom = dateRange[0].format('YYYY-MM-DD');
+        apiParams.dateTo = dateRange[1].format('YYYY-MM-DD');
       }
 
       const res = await adminAPI.getUsers(apiParams);
@@ -87,7 +84,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.page, params.limit, filters, setTotal]);
+  }, [params.page, params.limit, search, vipTier, isLocked, isActive, isEmailVerified, registrationSource, dateRange, setTotal]);
 
   useEffect(() => {
     fetchUsers();
@@ -108,10 +105,30 @@ export default function UsersPage() {
       <UsersHeader onRefresh={fetchUsers} />
       
       <UserFilters 
-        values={filters}
-        onChange={updateFilter}
-        onReset={resetFilters}
+        search={search}
+        vipTier={vipTier}
+        isLocked={isLocked}
+        isActive={isActive}
+        isEmailVerified={isEmailVerified}
+        registrationSource={registrationSource}
+        dateRange={dateRange}
+        onSearchChange={setSearch}
+        onVipTierChange={setVipTier}
+        onLockedChange={setIsLocked}
+        onActiveChange={setIsActive}
+        onEmailVerifiedChange={setIsEmailVerified}
+        onRegistrationSourceChange={setRegistrationSource}
+        onDateRangeChange={setDateRange}
         onSearch={fetchUsers}
+        onReset={() => {
+          setSearch('');
+          setVipTier('');
+          setIsLocked('');
+          setIsActive('');
+          setIsEmailVerified('');
+          setRegistrationSource('');
+          setDateRange(undefined);
+        }}
       />
 
       <UserTable

@@ -63,8 +63,7 @@ const menuItems = [
     children: [
       { key: '/social/comments', label: 'Bình luận' },
       { key: '/social/ratings', label: 'Đánh giá' },
-      { key: '/social/favorites', label: 'Sưu tầm' },
-      { key: '/social/likes', label: 'Yêu thích' },
+      { key: '/social/video-interactions', label: 'Sưu tầm & Yêu thích' },
     ],
   },
   {
@@ -77,13 +76,9 @@ const menuItems = [
     ],
   },
   {
-    key: 'exchange',
+    key: '/exchange-codes',
     icon: <GiftOutlined />,
-    label: 'Mã trao đổi',
-    children: [
-      { key: '/exchange-codes', label: 'Mã đổi quà' },
-      { key: '/exchange-codes/batches', label: 'Lô mã' },
-    ],
+    label: 'Lô mã đổi quà',
   },
   {
     key: 'gamification',

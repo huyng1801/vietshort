@@ -11,6 +11,7 @@ import {
   QueryRatingsDto,
   QueryFavoritesDto,
   QueryLikesDto,
+  QueryVideoInteractionsDto,
 } from './dto/social-management.dto';
 
 @ApiTags('admin/social')
@@ -97,6 +98,7 @@ export class AdminSocialController {
     return this.socialService.getRatings(
       query.videoId,
       query.userId,
+      query.search,
       query.rating,
       query.page || 1,
       query.limit || 20,
@@ -123,51 +125,17 @@ export class AdminSocialController {
     return this.socialService.deleteRating(id);
   }
 
-  // ═══ Favorites ═══
+  // ═══ Video Interactions (Favorites + Likes) ═══
 
-  @Get('favorites')
-  @ApiOperation({ summary: 'Thống kê video được yêu thích nhất' })
-  async getFavoriteStats(@Query() query: QueryFavoritesDto) {
-    return this.socialService.getFavoriteStats(
+  @Get('video-interactions')
+  @ApiOperation({ summary: 'Thống kê tương tác video (Sưu tầm + Yêu thích)' })
+  async getVideoInteractions(@Query() query: QueryVideoInteractionsDto) {
+    return this.socialService.getVideoInteractions(
       query.search,
       query.page || 1,
       query.limit || 20,
       query.sortBy,
       query.sortOrder as 'asc' | 'desc',
     );
-  }
-
-  @Get('favorites/video/:videoId')
-  @ApiOperation({ summary: 'Danh sách người dùng yêu thích video' })
-  async getVideoFavorites(
-    @Param('videoId') videoId: string,
-    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-  ) {
-    return this.socialService.getVideoFavorites(videoId, page || 1, limit || 20);
-  }
-
-  // ═══ Likes ═══
-
-  @Get('likes')
-  @ApiOperation({ summary: 'Thống kê video được thích nhất' })
-  async getLikeStats(@Query() query: QueryLikesDto) {
-    return this.socialService.getLikeStats(
-      query.search,
-      query.page || 1,
-      query.limit || 20,
-      query.sortBy,
-      query.sortOrder as 'asc' | 'desc',
-    );
-  }
-
-  @Get('likes/video/:videoId')
-  @ApiOperation({ summary: 'Danh sách người dùng thích video' })
-  async getVideoLikes(
-    @Param('videoId') videoId: string,
-    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-  ) {
-    return this.socialService.getVideoLikes(videoId, page || 1, limit || 20);
   }
 }

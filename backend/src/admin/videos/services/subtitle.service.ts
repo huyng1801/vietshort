@@ -54,7 +54,7 @@ export class SubtitleService {
 
     const where: any = {};
     if (params.search) {
-      where.title = { contains: params.search, mode: 'insensitive' };
+      where.title = { contains: params.search };
     }
     if (params.status) {
       where.status = params.status;

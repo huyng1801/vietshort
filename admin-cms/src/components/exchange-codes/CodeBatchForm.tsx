@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Form, Input, InputNumber, Select, DatePicker, Button, message, Space, Alert } from 'antd';
+import React, { useImperativeHandle, forwardRef, useState } from 'react';
+import { Form, Input, InputNumber, Select, DatePicker, message, Alert, Row, Col } from 'antd';
 import dayjs from 'dayjs';
 import adminAPI from '@/lib/admin-api';
 
@@ -9,19 +9,26 @@ interface CodeBatchFormProps {
   onSuccess?: () => void;
 }
 
+export interface CodeBatchFormHandle {
+  handleSubmit: () => Promise<void>;
+}
+
 const REWARD_TYPES = [
   { label: '🪙 Xu vàng (GOLD)', value: 'GOLD' },
   { label: '👑 VIP Days', value: 'VIP_DAYS' },
 ];
 
-export default function CodeBatchForm({ onSuccess }: CodeBatchFormProps) {
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const rewardType = Form.useWatch('rewardType', form);
+const CodeBatchForm = forwardRef<CodeBatchFormHandle, CodeBatchFormProps>(
+  ({ onSuccess }, ref) => {
+    const [form] = Form.useForm();
+    const [loading, setLoading] = useState(false);
+    const rewardType = Form.useWatch('rewardType', form);
 
-  const handleSubmit = async (values: any) => {
-    setLoading(true);
+  const handleSubmit = async () => {
     try {
+      const values = await form.validateFields();
+      setLoading(true);
+
       const submitData: Record<string, unknown> = {
         batchName: values.batchName,
         quantity: values.quantity,
@@ -36,22 +43,30 @@ export default function CodeBatchForm({ onSuccess }: CodeBatchFormProps) {
 
       const res = await adminAPI.createCodeBatch(submitData);
       const codesCount = res.data?.codes?.length || values.quantity;
-      message.success(`Đã tạo lô mã "${values.batchName}" với ${codesCount} mã thành công!`);
-      form.resetFields();
+      message.success(`✓ Đã tạo lô mã "${values.batchName}" với ${codesCount} mã thành công!`);
       onSuccess?.();
     } catch (err: any) {
+      if (err?.errorFields) {
+        return;
+      }
       const errorMsg = err?.response?.data?.message || 'Tạo lô mã thất bại';
       message.error(errorMsg);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    handleSubmit,
+  }));
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={handleSubmit}
+      autoComplete="off"
+      style={{ marginTop: 16 }}
       initialValues={{
         rewardType: 'GOLD',
         quantity: 10,
@@ -79,70 +94,75 @@ export default function CodeBatchForm({ onSuccess }: CodeBatchFormProps) {
         <Input placeholder="VD: Khuyến mãi Tết 2026" />
       </Form.Item>
 
-      <Form.Item
-        name="rewardType"
-        label="Loại phần thưởng"
-        rules={[{ required: true, message: 'Chọn loại phần thưởng' }]}
-      >
-        <Select options={REWARD_TYPES} />
-      </Form.Item>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item
+            name="rewardType"
+            label="Loại phần thưởng"
+            rules={[{ required: true, message: 'Chọn loại phần thưởng' }]}
+          >
+            <Select options={REWARD_TYPES} showSearch={false} />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            name="rewardValue"
+            label={rewardType === 'VIP_DAYS' ? 'Số ngày VIP / mã' : 'Số xu vàng / mã'}
+            rules={[
+              { required: true, message: 'Vui lòng nhập giá trị' },
+              { type: 'number', min: 1, message: 'Giá trị phải lớn hơn 0' },
+            ]}
+          >
+            <InputNumber
+              min={1}
+              placeholder={rewardType === 'VIP_DAYS' ? '7' : '1000'}
+              style={{ width: '100%' }}
+              formatter={(value) =>
+                rewardType === 'GOLD'
+                  ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                  : `${value}`
+              }
+              parser={(value) => Number(value!.replace(/,/g, '')) as unknown as 1}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item
+            name="quantity"
+            label="Số lượng mã cần tạo"
+            rules={[
+              { required: true, message: 'Vui lòng nhập số lượng' },
+              { type: 'number', min: 1, max: 1000, message: 'Từ 1 đến 1000 mã' },
+            ]}
+          >
+            <InputNumber min={1} max={1000} style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            name="codeLength"
+            label="Độ dài mã"
+            tooltip="Tổng ký tự của mã (bao gồm prefix)"
+          >
+            <InputNumber min={6} max={20} style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
+      </Row>
 
       <Form.Item
-        name="rewardValue"
-        label={rewardType === 'VIP_DAYS' ? 'Số ngày VIP / mã' : 'Số xu vàng / mã'}
-        rules={[
-          { required: true, message: 'Vui lòng nhập giá trị' },
-          { type: 'number', min: 1, message: 'Giá trị phải lớn hơn 0' },
-        ]}
+        name="codePrefix"
+        label="Prefix mã (tùy chọn)"
+        tooltip="VD: TET → mã sẽ là TET_XXXXXX"
       >
-        <InputNumber
-          min={1}
-          placeholder={rewardType === 'VIP_DAYS' ? '7' : '1000'}
-          style={{ width: '100%' }}
-          formatter={(value) =>
-            rewardType === 'GOLD'
-              ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-              : `${value}`
-          }
-          parser={(value) => Number(value!.replace(/,/g, '')) as unknown as 1}
+        <Input
+          placeholder="VD: TET"
+          maxLength={10}
+          onChange={(e) => form.setFieldValue('codePrefix', e.target.value.toUpperCase())}
         />
       </Form.Item>
-
-      <Form.Item
-        name="quantity"
-        label="Số lượng mã cần tạo"
-        rules={[
-          { required: true, message: 'Vui lòng nhập số lượng' },
-          { type: 'number', min: 1, max: 1000, message: 'Từ 1 đến 1000 mã' },
-        ]}
-      >
-        <InputNumber min={1} max={1000} style={{ width: '100%' }} />
-      </Form.Item>
-
-      <Space style={{ width: '100%' }} size="middle">
-        <Form.Item
-          name="codePrefix"
-          label="Prefix mã (tùy chọn)"
-          tooltip="VD: TET → mã sẽ là TET_XXXXXX"
-          style={{ flex: 1 }}
-        >
-          <Input
-            placeholder="VD: TET"
-            maxLength={10}
-            style={{ textTransform: 'uppercase' }}
-            onChange={(e) => form.setFieldValue('codePrefix', e.target.value.toUpperCase())}
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="codeLength"
-          label="Độ dài mã"
-          tooltip="Tổng ký tự của mã (bao gồm prefix)"
-          style={{ flex: 1 }}
-        >
-          <InputNumber min={6} max={20} style={{ width: '100%' }} />
-        </Form.Item>
-      </Space>
 
       <Form.Item
         name="usageLimit"
@@ -165,12 +185,9 @@ export default function CodeBatchForm({ onSuccess }: CodeBatchFormProps) {
           disabledDate={(current) => current && current < dayjs().startOf('day')}
         />
       </Form.Item>
-
-      <Form.Item style={{ marginTop: 24 }}>
-        <Button type="primary" htmlType="submit" loading={loading} block>
-          Tạo lô mã
-        </Button>
-      </Form.Item>
     </Form>
   );
-}
+});
+
+CodeBatchForm.displayName = 'CodeBatchForm';
+export default CodeBatchForm;

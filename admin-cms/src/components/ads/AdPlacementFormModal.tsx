@@ -31,10 +31,10 @@ interface AdPlacementFormModalProps {
 }
 
 const AD_TYPES = [
-  { label: '🏷️ Banner', value: 'BANNER' },
-  { label: '📺 Interstitial (toàn màn hình)', value: 'INTERSTITIAL' },
-  { label: '🎁 Reward Video (xem nhận thưởng)', value: 'REWARD_VIDEO' },
-  { label: '📰 Native (tùy chỉnh)', value: 'NATIVE' },
+  { label: 'Banner', value: 'BANNER' },
+  { label: 'Interstitial (toàn màn hình)', value: 'INTERSTITIAL' },
+  { label: 'Reward Video (xem nhận thưởng)', value: 'REWARD_VIDEO' },
+  { label: 'Native (tùy chỉnh)', value: 'NATIVE' },
 ];
 
 const PLATFORMS = [

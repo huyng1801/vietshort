@@ -151,7 +151,7 @@ export const PLAYER_SETTINGS = {
 } as const;
 
 // Quality Options
-export const VIDEO_QUALITIES = ['360p', '480p', '720p', '1080p', '1440p', '4K'] as const;
+export const VIDEO_QUALITIES = ['540p', '720p', '1080p'] as const;
 
 // Playback Speeds
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0] as const;
@@ -198,10 +198,10 @@ export const ROUTES = {
   WATCH: (id: string) => `/watch/${id}`,
   VIDEO_DETAIL: (id: string) => `/video/${id}`,
   CATEGORY: (slug: string) => `/category/${slug}`,
-  PROFILE: '/account/profile',
-  WALLET: '/account/wallet',
-  VIP: '/account/vip',
-  HISTORY: '/account/history',
-  BOOKMARKS: '/account/bookmarks',
-  SETTINGS: '/account/settings',
+  PROFILE: '/profile',
+  WALLET: '/wallet',
+  VIP: '/vip',
+  HISTORY: '/history',
+  BOOKMARKS: '/bookmarks',
+  SETTINGS: '/settings',
 } as const;

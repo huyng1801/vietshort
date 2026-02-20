@@ -82,6 +82,21 @@ export class VideosService {
     });
   }
 
+  async getGenres() {
+    const cacheKey = 'genres:active';
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) return cached;
+
+    const genres = await this.prisma.genre.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true, name: true, slug: true, description: true },
+    });
+
+    await this.redisService.set(cacheKey, genres, 3600);
+    return genres;
+  }
+
   async getTrending(limit = 20) {
     const cacheKey = `trending:${limit}`;
     const cached = await this.redisService.get(cacheKey);
@@ -95,6 +110,7 @@ export class VideosService {
         id: true, title: true, slug: true, poster: true,
         viewCount: true, likeCount: true, ratingAverage: true, isVipOnly: true,
         releaseYear: true, genres: true, duration: true,
+        isSerial: true, totalEpisodes: true,
       },
     });
 
@@ -110,6 +126,8 @@ export class VideosService {
       select: {
         id: true, title: true, slug: true, poster: true,
         viewCount: true, ratingAverage: true, isVipOnly: true, publishedAt: true,
+        releaseYear: true, genres: true, duration: true,
+        isSerial: true, totalEpisodes: true,
       },
     });
   }
@@ -268,13 +286,13 @@ export class VideosService {
     let qualities: string[];
     switch (effectiveVip) {
       case VipType.VIP_GOLD:
-        qualities = ['360p', '480p', '720p', '1080p'];
+        qualities = ['540p', '720p', '1080p'];
         break;
       case VipType.VIP_FREEADS:
-        qualities = ['360p', '480p', '720p'];
+        qualities = ['540p', '720p'];
         break;
       default:
-        qualities = ['360p', '480p'];
+        qualities = ['540p'];
         break;
     }
 

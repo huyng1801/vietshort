@@ -44,7 +44,7 @@ export default () => ({
       ffmpegPath: process.env.FFMPEG_PATH || 'ffmpeg',
       maxFileSize: parseInt(process.env.MAX_VIDEO_SIZE || '5368709120', 10), // 5GB in bytes
       allowedFormats: process.env.ALLOWED_VIDEO_FORMATS?.split(',') || ['mp4', 'mov', 'avi', 'mkv'],
-      encodingQualities: ['360p', '480p', '720p', '1080p'],
+      encodingQualities: ['540p', '720p', '1080p'],
     },
 
     // Firebase push notifications

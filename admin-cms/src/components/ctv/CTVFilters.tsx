@@ -1,51 +1,76 @@
 'use client';
 
-import React from 'react';
-import FilterBar, { FilterField } from '@/components/common/FilterBar';
+import { Input, Select, Button, Space, DatePicker } from 'antd';
+import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import type { ReactNode } from 'react';
+import type { Dayjs } from 'dayjs';
 
 interface CTVFiltersProps {
-  values: Record<string, unknown>;
-  onChange: (key: string, value: unknown) => void;
+  search: string;
+  isActive: boolean | undefined;
+  isVerified: boolean | undefined;
+  dateRange: [Dayjs, Dayjs] | undefined;
+  onSearchChange: (value: string) => void;
+  onActiveChange: (value: boolean | undefined) => void;
+  onVerifiedChange: (value: boolean | undefined) => void;
+  onDateRangeChange: (dates: [Dayjs, Dayjs] | undefined) => void;
+  onSearch: () => void;
   onReset: () => void;
-  onSearch?: () => void;
 }
 
-const filterFields: FilterField[] = [
-  {
-    key: 'search',
-    label: 'Tìm kiếm',
-    type: 'search',
-    placeholder: 'Email, biệt danh, tên, mã CTV, SĐT, công ty...',
-    width: 300,
-  },
-
-  {
-    key: 'isActive',
-    label: 'Trạng thái',
-    type: 'select',
-    options: [
-      { label: 'Tất cả', value: '' },
-      { label: 'Hoạt động', value: 'true' },
-      { label: 'Không hoạt động', value: 'false' },
-    ],
-  },
-  {
-    key: 'isVerified',
-    label: 'Xác thực',
-    type: 'select',
-    options: [
-      { label: 'Tất cả', value: '' },
-      { label: 'Đã xác thực', value: 'true' },
-      { label: 'Chưa xác thực', value: 'false' },
-    ],
-  },
-  {
-    key: 'dateRange',
-    label: 'Ngày tạo',
-    type: 'dateRange',
-  },
-];
-
-export default function CTVFilters({ values, onChange, onReset, onSearch }: CTVFiltersProps) {
-  return <FilterBar fields={filterFields} values={values} onChange={onChange} onReset={onReset} onSearch={onSearch} />;
+export default function CTVFilters({
+  search,
+  isActive,
+  isVerified,
+  dateRange,
+  onSearchChange,
+  onActiveChange,
+  onVerifiedChange,
+  onDateRangeChange,
+  onSearch,
+  onReset,
+}: CTVFiltersProps): ReactNode {
+  return (
+    <Space wrap className="mb-4">
+      <Input
+        placeholder="Email, biệt danh, tên, mã CTV, SĐT, công ty..."
+        prefix={<SearchOutlined />}
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        onPressEnter={onSearch}
+        style={{ width: 320 }}
+        allowClear
+      />
+      <Select
+        placeholder="Trạng thái"
+        value={isActive}
+        onChange={onActiveChange}
+        style={{ width: 160 }}
+        allowClear
+        options={[
+          { label: 'Hoạt động', value: true },
+          { label: 'Không hoạt động', value: false },
+        ]}
+      />
+      <Select
+        placeholder="Xác thực"
+        value={isVerified}
+        onChange={onVerifiedChange}
+        style={{ width: 160 }}
+        allowClear
+        options={[
+          { label: 'Đã xác thực', value: true },
+          { label: 'Chưa xác thực', value: false },
+        ]}
+      />
+      <DatePicker.RangePicker
+        value={dateRange}
+        onChange={(dates) => onDateRangeChange(dates as [Dayjs, Dayjs] | undefined)}
+        style={{ width: 280 }}
+      />
+      <Button icon={<ReloadOutlined />} onClick={onReset}>
+        Đặt lại
+      </Button>
+    </Space>
+  );
 }

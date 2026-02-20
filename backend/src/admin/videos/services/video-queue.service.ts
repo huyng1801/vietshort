@@ -19,7 +19,7 @@ export class VideoQueueService {
     await this.redisService.addToQueue('video-encoding', {
       episodeId,
       sourceUrl,
-      qualities: ['360p', '480p', '720p', '1080p'],
+      qualities: ['540p', '720p', '1080p'],
       createdAt: new Date().toISOString(),
     });
   }

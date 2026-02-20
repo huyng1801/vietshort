@@ -16,7 +16,8 @@ import { VipModule } from './vip/vip.module';
 import { WalletModule } from './wallet/wallet.module';
 import { UnlockModule } from './unlock/unlock.module';
 import { GamificationModule } from './gamification/gamification.module';
-import { ExchangeCodesModule } from './exchange-codes/exchange-codes.module';
+import { BannersModule } from './banners/banners.module';
+import { ExchangeCodesModule } from '../admin/exchange-codes/exchange-codes.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ExchangeCodesModule } from './exchange-codes/exchange-codes.module';
     WalletModule,
     UnlockModule,
     GamificationModule,
+    BannersModule,
     ExchangeCodesModule,
   ],
   exports: [
@@ -53,6 +55,7 @@ import { ExchangeCodesModule } from './exchange-codes/exchange-codes.module';
     WalletModule,
     UnlockModule,
     GamificationModule,
+    BannersModule,
     ExchangeCodesModule,
   ],
 })
