@@ -7,6 +7,7 @@ export interface SubtitleTrack {
   label: string;
   language: string;
   url: string;
+  content?: string; // Inline SRT content (takes priority over url)
   isDefault?: boolean;
 }
 

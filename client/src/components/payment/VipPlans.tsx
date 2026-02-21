@@ -53,7 +53,7 @@ export function VipTierCard({ tier, selected, onSelect }: VipTierCardProps) {
     <button
       onClick={onSelect}
       className={cn(
-        'relative flex-1 rounded-2xl border-2 p-6 text-left transition-all duration-300',
+        'relative flex-1 rounded-xl sm:rounded-2xl border-2 p-4 sm:p-5 lg:p-6 text-left transition-all duration-300',
         selected
           ? `${info.border} ${info.glow} shadow-lg scale-[1.02]`
           : 'border-white/10 hover:border-gray-600',
@@ -65,20 +65,20 @@ export function VipTierCard({ tier, selected, onSelect }: VipTierCardProps) {
         </div>
       )}
 
-      <div className={cn('inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-base font-semibold mb-4', info.bg)}>
-        <Icon className="w-5 h-5" />
+      <div className={cn('inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm lg:text-base font-semibold mb-3 sm:mb-4', info.bg)}>
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         {info.name}
       </div>
 
-      <p className="text-gray-400 text-base mb-4">{info.tagline}</p>
+      <p className="text-gray-400 text-xs sm:text-sm lg:text-base mb-3 sm:mb-4">{info.tagline}</p>
 
-      <ul className="space-y-2.5">
+      <ul className="space-y-1.5 sm:space-y-2 lg:space-y-2.5">
         {info.features.map((f) => (
-          <li key={f.label} className="flex items-center gap-2 text-base">
+          <li key={f.label} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm lg:text-base">
             {f.included ? (
-              <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
             ) : (
-              <X className="w-4 h-4 text-gray-600 flex-shrink-0" />
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
             )}
             <span className={f.included ? 'text-gray-200' : 'text-gray-500'}>{f.label}</span>
           </li>
@@ -110,7 +110,7 @@ interface PlanSelectorProps {
 
 export function PlanSelector({ tier, selected, onSelect, plans }: PlanSelectorProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
       {plans.map((plan) => {
         const isSelected = selected === plan.id;
         const originalPrice = plan.discount ? Math.round(plan.price / (1 - plan.discount)) : null;
@@ -119,7 +119,7 @@ export function PlanSelector({ tier, selected, onSelect, plans }: PlanSelectorPr
             key={plan.id}
             onClick={() => onSelect(plan)}
             className={cn(
-              'relative rounded-xl border-2 p-5 text-center transition-all',
+              'relative rounded-lg sm:rounded-xl border-2 p-3.5 sm:p-4 lg:p-5 text-center transition-all',
               isSelected
                 ? 'border-red-500 bg-red-500/10 shadow-lg shadow-red-500/10'
                 : 'border-white/10 hover:border-gray-500 bg-gray-800/50',
@@ -130,16 +130,16 @@ export function PlanSelector({ tier, selected, onSelect, plans }: PlanSelectorPr
                 -{Math.round(plan.discount * 100)}%
               </div>
             )}
-            <div className="text-base text-gray-400 mb-2">{plan.label}</div>
-            <div className="text-3xl font-bold text-white">
+            <div className="text-xs sm:text-sm lg:text-base text-gray-400 mb-1.5 sm:mb-2">{plan.label}</div>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
               {formatVND(plan.price)}
             </div>
             {originalPrice && (
-              <div className="text-sm text-gray-500 line-through mt-1">
+              <div className="text-xs sm:text-sm text-gray-500 line-through mt-0.5 sm:mt-1">
                 {formatVND(originalPrice)}
               </div>
             )}
-            <div className="text-sm text-gray-400 mt-2">
+            <div className="text-xs sm:text-sm text-gray-400 mt-1.5 sm:mt-2">
               ~{formatVND(plan.perMonth)}/tháng
             </div>
           </button>
@@ -167,23 +167,23 @@ export function SavingsCalculator({ tier, plans }: SavingsCalculatorProps) {
   const savingsPercent = Math.round((savings / monthlyCostYear) * 100);
 
   return (
-    <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-5 h-5 text-green-400" />
-        <span className="text-base font-semibold text-green-400">Tiết kiệm với gói năm</span>
+    <div className="rounded-lg sm:rounded-xl border border-green-500/30 bg-green-500/5 p-3.5 sm:p-4 lg:p-5">
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+        <span className="text-xs sm:text-sm lg:text-base font-semibold text-green-400">Tiết kiệm với gói năm</span>
       </div>
-      <div className="grid grid-cols-2 gap-4 text-base">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm lg:text-base">
         <div>
           <div className="text-gray-400">Thanh toán hàng tháng (12 tháng)</div>
-          <div className="text-xl font-bold text-gray-300 line-through">{formatVND(monthlyCostYear)}</div>
+          <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-300 line-through">{formatVND(monthlyCostYear)}</div>
         </div>
         <div>
           <div className="text-gray-400">Gói 1 năm</div>
-          <div className="text-xl font-bold text-white">{formatVND(yearly.price)}</div>
+          <div className="text-base sm:text-lg lg:text-xl font-bold text-white">{formatVND(yearly.price)}</div>
         </div>
       </div>
-      <div className="mt-3 flex items-center gap-2 text-green-400 font-semibold text-base">
-        <Shield className="w-5 h-5" />
+      <div className="mt-2 sm:mt-3 flex items-center gap-1.5 sm:gap-2 text-green-400 font-semibold text-xs sm:text-sm lg:text-base">
+        <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
         Tiết kiệm {formatVND(savings)} ({savingsPercent}%)
       </div>
     </div>
@@ -205,22 +205,22 @@ export function FeatureComparisonTable() {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-base">
+      <table className="w-full text-xs sm:text-sm lg:text-base">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="text-left py-4 px-5 text-gray-400 font-medium">Tính năng</th>
-            <th className="text-center py-4 px-5 text-gray-400 font-medium">Miễn phí</th>
-            <th className="text-center py-4 px-5 text-blue-400 font-medium">VIP FreeAds</th>
-            <th className="text-center py-4 px-5 text-amber-400 font-medium">VIP Gold</th>
+            <th className="text-left py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-gray-400 font-medium">Tính năng</th>
+            <th className="text-center py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-gray-400 font-medium">Miễn phí</th>
+            <th className="text-center py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-blue-400 font-medium">VIP FreeAds</th>
+            <th className="text-center py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-amber-400 font-medium">VIP Gold</th>
           </tr>
         </thead>
         <tbody>
           {features.map((f) => (
             <tr key={f.name} className="border-b border-gray-800">
-              <td className="py-4 px-5 text-gray-300">{f.name}</td>
-              <td className="py-4 px-5 text-center">{renderCell(f.free)}</td>
-              <td className="py-4 px-5 text-center">{renderCell(f.freeads)}</td>
-              <td className="py-4 px-5 text-center">{renderCell(f.gold)}</td>
+              <td className="py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-gray-300">{f.name}</td>
+              <td className="py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-center">{renderCell(f.free)}</td>
+              <td className="py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-center">{renderCell(f.freeads)}</td>
+              <td className="py-2.5 px-3 sm:py-3 sm:px-4 lg:py-4 lg:px-5 text-center">{renderCell(f.gold)}</td>
             </tr>
           ))}
         </tbody>

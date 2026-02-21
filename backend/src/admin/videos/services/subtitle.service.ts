@@ -228,7 +228,7 @@ export class SubtitleService {
   async uploadSubtitle(episodeId: string, dto: CreateSubtitleDto) {
     const episode = await this.prisma.episode.findUnique({
       where: { id: episodeId },
-      include: { video: { select: { id: true, title: true } } },
+      include: { video: { select: { id: true, title: true, slug: true } } },
     });
 
     if (!episode) {
@@ -271,6 +271,10 @@ export class SubtitleService {
         progress: 100,
       },
     });
+
+    // Invalidate video cache so new subtitle appears immediately in the client
+    await this.redisService.del(`video:${episode.video.id}`);
+    await this.redisService.del(`video:slug:${episode.video.slug}`);
 
     this.logger.log(`Subtitle uploaded: ${subtitle.id} (${dto.language}) for episode ${episodeId}`);
     return subtitle;
@@ -336,7 +340,7 @@ export class SubtitleService {
   async updateSubtitleContent(subtitleId: string, content: string) {
     const subtitle = await this.prisma.subtitle.findUnique({
       where: { id: subtitleId },
-      include: { episode: { select: { videoId: true, episodeNumber: true } } },
+      include: { episode: { include: { video: { select: { id: true, slug: true } } } } },
     });
 
     if (!subtitle) {
@@ -356,6 +360,10 @@ export class SubtitleService {
       data: { content, updatedAt: new Date() },
     });
 
+    // Invalidate video cache
+    await this.redisService.del(`video:${subtitle.episode.videoId}`);
+    await this.redisService.del(`video:slug:${subtitle.episode.video.slug}`);
+
     this.logger.log(`Subtitle updated: ${subtitleId}`);
     return updated;
   }
@@ -366,7 +374,7 @@ export class SubtitleService {
   async deleteSubtitle(subtitleId: string) {
     const subtitle = await this.prisma.subtitle.findUnique({
       where: { id: subtitleId },
-      include: { episode: { select: { videoId: true, episodeNumber: true } } },
+      include: { episode: { include: { video: { select: { id: true, slug: true } } } } },
     });
 
     if (!subtitle) {
@@ -382,6 +390,11 @@ export class SubtitleService {
     }
 
     await this.prisma.subtitle.delete({ where: { id: subtitleId } });
+
+    // Invalidate video cache
+    await this.redisService.del(`video:${subtitle.episode.videoId}`);
+    await this.redisService.del(`video:slug:${subtitle.episode.video.slug}`);
+
     this.logger.log(`Subtitle deleted: ${subtitleId}`);
     return { success: true };
   }

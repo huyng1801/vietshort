@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { bookmarksApi } from '@/lib/api';
 import { Loading } from '@/components/common/Loading';
 import { VideoCard } from '@/components/video/VideoCard';
@@ -57,6 +57,7 @@ type ViewMode = 'grid' | 'list';
 export default function BookmarksPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const _hasHydrated = useHasHydrated();
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -86,12 +87,13 @@ export default function BookmarksPage() {
   }, []);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     fetchBookmarks(page);
-  }, [isAuthenticated, router, page, fetchBookmarks]);
+  }, [_hasHydrated, isAuthenticated, router, page, fetchBookmarks]);
 
   const handleRemoveBookmark = async (videoId: string) => {
     try {
@@ -151,114 +153,8 @@ export default function BookmarksPage() {
   return (
     <div className="min-h-screen pb-20 lg:pb-8 bg-[#0a0a0a]">
       {/* Header */}
-      <div className="mx-auto px-2 lg:px-32 pt-20 lg:pt-24">
+      <div className="mx-auto px-2 lg:px-32 pt-20 lg:pt-24 mb-8">
         <Breadcrumb items={[{ label: '\u0110\u00e1nh d\u1ea5u' }]} />
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center">
-            <Bookmark className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">Đánh dấu</h1>
-            <p className="text-gray-400 text-sm lg:text-base">
-              {total > 0
-                ? `${total} phim đã lưu • Danh sách phim yêu thích của bạn`
-                : 'Chưa có phim nào được đánh dấu'}
-            </p>
-          </div>
-        </div>
-
-        {/* Search & Filters */}
-        {bookmarks.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm trong danh sách đánh dấu..."
-                className="w-full pl-10 pr-10 py-2.5 bg-gray-800/60 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Sort & View Controls */}
-            <div className="flex items-center gap-2">
-              {/* Filter button (mobile) */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="sm:hidden p-2.5 bg-gray-800/60 border border-gray-700/50 rounded-xl text-gray-400 hover:text-white transition-colors"
-              >
-                <Filter className="w-5 h-5" />
-              </button>
-
-              {/* Sort dropdown */}
-              <div className="relative hidden sm:block">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="appearance-none pl-10 pr-8 py-2.5 bg-gray-800/60 border border-gray-700/50 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500/50 cursor-pointer"
-                >
-                  <option value="newest">Mới nhất</option>
-                  <option value="oldest">Cũ nhất</option>
-                  <option value="name">Tên A-Z</option>
-                </select>
-                <SortDesc className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
-              </div>
-
-              {/* View mode toggle */}
-              <div className="flex items-center bg-gray-800/60 border border-gray-700/50 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2.5 transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'text-gray-500 hover:text-white'
-                  }`}
-                >
-                  <Grid3X3 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2.5 transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'text-gray-500 hover:text-white'
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Mobile filters */}
-        {showFilters && (
-          <div className="sm:hidden mb-4 p-4 bg-gray-800/40 rounded-xl border border-gray-700/30">
-            <label className="text-sm text-gray-400 mb-2 block">Sắp xếp theo</label>
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value as SortOption);
-                setShowFilters(false);
-              }}
-              className="w-full p-2.5 bg-gray-900 border border-gray-700/50 rounded-lg text-white text-sm"
-            >
-              <option value="newest">Mới nhất</option>
-              <option value="oldest">Cũ nhất</option>
-              <option value="name">Tên A-Z</option>
-            </select>
-          </div>
-        )}
       </div>
 
       {/* Content */}

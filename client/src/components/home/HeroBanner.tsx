@@ -146,14 +146,14 @@ export function HeroBanner({ items }: HeroBannerProps) {
         <>
           <button
             onClick={prev}
-            className={`absolute top-1/2 left-[3%] sm:left-[5%] lg:left-[8%] -translate-y-1/2 z-30 rounded-full w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/10 hover:bg-white/15 flex items-center justify-center transition-all ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute top-1/2 left-[3%] sm:left-[5%] lg:left-[8%] -translate-y-1/2 z-30 rounded-full w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/30 hover:bg-white/50 flex items-center justify-center transition-all ${isHovered ? 'opacity-100' : 'opacity-0'}`}
             aria-label="Trước"
           >
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
           </button>
           <button
             onClick={next}
-            className={`absolute top-1/2 right-[3%] sm:right-[5%] lg:right-[8%] -translate-y-1/2 z-30 rounded-full w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/10 hover:bg-white/15 flex items-center justify-center transition-all ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute top-1/2 right-[3%] sm:right-[5%] lg:right-[8%] -translate-y-1/2 z-30 rounded-full w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/30 hover:bg-white/50 flex items-center justify-center transition-all ${isHovered ? 'opacity-100' : 'opacity-0'}`}
             aria-label="Tiếp theo"
           >
             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />

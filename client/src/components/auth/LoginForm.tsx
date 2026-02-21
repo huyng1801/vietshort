@@ -44,15 +44,15 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
+          <label htmlFor="email" className="block text-sm sm:text-base font-medium text-gray-300 mb-1.5 sm:mb-2">
             Email
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
             <input
               id="email"
               name="email"
@@ -60,7 +60,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               required
               value={formData.email}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
               placeholder="your@email.com"
             />
           </div>
@@ -68,11 +68,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
         {/* Password Field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1.5">
+          <label htmlFor="password" className="block text-sm sm:text-base font-medium text-gray-300 mb-1.5 sm:mb-2">
             Mật khẩu
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
             <input
               id="password"
               name="password"
@@ -80,7 +80,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               required
               value={formData.password}
               onChange={handleChange}
-              className="w-full pl-10 pr-12 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+              className="w-full pl-9 sm:pl-10 pr-12 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
               placeholder="••••••••"
             />
             <button
@@ -105,7 +105,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             />
             <span className="text-sm text-gray-400">Ghi nhớ đăng nhập</span>
           </label>
-          <Link href="/forgot-password" className="text-sm text-red-500 hover:text-red-400">
+          <Link href="/forgot-password" className="text-sm sm:text-base text-red-500 hover:text-red-400 transition-colors">
             Quên mật khẩu?
           </Link>
         </div>
@@ -121,7 +121,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 disabled:cursor-not-allowed text-white font-semibold text-sm sm:text-base rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
         >
           {isLoading ? (
             <>
@@ -135,22 +135,19 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       </form>
 
       {/* Divider */}
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-700"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-gray-900 text-gray-500">Hoặc đăng nhập với</span>
-        </div>
+      <div className="flex items-center gap-3 my-5 sm:my-6">
+        <div className="flex-1 h-px bg-gray-700/50" />
+        <span className="text-xs sm:text-sm text-gray-500 px-1">Đăng nhập với</span>
+        <div className="flex-1 h-px bg-gray-700/50" />
       </div>
 
       {/* OAuth Buttons */}
       <OAuthButtons />
 
       {/* Register Link */}
-      <p className="mt-6 text-center text-gray-400">
+      <p className="mt-5 sm:mt-6 text-center text-sm sm:text-base text-gray-400">
         Chưa có tài khoản?{' '}
-        <Link href="/register" className="text-red-500 hover:text-red-400 font-medium">
+        <Link href="/register" className="text-red-500 hover:text-red-400 font-semibold transition-colors">
           Đăng ký ngay
         </Link>
       </p>

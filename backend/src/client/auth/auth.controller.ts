@@ -114,26 +114,28 @@ export class AuthController {
     return this.authService.guestLogin(dto, ip, req.headers['user-agent']);
   }
 
-  @Public()
+  @UseGuards(JwtAuthGuard)
   @Post('guest/link-account')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT')
   @ApiOperation({ summary: 'Liên kết tài khoản khách với email/password' })
   @ApiResponse({ status: 200, description: 'Liên kết thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy tài khoản guest' })
   @ApiResponse({ status: 409, description: 'Email đã tồn tại' })
-  async linkAccount(@Body() dto: LinkAccountDto) {
-    return this.authService.linkAccount(dto);
+  async linkAccount(@CurrentUser('id') userId: string, @Body() dto: LinkAccountDto) {
+    return this.authService.linkAccount(dto, userId);
   }
 
-  @Public()
+  @UseGuards(JwtAuthGuard)
   @Post('guest/upgrade')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT')
   @ApiOperation({ summary: 'Nâng cấp tài khoản guest thành tài khoản chính thức' })
   @ApiResponse({ status: 200, description: 'Nâng cấp thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy tài khoản guest' })
   @ApiResponse({ status: 409, description: 'Email/nickname đã tồn tại' })
-  async upgradeGuest(@Body() dto: UpgradeGuestDto) {
-    return this.authService.upgradeGuest(dto);
+  async upgradeGuest(@CurrentUser('id') userId: string, @Body() dto: UpgradeGuestDto) {
+    return this.authService.upgradeGuest(dto, userId);
   }
 
   // ─── Referral Code Endpoints ──────────────────────────
@@ -170,8 +172,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth - Callback' })
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
     const result = req.user as any;
-    // Redirect to frontend with tokens
-    const redirectUrl = `${this.frontendUrl}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+    const redirectUrl = `${this.frontendUrl}/oauth-callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
     return res.redirect(redirectUrl);
   }
 
@@ -189,7 +190,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Facebook OAuth - Callback' })
   async facebookAuthCallback(@Req() req: Request, @Res() res: Response) {
     const result = req.user as any;
-    const redirectUrl = `${this.frontendUrl}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+    const redirectUrl = `${this.frontendUrl}/oauth-callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
     return res.redirect(redirectUrl);
   }
 
@@ -207,7 +208,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Apple OAuth - Callback (Apple uses POST)' })
   async appleAuthCallback(@Req() req: Request, @Res() res: Response) {
     const result = req.user as any;
-    const redirectUrl = `${this.frontendUrl}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+    const redirectUrl = `${this.frontendUrl}/oauth-callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
     return res.redirect(redirectUrl);
   }
 
@@ -226,7 +227,7 @@ export class AuthController {
   async tiktokAuthCallback(@Query('code') code: string, @Res() res: Response) {
     try {
       const result = await this.tiktokOAuthService.handleCallback(code);
-      const redirectUrl = `${this.frontendUrl}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+      const redirectUrl = `${this.frontendUrl}/oauth-callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
       return res.redirect(redirectUrl);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Authentication failed';

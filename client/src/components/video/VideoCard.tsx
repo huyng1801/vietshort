@@ -58,8 +58,8 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
             </div>
           </div>
           {video.isVipOnly && (
-            <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 rounded text-[10px] font-bold text-white">
-              <Crown className="w-2.5 h-2.5" /> VIP
+            <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 rounded text-[10px] font-bold text-white badge-shimmer-gold shadow-lg" style={{ boxShadow: '0 0 12px rgba(250, 204, 21, 0.8), 0 0 8px rgba(251, 146, 60, 0.6)' }}>
+              <Crown className="w-2.5 h-2.5 drop-shadow-lg" /> VIP
             </div>
           )}
           {video.duration && (
@@ -105,8 +105,8 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
 
           {/* VIP badge */}
           {video.isVipOnly && (
-            <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full text-[10px] font-bold text-white shadow">
-              <Crown className="w-3 h-3" /> VIP
+            <div className="absolute top-2 left-2 flex items-center px-1 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full text-[10px] font-bold text-white badge-shimmer-gold shadow-lg" style={{ boxShadow: '0 0 12px rgba(250, 204, 21, 0.8), 0 0 8px rgba(251, 146, 60, 0.6)' }}>
+              <Crown className="w-3 h-3 drop-shadow-lg" />
             </div>
           )}
 
@@ -127,6 +127,13 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
               {video.totalEpisodes} tập
             </div>
           )}
+
+          {/* View count - bottom left */}
+          {video.viewCount != null && (
+            <div className="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/70 rounded text-[10px] text-white flex items-center gap-0.5">
+              <Eye className="w-3 h-3" /> {formatViews(video.viewCount)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -138,11 +145,11 @@ export function VideoCard({ video, rank, variant = 'portrait', className = '' }:
       {/* Meta */}
       <div className="flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 text-[10px] sm:text-[10px] lg:text-xs text-gray-500">
         {video.genres && (
-          <span className="truncate">{video.genres.split(',')[0]?.trim()}</span>
+          <span className="truncate">{video.genres.replace(/,/g, ', ')}</span>
         )}
-        {video.viewCount != null && (
-          <span className="flex items-center gap-0.5 shrink-0">
-            <Eye className="w-3 h-3" /> {formatViews(video.viewCount)}
+        {video.ratingAverage != null && video.ratingAverage > 0 && (
+          <span className="flex items-center gap-0.5 text-yellow-400 shrink-0">
+            <Star className="w-3 h-3 fill-current" /> {video.ratingAverage.toFixed(1)}
           </span>
         )}
       </div>

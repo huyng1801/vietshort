@@ -76,12 +76,13 @@ export function OAuthButtons({ className = '' }: OAuthButtonsProps) {
   };
 
   return (
-    <div className={`grid grid-cols-4 gap-3 ${className}`}>
+    <div className={`grid grid-cols-4 gap-2 sm:gap-3 ${className}`}>
       {/* Google */}
       <button
         onClick={() => handleOAuthLogin('google')}
         disabled={loadingProvider !== null}
-        className="flex items-center justify-center gap-2 py-3 bg-white hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded-lg transition-colors"
+        title="Đăng nhập với Google"
+        className="flex items-center justify-center py-2.5 sm:py-3 bg-white hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded-lg sm:rounded-xl transition-colors"
       >
         {loadingProvider === 'google' ? (
           <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
@@ -94,13 +95,13 @@ export function OAuthButtons({ className = '' }: OAuthButtonsProps) {
       <button
         onClick={() => handleOAuthLogin('facebook')}
         disabled={loadingProvider !== null}
-        className={
-          `flex items-center justify-center gap-2 py-3 bg-[#1877F2] hover:bg-[#166FE5] disabled:bg-[#1877F2]/50 disabled:cursor-not-allowed rounded-lg transition-colors`}
+        title="Đăng nhập với Facebook"
+        className="flex items-center justify-center py-2.5 sm:py-3 bg-[#1877F2] hover:bg-[#166FE5] disabled:bg-[#1877F2]/50 disabled:cursor-not-allowed rounded-lg sm:rounded-xl transition-colors"
       >
         {loadingProvider === 'facebook' ? (
           <Loader2 className="w-5 h-5 animate-spin text-white" />
         ) : (
-          <FacebookIcon className={loadingProvider !== null ? "text-[#1877F2]" : "text-white"} />
+          <FacebookIcon className="text-white" />
         )}
       </button>
 
@@ -108,7 +109,8 @@ export function OAuthButtons({ className = '' }: OAuthButtonsProps) {
       <button
         onClick={() => handleOAuthLogin('apple')}
         disabled={loadingProvider !== null}
-        className="flex items-center justify-center gap-2 py-3 bg-black hover:bg-gray-900 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+        title="Đăng nhập với Apple"
+        className="flex items-center justify-center py-2.5 sm:py-3 bg-black hover:bg-gray-900 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded-lg sm:rounded-xl transition-colors"
       >
         {loadingProvider === 'apple' ? (
           <Loader2 className="w-5 h-5 animate-spin" />
@@ -121,12 +123,13 @@ export function OAuthButtons({ className = '' }: OAuthButtonsProps) {
       <button
         onClick={() => handleOAuthLogin('tiktok')}
         disabled={loadingProvider !== null}
-        className="flex items-center justify-center gap-2 py-3 bg-black hover:bg-gray-900 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
+        title="Đăng nhập với TikTok"
+        className="flex items-center justify-center py-2.5 sm:py-3 bg-black hover:bg-gray-900 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg sm:rounded-xl transition-colors"
       >
         {loadingProvider === 'tiktok' ? (
           <Loader2 className="w-5 h-5 animate-spin text-white" />
         ) : (
-          <TikTokIcon className={loadingProvider !== null ? "text-black" : "text-white"} />
+          <TikTokIcon className="text-white" />
         )}
       </button>
     </div>

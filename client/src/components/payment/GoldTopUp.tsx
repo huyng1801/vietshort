@@ -60,11 +60,11 @@ export function GoldTopUp({ onSuccess }: GoldTopUpProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-6 lg:space-y-8">
       {/* Gold package grid */}
       <div>
-        <h3 className="text-lg font-bold text-white mb-1">Chọn gói Gold</h3>
-        <p className="text-sm text-gray-400 mb-5">Chọn gói phù hợp để nạp Gold vào ví của bạn</p>
+        <h3 className="text-base sm:text-lg font-bold text-white mb-1">Chọn gói Gold</h3>
+        <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4 lg:mb-5">Chọn gói phù hợp để nạp Gold vào ví của bạn</p>
 
         {loadingPackages ? (
           <div className="flex items-center justify-center py-16">
@@ -72,7 +72,7 @@ export function GoldTopUp({ onSuccess }: GoldTopUpProps) {
             <span className="ml-3 text-gray-400">Đang tải bảng giá...</span>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 lg:gap-4">
             {packages.map((pkg) => {
               const isSelected = selectedPkg?.id === pkg.id;
               return (
@@ -80,7 +80,7 @@ export function GoldTopUp({ onSuccess }: GoldTopUpProps) {
                   key={pkg.id}
                   onClick={() => setSelectedPkg(pkg)}
                   className={cn(
-                    'relative rounded-2xl border-2 p-5 text-center transition-all',
+                    'relative rounded-xl sm:rounded-2xl border-2 p-3 sm:p-4 lg:p-5 text-center transition-all',
                     isSelected
                       ? 'border-amber-500 bg-amber-500/10 shadow-xl shadow-amber-500/15 scale-[1.02]'
                       : 'border-gray-700 hover:border-gray-500 bg-gray-800/50 hover:bg-gray-800/80',
@@ -97,16 +97,16 @@ export function GoldTopUp({ onSuccess }: GoldTopUpProps) {
                       +{pkg.bonus}
                     </div>
                   ) : null}
-                  <div className="flex items-center justify-center gap-1.5 mb-2">
-                    <Coins className="w-6 h-6 text-yellow-400" />
-                    <span className="text-2xl font-bold text-white">{pkg.gold}</span>
+                  <div className="flex items-center justify-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+                    <Coins className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{pkg.gold}</span>
                   </div>
                   {pkg.bonus ? (
                     <div className="text-xs text-green-400 mb-2 flex items-center justify-center gap-1">
                       <Gift className="w-3.5 h-3.5" /> +{pkg.bonus} bonus
                     </div>
                   ) : null}
-                  <div className="text-base font-medium text-gray-300">{formatVNDFull(pkg.price)}</div>
+                  <div className="text-xs sm:text-sm lg:text-base font-medium text-gray-300">{formatVNDFull(pkg.price)}</div>
                 </button>
               );
             })}
@@ -117,30 +117,30 @@ export function GoldTopUp({ onSuccess }: GoldTopUpProps) {
       {/* Payment method */}
       {selectedPkg && (
         <div>
-          <h3 className="text-lg font-bold text-white mb-4">Phương thức thanh toán</h3>
+          <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Phương thức thanh toán</h3>
           <PaymentMethodSelector selected={paymentMethod} onSelect={setPaymentMethod} />
         </div>
       )}
 
       {/* Confirm */}
       {selectedPkg && paymentMethod && (
-        <div className="rounded-2xl border border-gray-700 bg-gray-800/50 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-base text-gray-400">Gói đã chọn</span>
-            <div className="flex items-center gap-1.5 text-amber-400 font-bold text-lg">
-              <Coins className="w-5 h-5" />
+        <div className="rounded-xl sm:rounded-2xl border border-gray-700 bg-gray-800/50 p-4 sm:p-5 lg:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <span className="text-xs sm:text-sm lg:text-base text-gray-400">Gói đã chọn</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 text-amber-400 font-bold text-sm sm:text-base lg:text-lg">
+              <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
               {selectedPkg.gold}{selectedPkg.bonus ? ` + ${selectedPkg.bonus}` : ''}
             </div>
           </div>
-          <div className="flex items-center justify-between mb-5">
-            <span className="text-base text-gray-400">Tổng thanh toán</span>
-            <span className="text-xl font-bold text-white">{formatVNDFull(selectedPkg.price)}</span>
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
+            <span className="text-xs sm:text-sm lg:text-base text-gray-400">Tổng thanh toán</span>
+            <span className="text-base sm:text-lg lg:text-xl font-bold text-white">{formatVNDFull(selectedPkg.price)}</span>
           </div>
 
           <button
             onClick={handlePurchase}
             disabled={processing}
-            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 rounded-xl text-base font-bold text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3 sm:py-3.5 lg:py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {processing ? (
               <Loader2 className="w-5 h-5 animate-spin" />

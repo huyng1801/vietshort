@@ -12,7 +12,7 @@ export class SubtitlesService {
 
   async findByEpisode(episodeId: string) {
     return this.prisma.subtitle.findMany({
-      where: { episodeId },
+      where: { episodeId, status: 'READY' },
       orderBy: { language: 'asc' },
     });
   }

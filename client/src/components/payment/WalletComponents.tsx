@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Coins, ArrowUpRight, ArrowDownRight, Clock, Filter, ChevronDown, Loader2, Wallet } from 'lucide-react';
+import { Coins, ArrowUpRight, ArrowDownRight, Clock, Filter, ChevronDown, Loader2, Wallet, Crown, Zap } from 'lucide-react';
 import { paymentApi, walletApi, type Transaction } from '@/lib/api';
 import { formatVNDFull } from './VipPlans';
 import { cn } from '@/lib/utils';
@@ -16,41 +16,41 @@ interface GoldBalanceProps {
 
 export function GoldBalanceCard({ balance, vipTier, onTopUp }: GoldBalanceProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600 via-yellow-600 to-amber-700 p-6">
+    <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-600 via-yellow-600 to-amber-700 p-4 sm:p-5 lg:p-6">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-4 right-4 w-24 h-24 rounded-full border-4 border-white" />
-        <div className="absolute bottom-2 left-8 w-16 h-16 rounded-full border-4 border-white" />
+        <div className="absolute top-4 right-4 w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full border-4 border-white" />
+        <div className="absolute bottom-2 left-8 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full border-4 border-white" />
       </div>
 
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-amber-200" />
-            <span className="text-amber-100 text-sm font-medium">Ví Gold</span>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-amber-200" />
+            <span className="text-amber-100 text-xs sm:text-sm font-medium">Ví Gold</span>
           </div>
           {vipTier && (
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               vipTier === 'VIP_GOLD' ? 'bg-amber-900/50 text-amber-200' : 'bg-blue-900/50 text-blue-200',
             )}>
-              {vipTier === 'VIP_GOLD' ? '👑 VIP Gold' : '⚡ VIP FreeAds'}
+              {vipTier === 'VIP_GOLD' ? <><Crown className="w-3 h-3 inline" /> VIP Gold</> : <><Zap className="w-3 h-3 inline" /> VIP FreeAds</>}
             </span>
           )}
         </div>
 
-        <div className="flex items-end gap-2 mb-1">
-          <Coins className="w-8 h-8 text-yellow-300" />
-          <span className="text-4xl font-bold text-white tracking-tight">
+        <div className="flex items-end gap-1.5 sm:gap-2 mb-1">
+          <Coins className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-yellow-300" />
+          <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
             {balance.toLocaleString('vi-VN')}
           </span>
         </div>
-        <p className="text-amber-200/70 text-sm">Gold hiện có</p>
+        <p className="text-amber-200/70 text-xs sm:text-sm">Gold hiện có</p>
 
         {onTopUp && (
           <button
             onClick={onTopUp}
-            className="mt-4 w-full py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl text-sm font-semibold text-white transition-colors"
+            className="mt-3 sm:mt-4 w-full py-2 sm:py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold text-white transition-colors"
           >
             + Nạp Gold
           </button>
@@ -188,19 +188,19 @@ function TransactionRow({ transaction: t }: { transaction: Transaction }) {
   const date = new Date(t.createdAt);
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 hover:bg-gray-800/60 transition-colors">
+    <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-gray-800/30 hover:bg-gray-800/60 transition-colors">
       <div className={cn(
-        'w-10 h-10 rounded-xl flex items-center justify-center',
+        'w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl flex items-center justify-center',
         isPositive ? 'bg-green-500/10' : 'bg-red-500/10',
       )}>
         {isPositive ? (
-          <ArrowDownRight className="w-5 h-5 text-green-400" />
+          <ArrowDownRight className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
         ) : (
-          <ArrowUpRight className="w-5 h-5 text-red-400" />
+          <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-white truncate">
+        <div className="text-xs sm:text-sm font-medium text-white truncate">
           {t.description || typeLabels[t.type] || t.type}
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
@@ -210,7 +210,7 @@ function TransactionRow({ transaction: t }: { transaction: Transaction }) {
       </div>
       <div className="text-right flex-shrink-0">
         {t.rewardValue !== null && t.rewardValue !== 0 && (
-          <div className={cn('text-sm font-bold', isPositive ? 'text-green-400' : 'text-red-400')}>
+          <div className={cn('text-xs sm:text-sm font-bold', isPositive ? 'text-green-400' : 'text-red-400')}>
             {isPositive ? '+' : ''}{t.rewardValue} <Coins className="w-3 h-3 inline" />
           </div>
         )}

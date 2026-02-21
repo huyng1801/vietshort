@@ -67,7 +67,6 @@ export function UserAvatar({
   const isVipGold = vipTier === 'VIP_GOLD';
   const isVipFreeAds = vipTier === 'VIP_FREEADS';
   const hasVip = isVipGold || isVipFreeAds;
-  user.avatar = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJkhjJC9qtF8JPKltseDK_Bzsev-y0nuhK6w&s";
   // Ring classes - use Tailwind with glow animation
   let ringClasses = '';
   if (isVipGold) {

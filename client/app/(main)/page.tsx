@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Clock, Play, Sparkles } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { videoApi, bannerApi, watchHistoryApi, recommendApi } from '@/lib/api';
 import { HeroBanner, BannerItem } from '@/components/home/HeroBanner';
 import { VideoGrid } from '@/components/home/VideoGrid';
@@ -22,6 +22,7 @@ interface GenreSection {
 
 export default function HomePage() {
   const { isAuthenticated, guestLogin, isLoading: authLoading } = useAuthStore();
+  const _hasHydrated = useHasHydrated();
   const [bannerItems, setBannerItems] = useState<BannerItem[]>([]);
   const [continueWatching, setContinueWatching] = useState<VideoCardData[]>([]);
   const [newReleases, setNewReleases] = useState<VideoCardData[]>([]);
@@ -31,6 +32,7 @@ export default function HomePage() {
 
   // Auto guest login
   useEffect(() => {
+    if (!_hasHydrated) return; // Wait for localStorage hydration
     const autoLogin = async () => {
       if (!isAuthenticated && !authLoading) {
         try {
@@ -41,7 +43,7 @@ export default function HomePage() {
       }
     };
     autoLogin();
-  }, [isAuthenticated, guestLogin, authLoading]);
+  }, [_hasHydrated, isAuthenticated, guestLogin, authLoading]);
 
   // Fetch all data
   useEffect(() => {

@@ -143,11 +143,17 @@ export class AuthService {
     });
 
     if (!stored || stored.expiresAt < new Date()) {
-      if (stored) await this.prisma.refreshToken.delete({ where: { id: stored.id } });
+      // Use deleteMany to avoid P2025 if already deleted by a concurrent request
+      if (stored) await this.prisma.refreshToken.deleteMany({ where: { id: stored.id } });
       throw new UnauthorizedException('Phiên đăng nhập đã hết hạn');
     }
 
-    await this.prisma.refreshToken.delete({ where: { id: stored.id } });
+    // Atomic delete — if count is 0, another concurrent request already consumed this token
+    const { count } = await this.prisma.refreshToken.deleteMany({ where: { id: stored.id } });
+    if (count === 0) {
+      throw new UnauthorizedException('Phiên đăng nhập đã hết hạn');
+    }
+
     const tokens = await this.generateTokens(stored.userId, stored.user.email);
     return { user: this.sanitizeUser(stored.user), ...tokens };
   }
@@ -219,6 +225,25 @@ export class AuthService {
     const refreshToken = crypto.randomBytes(40).toString('hex');
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Cleanup expired tokens for this user
+    await this.prisma.refreshToken.deleteMany({
+      where: { userId, expiresAt: { lt: new Date() } },
+    });
+
+    // Limit active tokens to 5 per user (keep newest, evict oldest)
+    const activeTokens = await this.prisma.refreshToken.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+    if (activeTokens.length >= 5) {
+      const idsToDelete = activeTokens.slice(4).map((t) => t.id);
+      await this.prisma.refreshToken.deleteMany({
+        where: { id: { in: idsToDelete } },
+      });
+    }
+
     await this.prisma.refreshToken.create({ data: { token: refreshToken, userId, expiresAt } });
     return { accessToken, refreshToken };
   }
@@ -281,7 +306,7 @@ export class AuthService {
   }
 
   // ─── Link Guest Account to Email ──────────────────────
-  async linkAccount(dto: LinkAccountDto) {
+  async linkAccount(dto: LinkAccountDto, authenticatedUserId?: string) {
     // Tìm tài khoản guest
     const guestUser = await this.prisma.user.findFirst({
       where: { deviceId: dto.deviceId },
@@ -289,6 +314,11 @@ export class AuthService {
 
     if (!guestUser) {
       throw new NotFoundException('Không tìm thấy tài khoản guest với device ID này');
+    }
+
+    // Verify the authenticated user matches the guest account
+    if (authenticatedUserId && guestUser.id !== authenticatedUserId) {
+      throw new ForbiddenException('Không có quyền thực hiện thao tác này');
     }
 
     if (guestUser.passwordHash) {
@@ -334,13 +364,18 @@ export class AuthService {
   }
 
   // ─── Upgrade Guest to Full Account ───────────────────
-  async upgradeGuest(dto: UpgradeGuestDto) {
+  async upgradeGuest(dto: UpgradeGuestDto, authenticatedUserId?: string) {
     const guestUser = await this.prisma.user.findFirst({
       where: { deviceId: dto.deviceId },
     });
 
     if (!guestUser) {
       throw new NotFoundException('Không tìm thấy tài khoản guest');
+    }
+
+    // Verify the authenticated user matches the guest account
+    if (authenticatedUserId && guestUser.id !== authenticatedUserId) {
+      throw new ForbiddenException('Không có quyền thực hiện thao tác này');
     }
 
     if (guestUser.passwordHash) {

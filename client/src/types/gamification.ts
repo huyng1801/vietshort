@@ -97,31 +97,31 @@ export interface AchievementDisplay extends Achievement {
 
 /** Map achievement IDs to UI display info */
 export const ACHIEVEMENT_UI: Record<string, Omit<AchievementDisplay, keyof Achievement>> = {
-  first_comment: { icon: '💬', category: 'social', color: 'blue' },
-  first_share: { icon: '🔗', category: 'social', color: 'cyan' },
-  first_rating: { icon: '⭐', category: 'social', color: 'yellow' },
-  watch_10: { icon: '👀', category: 'watch', color: 'green' },
-  watch_50: { icon: '🔥', category: 'watch', color: 'orange' },
-  watch_100: { icon: '🏆', category: 'watch', color: 'amber' },
-  streak_7: { icon: '📅', category: 'streak', color: 'purple' },
+  first_comment: { icon: 'MessageCircle', category: 'social', color: 'blue' },
+  first_share: { icon: 'Share2', category: 'social', color: 'cyan' },
+  first_rating: { icon: 'Star', category: 'social', color: 'yellow' },
+  watch_10: { icon: 'Eye', category: 'watch', color: 'green' },
+  watch_50: { icon: 'Flame', category: 'watch', color: 'orange' },
+  watch_100: { icon: 'Trophy', category: 'watch', color: 'amber' },
+  streak_7: { icon: 'CalendarDays', category: 'streak', color: 'purple' },
 };
 
 /** Default fallback for unknown achievements */
 export const DEFAULT_ACHIEVEMENT_UI: Omit<AchievementDisplay, keyof Achievement> = {
-  icon: '🎯',
+  icon: 'Target',
   category: 'watch',
   color: 'gray',
 };
 
 /** Map task type to icon */
 export const TASK_ICONS: Record<string, string> = {
-  watch_3: '📺',
-  watch_5: '🎬',
-  watch_10: '🏅',
-  WATCH_VIDEO: '📺',
-  LIKE_VIDEO: '❤️',
-  COMMENT: '💬',
-  SHARE: '🔗',
-  WATCH_AD: '📺',
-  RATE_VIDEO: '⭐',
+  watch_3: 'Tv',
+  watch_5: 'Clapperboard',
+  watch_10: 'Medal',
+  WATCH_VIDEO: 'Tv',
+  LIKE_VIDEO: 'Heart',
+  COMMENT: 'MessageCircle',
+  SHARE: 'Share2',
+  WATCH_AD: 'Tv',
+  RATE_VIDEO: 'Star',
 };

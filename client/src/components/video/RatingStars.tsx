@@ -64,18 +64,18 @@ export function RatingStars({
   }, [videoId, userRating, loading, interactive, isAuthenticated]);
 
   const sizeClasses = {
-    sm: 'w-5 h-5',
-    md: 'w-7 h-7',
-    lg: 'w-10 h-10',
+    sm: 'w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5',
+    md: 'w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7',
+    lg: 'w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10',
   };
 
   const starSize = sizeClasses[size];
   const displayRating = hoverRating || userRating;
 
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
+    <div className={`flex flex-col items-center gap-1 sm:gap-1.5 lg:gap-2 ${className}`}>
       {/* Star row */}
-      <div className="flex items-center gap-1 relative">
+      <div className="flex items-center gap-0.5 sm:gap-1 relative">
         {[1, 2, 3, 4, 5].map((star) => {
           const filled = star <= displayRating;
           const halfFilled = !interactive && star <= Math.ceil(avgRating) && star > Math.floor(avgRating);
@@ -113,7 +113,7 @@ export function RatingStars({
 
       {/* Rating info */}
       {showAverage && (
-        <div className="flex items-center gap-2 text-lg">
+        <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 text-xs sm:text-sm lg:text-base">
           <span className="text-yellow-400 font-bold">{avgRating.toFixed(1)}</span>
           <span className="text-gray-500">({formatCount(count)} đánh giá)</span>
         </div>
@@ -121,8 +121,8 @@ export function RatingStars({
 
       {/* User's rating indicator */}
       {userRating > 0 && interactive && (
-        <span className="text-base text-gray-500 font-medium">
-          Bạn đã đánh giá {userRating} ★
+        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-500 font-medium flex items-center gap-0.5 sm:gap-1">
+          Bạn đã đánh giá {userRating} <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-yellow-400 fill-yellow-400" />
         </span>
       )}
     </div>
@@ -138,16 +138,16 @@ interface RatingDisplayProps {
 }
 
 export function RatingDisplay({ rating, count, size = 'sm', className = '' }: RatingDisplayProps) {
-  const starSize = size === 'sm' ? 'w-5 h-5' : 'w-7 h-7';
+  const starSize = size === 'sm' ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' : 'w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7';
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`flex items-center gap-1 sm:gap-1.5 lg:gap-2 ${className}`}>
       <Star className={`${starSize} text-yellow-400 fill-yellow-400`} />
-      <span className={`font-bold text-yellow-400 ${size === 'sm' ? 'text-lg' : 'text-xl'}`}>
+      <span className={`font-bold text-yellow-400 ${size === 'sm' ? 'text-xs sm:text-sm lg:text-base' : 'text-sm sm:text-base lg:text-lg'}`}>
         {rating.toFixed(1)}
       </span>
       {count != null && (
-        <span className={`text-gray-500 ${size === 'sm' ? 'text-base' : 'text-lg'}`}>
+        <span className={`text-gray-500 ${size === 'sm' ? 'text-[10px] sm:text-xs lg:text-sm' : 'text-xs sm:text-sm lg:text-base'}`}>
           ({formatCount(count)})
         </span>
       )}

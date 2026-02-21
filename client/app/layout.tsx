@@ -3,7 +3,6 @@
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from 'react-hot-toast';
 import { Providers } from '@/components/providers/Providers';
 import './globals.css';
 
@@ -34,16 +33,6 @@ export default function RootLayout({
         >
           <Providers>
             {children}
-            <Toaster 
-              position="top-center"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#1f2937',
-                  color: '#fff',
-                },
-              }}
-            />
           </Providers>
         </ThemeProvider>
       </body>

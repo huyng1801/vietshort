@@ -380,22 +380,25 @@ export class SubtitleWorkerService implements OnModuleInit {
           this.logger.log(`📤 Sample INPUT to Groq (first 6 lines - 2 SRT segments):\n${sampleLines.join('\n')}`);
         }
 
-        const completion = await this.groqClient.chat.completions.create({
-          messages: [
-            {
-              role: 'system',
-              content: `You are a professional subtitle translator. Translate from ${sourceLanguage} to ${targetLanguage}.
+        // Helper to call Groq for a single SRT string
+        const callGroq = async (input: string): Promise<string> => {
+          const res = await this.groqClient.chat.completions.create({
+            messages: [
+              {
+                role: 'system',
+                content: `You are a professional subtitle translator. Translate from ${sourceLanguage} to ${targetLanguage}.
 
 🔴 INPUT FORMAT: Standard SRT (SubRip) subtitle format
 🔴 OUTPUT FORMAT: SAME SRT format with translated text
 
 RULES:
 ✓ Keep segment numbers unchanged (1, 2, 3...)
-✓ Keep timestamps unchanged (00:00:01,000 --> 00:00:03,000)  
+✓ Keep timestamps unchanged (00:00:01,000 --> 00:00:03,000)
 ✓ ONLY translate the subtitle text (lines after timestamp)
 ✓ Keep blank lines between segments
 ✓ Start output immediately with "1" (no preamble)
 ✓ No extra comments or explanations
+✓ NEVER merge or skip any segment — output EXACTLY the same number of segments as input
 
 EXAMPLE:
 INPUT:
@@ -415,36 +418,63 @@ Hello world
 2
 00:00:03,220 --> 00:00:05,680
 This is a test`,
-            },
-            {
-              role: 'user',
-              content: srtInput,
-            },
-          ],
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-          temperature: 0.1,
-          max_tokens: 8192,
-        });
+              },
+              {
+                role: 'user',
+                content: input,
+              },
+            ],
+            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+            temperature: 0.1,
+            max_tokens: 8192,
+          });
+          const text = res.choices[0]?.message?.content?.trim();
+          if (!text) throw new Error(`Empty translation response for batch ${batchNum}`);
+          return text;
+        };
 
-        const translatedSrt = completion.choices[0]?.message?.content?.trim();
-        if (!translatedSrt) {
-          throw new Error(`Empty translation response for batch ${batchNum}`);
-        }
-        
-        // DEBUG: Log sample output from Groq  
-        if (batchNum === 1) {
-          const sampleOutput = translatedSrt.split('\n').slice(0, 6);
-          this.logger.log(`📥 Sample OUTPUT from Groq (first 6 lines):\n${sampleOutput.join('\n')}`);
-        }
+        // Try up to 3 attempts; fall back to per-segment translation on final mismatch
+        const MAX_RETRIES = 2;
+        let translatedBatch: Array<{ index: number; timestamp: string; text: string }> | null = null;
 
-        // Parse the translated SRT back into segments
-        const translatedBatch = this.parseSrt(translatedSrt);
-        
-        if (translatedBatch.length !== batch.length) {
-          this.logger.error(
-            `❌ Batch ${batchNum} parsing failed: expected ${batch.length} segments, got ${translatedBatch.length}`
+        for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
+          const translatedSrt = await callGroq(srtInput);
+
+          if (attempt === 1) {
+            const sampleOutput = translatedSrt.split('\n').slice(0, 6);
+            this.logger.log(`📥 Sample OUTPUT from Groq (first 6 lines):\n${sampleOutput.join('\n')}`);
+          }
+
+          const parsed = this.parseSrt(translatedSrt);
+
+          if (parsed.length === batch.length) {
+            translatedBatch = parsed;
+            break;
+          }
+
+          this.logger.warn(
+            `⚠️ Batch ${batchNum} attempt ${attempt}: expected ${batch.length} segments, got ${parsed.length}${attempt <= MAX_RETRIES ? ' — retrying...' : ''}`
           );
-          throw new Error(`Translation batch ${batchNum} returned incorrect segment count`);
+        }
+
+        // If all retries failed, fall back: align by index, pad missing with original text
+        if (!translatedBatch) {
+          this.logger.warn(
+            `⚠️ Batch ${batchNum}: using best-effort alignment after ${MAX_RETRIES + 1} failed attempts`
+          );
+          // Re-run one last time and use whatever we got, padded as needed
+          const lastResponse = await callGroq(srtInput);
+          const lastParsed = this.parseSrt(lastResponse);
+
+          // Build a map by segment number for index-based alignment
+          const byIndex = new Map(lastParsed.map(s => [s.index, s]));
+          translatedBatch = batch.map((orig, relIdx) => {
+            const absNum = i + relIdx + 1;
+            const found = byIndex.get(absNum);
+            if (found) return found;
+            this.logger.warn(`⚠️ Segment ${absNum} missing from translation — using original text`);
+            return { index: absNum, timestamp: orig.timestamp, text: orig.text };
+          });
         }
 
         // Extract just the text from translated segments

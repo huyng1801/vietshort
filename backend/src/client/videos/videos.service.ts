@@ -42,7 +42,7 @@ export class VideosService {
 
     const video = await this.prisma.video.findUnique({
       where: { id },
-      include: { episodes: { orderBy: { episodeNumber: 'asc' } } },
+      include: { episodes: { orderBy: { episodeNumber: 'asc' }, include: { subtitles: { where: { status: 'READY' } } } } },
     });
     if (!video) throw new NotFoundException('Video không tồn tại');
 
@@ -56,7 +56,7 @@ export class VideosService {
 
     const video = await this.prisma.video.findUnique({
       where: { slug },
-      include: { episodes: { orderBy: { episodeNumber: 'asc' } } },
+      include: { episodes: { orderBy: { episodeNumber: 'asc' }, include: { subtitles: { where: { status: 'READY' } } } } },
     });
     if (!video) throw new NotFoundException('Video không tồn tại');
 

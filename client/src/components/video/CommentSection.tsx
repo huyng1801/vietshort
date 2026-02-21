@@ -29,10 +29,12 @@ interface Comment {
 interface CommentSectionProps {
   videoId: string;
   className?: string;
+  defaultExpanded?: boolean;
+  hideToggle?: boolean;
 }
 
 // ─── Main Component ───────────────────────────────────────────
-export function CommentSection({ videoId, className = '' }: CommentSectionProps) {
+export function CommentSection({ videoId, className = '', defaultExpanded = false, hideToggle = false }: CommentSectionProps) {
   const { user, isAuthenticated } = useAuthStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export function CommentSection({ videoId, className = '' }: CommentSectionProps)
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalComments, setTotalComments] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   // Fetch comments
   const fetchComments = useCallback(async (pageNum: number, append = false) => {
@@ -92,25 +94,27 @@ export function CommentSection({ videoId, className = '' }: CommentSectionProps)
   return (
     <div className={`${className}`}>
       {/* Header - Expandable on mobile */}
+      {!hideToggle && (
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between py-4 border-t border-white/5"
+        className="w-full flex items-center justify-between py-2 sm:py-3 lg:py-4 border-t border-white/5"
       >
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-gray-400" />
-          <h3 className="text-white font-bold text-xl">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg">
             Bình luận {totalComments > 0 && <span className="text-gray-500 font-normal">({totalComments})</span>}
           </h3>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
+          <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
         )}
       </button>
+      )}
 
       {isExpanded && (
-        <div className="space-y-4 pb-4">
+        <div className="space-y-2 sm:space-y-3 lg:space-y-4 pb-2 sm:pb-3 lg:pb-4">
           {/* Comment Input */}
           <CommentInput
             videoId={videoId}
@@ -120,17 +124,17 @@ export function CommentSection({ videoId, className = '' }: CommentSectionProps)
 
           {/* Comments List */}
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 text-gray-500 animate-spin" />
+            <div className="flex justify-center py-4 sm:py-6 lg:py-8">
+              <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500 animate-spin" />
             </div>
           ) : comments.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageCircle className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-              <p className="text-gray-500 text-xl">Chưa có bình luận nào</p>
-              <p className="text-gray-600 text-base mt-1">Hãy là người đầu tiên bình luận!</p>
+            <div className="text-center py-4 sm:py-6 lg:py-8">
+              <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gray-700 mx-auto mb-1.5 sm:mb-2" />
+              <p className="text-gray-500 text-xs sm:text-sm lg:text-base">Chưa có bình luận nào</p>
+              <p className="text-gray-600 text-[10px] sm:text-xs lg:text-sm mt-0.5 sm:mt-1">Hãy là người đầu tiên bình luận!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-3 lg:space-y-4">
               {comments.map((comment) => (
                 <CommentItem
                   key={comment.id}
@@ -146,10 +150,10 @@ export function CommentSection({ videoId, className = '' }: CommentSectionProps)
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="w-full py-2 text-xl text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-1.5 sm:py-2 text-xs sm:text-sm lg:text-base text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-1.5 sm:gap-2"
                 >
                   {loadingMore ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                   ) : (
                     'Xem thêm bình luận'
                   )}
@@ -231,14 +235,14 @@ function CommentInput({ videoId, parentId, onSubmit, onCancel, placeholder = 'Vi
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 text-center">
-        <p className="text-gray-500 text-base">Đăng nhập để bình luận</p>
+      <div className="bg-white/[0.02] border border-white/5 rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
+        <p className="text-gray-500 text-xs sm:text-sm lg:text-base">Đăng nhập để bình luận</p>
       </div>
     );
   }
 
   return (
-    <div className="flex gap-3 items-start">
+    <div className="flex gap-2 sm:gap-3 items-start">
       {/* Avatar */}
       <UserAvatar
         user={user}
@@ -255,8 +259,8 @@ function CommentInput({ videoId, parentId, onSubmit, onCancel, placeholder = 'Vi
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           rows={1}
-          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white text-base placeholder-gray-500 resize-none focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
-          style={{ minHeight: '44px', maxHeight: '140px' }}
+          className="w-full bg-white/[0.03] border border-white/10 rounded-lg sm:rounded-xl px-2.5 sm:px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs sm:text-sm lg:text-base placeholder-gray-500 resize-none focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+          style={{ minHeight: '36px', maxHeight: '120px' }}
           onInput={(e) => {
             const target = e.target as HTMLTextAreaElement;
             target.style.height = 'auto';
@@ -272,9 +276,9 @@ function CommentInput({ videoId, parentId, onSubmit, onCancel, placeholder = 'Vi
           <button
             onClick={handleSubmit}
             disabled={!content.trim() || submitting}
-            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-lg font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            className="px-2 sm:px-3 py-1 sm:py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs sm:text-sm lg:text-base font-medium rounded-md sm:rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5"
           >
-            {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+            {submitting ? <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" /> : <Send className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
             Gửi
           </button>
         </div>
@@ -346,7 +350,7 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
   };
 
   return (
-    <div className={`flex gap-3 ${isReply ? 'ml-8 lg:ml-11' : ''}`}> 
+    <div className={`flex gap-2 sm:gap-3 ${isReply ? 'ml-6 sm:ml-8 lg:ml-11' : ''}`}> 
       {/* Avatar */}
       <UserAvatar
         user={comment.user}
@@ -356,11 +360,11 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-white text-lg font-semibold">{comment.user.nickname}</span>
-          <span className="text-gray-600 text-base">{timeAgo(comment.createdAt)}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
+          <span className="text-white text-xs sm:text-sm lg:text-base font-semibold">{comment.user.nickname}</span>
+          <span className="text-gray-600 text-[10px] sm:text-xs lg:text-sm">{timeAgo(comment.createdAt)}</span>
           {comment.updatedAt && comment.updatedAt !== comment.createdAt && (
-            <span className="text-gray-600 text-base">(đã sửa)</span>
+            <span className="text-gray-600 text-[10px] sm:text-xs lg:text-sm">(đã sửa)</span>
           )}
         </div>
 
@@ -369,7 +373,7 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white text-lg resize-none focus:outline-none focus:border-red-500/50"
+              className="w-full bg-white/[0.03] border border-white/10 rounded-md sm:rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-white text-xs sm:text-sm lg:text-base resize-none focus:outline-none focus:border-red-500/50"
               rows={2}
             />
             <div className="flex gap-2 mt-1.5 justify-end">
@@ -385,18 +389,18 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
             </div>
           </div>
         ) : (
-          <p className="text-gray-300 text-xl leading-relaxed break-words">{content}</p>
+          <p className="text-gray-300 text-xs sm:text-sm lg:text-base leading-relaxed break-words">{content}</p>
         )}
 
         {/* Actions */}
         {!isEditing && (
-          <div className="flex items-center gap-4 mt-1.5">
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 mt-1 sm:mt-1.5">
             {!isReply && (
               <button
                 onClick={() => setShowReplyInput(!showReplyInput)}
-                className="flex items-center gap-1 text-base text-gray-500 hover:text-white transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs lg:text-sm text-gray-500 hover:text-white transition-colors"
               >
-                <Reply className="w-3 h-3" />
+                <Reply className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 Trả lời
               </button>
             )}
@@ -404,9 +408,9 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
             {!isReply && (comment.repliesCount || 0) > 0 && !showReplies && (
               <button
                 onClick={loadReplies}
-                className="flex items-center gap-1 text-base text-blue-400 hover:text-blue-300 transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs lg:text-sm text-blue-400 hover:text-blue-300 transition-colors"
               >
-                {loadingReplies ? <Loader2 className="w-3 h-3 animate-spin" /> : <ChevronDown className="w-3 h-3" />}
+                {loadingReplies ? <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" /> : <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                 {comment.repliesCount} phản hồi
               </button>
             )}
@@ -422,21 +426,21 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
               {showMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-lg py-1 w-32 shadow-xl z-50">
+                  <div className="absolute right-0 top-full mt-1 bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-md sm:rounded-lg py-0.5 sm:py-1 w-24 sm:w-28 lg:w-32 shadow-xl z-50">
                     {isOwner && (
                       <button
                         onClick={() => { setIsEditing(true); setShowMenu(false); }}
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-lg text-gray-300 hover:bg-white/5"
+                        className="flex items-center gap-1.5 sm:gap-2 w-full px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs lg:text-sm text-gray-300 hover:bg-white/5"
                       >
-                        <Edit3 className="w-3 h-3" /> Sửa
+                        <Edit3 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Sửa
                       </button>
                     )}
                     {!isOwner && (
                       <button
                         onClick={handleReport}
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-lg text-gray-300 hover:bg-white/5"
+                        className="flex items-center gap-1.5 sm:gap-2 w-full px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs lg:text-sm text-gray-300 hover:bg-white/5"
                       >
-                        <Flag className="w-3 h-3" /> Báo cáo
+                        <Flag className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Báo cáo
                       </button>
                     )}
                   </div>
@@ -448,7 +452,7 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
 
         {/* Reply Input */}
         {showReplyInput && (
-          <div className="mt-3">
+          <div className="mt-2 sm:mt-3">
             <CommentInput
               videoId={videoId}
               parentId={comment.id}
@@ -462,7 +466,7 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
 
         {/* Replies */}
         {showReplies && replies.length > 0 && (
-          <div className="mt-3 space-y-3">
+          <div className="mt-2 sm:mt-3 space-y-2 sm:space-y-3">
             {replies.map((reply) => (
               <CommentItem
                 key={reply.id}
@@ -475,9 +479,9 @@ function CommentItem({ comment, videoId, currentUserId, onDelete, isReply = fals
             ))}
             <button
               onClick={() => setShowReplies(false)}
-              className="text-base text-gray-500 hover:text-white flex items-center gap-1 transition-colors"
+              className="text-[10px] sm:text-xs lg:text-sm text-gray-500 hover:text-white flex items-center gap-0.5 sm:gap-1 transition-colors"
             >
-              <ChevronUp className="w-3 h-3" /> Ẩn phản hồi
+              <ChevronUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Ẩn phản hồi
             </button>
           </div>
         )}

@@ -19,7 +19,6 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
         href="/"
         className="hover:text-white transition-colors flex items-center gap-1"
       >
-        <Home className="w-4 h-4" />
         <span>Trang chủ</span>
       </Link>
       {items.map((item, index) => (

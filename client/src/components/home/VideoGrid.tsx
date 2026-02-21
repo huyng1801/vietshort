@@ -26,7 +26,15 @@ export function VideoGrid({
 }: VideoGridProps) {
   if (!videos.length) return null;
 
-  const displayVideos = videos.slice(0, maxItems);
+  // Deduplicate by id before slicing to avoid React key conflicts
+  const seen = new Set<string>();
+  const displayVideos = videos
+    .filter((v) => {
+      if (seen.has(v.id)) return false;
+      seen.add(v.id);
+      return true;
+    })
+    .slice(0, maxItems);
 
   return (
     <section className="mb-8">

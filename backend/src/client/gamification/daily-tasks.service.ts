@@ -12,32 +12,52 @@ export class DailyTasksService {
   ) {}
 
   async trackWatchProgress(userId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const lockKey = `daily_task_lock:${userId}`;
+    const redis = this.redisService.getClient();
 
-    // Get all WATCH_VIDEO type tasks
-    const watchTasks = await this.prisma.dailyTask.findMany({
-      where: { taskType: 'WATCH_VIDEO', isActive: true },
-    });
+    // Acquire a per-user distributed lock to serialize concurrent requests.
+    // Prisma upsert is not atomic (SELECT + INSERT/UPDATE), so without a lock
+    // concurrent calls for the same user all race and fail with P2002.
+    let lockAcquired = false;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const result = await redis.set(lockKey, '1', 'PX', 10000, 'NX');
+      if (result === 'OK') {
+        lockAcquired = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50 + attempt * 10));
+    }
 
-    if (watchTasks.length === 0) return { watchCount: 0, goldEarned: 0, milestones: [], claimedMilestones: [] };
+    if (!lockAcquired) {
+      // Could not acquire lock within ~1.9s — return current progress without incrementing
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const first = await this.prisma.userDailyTaskProgress.findFirst({
+        where: { userId, date: today, task: { taskType: 'WATCH_VIDEO' } },
+      });
+      return { watchCount: first?.currentCount || 0, goldEarned: 0, milestones: [], claimedMilestones: [] };
+    }
 
-    let totalGoldEarned = 0;
-    const milestones: number[] = [];
-    const claimedMilestones: number[] = [];
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    for (const task of watchTasks) {
-      // Get or create progress record with race condition handling
-      let progress;
-      try {
-        progress = await this.prisma.userDailyTaskProgress.upsert({
-          where: {
-            userId_taskId_date: {
-              userId,
-              taskId: task.id,
-              date: today,
-            },
-          },
+      // Get all WATCH_VIDEO type tasks
+      const watchTasks = await this.prisma.dailyTask.findMany({
+        where: { taskType: 'WATCH_VIDEO', isActive: true },
+      });
+
+      if (watchTasks.length === 0) return { watchCount: 0, goldEarned: 0, milestones: [], claimedMilestones: [] };
+
+      let totalGoldEarned = 0;
+      const milestones: number[] = [];
+      const claimedMilestones: number[] = [];
+
+      for (const task of watchTasks) {
+        // Use upsert — atomic at the DB level, no race even without lock
+        const progress = await this.prisma.userDailyTaskProgress.upsert({
+          where: { userId_taskId_date: { userId, taskId: task.id, date: today } },
+          update: { currentCount: { increment: 1 } },
           create: {
             userId,
             taskId: task.id,
@@ -45,85 +65,38 @@ export class DailyTasksService {
             currentCount: 1,
             isCompleted: 1 >= task.targetCount,
           },
-          update: {
-            currentCount: { increment: 1 },
-          },
         });
-      } catch (error: any) {
-        // Handle race condition: if unique constraint fails, just fetch and update
-        if (error.code === 'P2002') {
-          progress = await this.prisma.userDailyTaskProgress.findUnique({
-            where: {
-              userId_taskId_date: {
-                userId,
-                taskId: task.id,
-                date: today,
-              },
-            },
+
+        milestones.push(task.targetCount);
+
+        // Check if task just completed
+        if (!progress.isCompleted && progress.currentCount >= task.targetCount) {
+          await this.prisma.userDailyTaskProgress.update({
+            where: { id: progress.id },
+            data: { isCompleted: true, completedAt: new Date(), rewardClaimed: true },
           });
-          
-          if (progress) {
-            progress = await this.prisma.userDailyTaskProgress.update({
-              where: { id: progress.id },
-              data: {
-                currentCount: { increment: 1 },
-              },
-            });
-          } else {
-            // Fallback: create if somehow still doesn't exist
-            progress = await this.prisma.userDailyTaskProgress.create({
-              data: {
-                userId,
-                taskId: task.id,
-                date: today,
-                currentCount: 1,
-                isCompleted: 1 >= task.targetCount,
-              },
-            });
-          }
-        } else {
-          throw error;
+
+          await this.walletService.addGold(userId, task.rewardGold, `Hoàn thành: ${task.name}`);
+          totalGoldEarned += task.rewardGold;
+          claimedMilestones.push(task.targetCount);
+        } else if (progress.isCompleted) {
+          claimedMilestones.push(task.targetCount);
         }
       }
 
-      milestones.push(task.targetCount);
+      const firstProgress = await this.prisma.userDailyTaskProgress.findFirst({
+        where: { userId, date: today, task: { taskType: 'WATCH_VIDEO' } },
+      });
 
-      // Check if task just completed (progress.currentCount is already incremented)
-      if (!progress.isCompleted && progress.currentCount >= task.targetCount) {
-        // Update completion status and claim reward
-        await this.prisma.userDailyTaskProgress.update({
-          where: { id: progress.id },
-          data: {
-            isCompleted: true,
-            completedAt: new Date(),
-            rewardClaimed: true,
-          },
-        });
-
-        // Award gold
-        await this.walletService.addGold(userId, task.rewardGold, `Hoàn thành: ${task.name}`);
-        totalGoldEarned += task.rewardGold;
-        claimedMilestones.push(task.targetCount);
-      } else if (progress.isCompleted) {
-        claimedMilestones.push(task.targetCount);
-      }
+      return {
+        watchCount: firstProgress?.currentCount || 1,
+        goldEarned: totalGoldEarned,
+        milestones,
+        claimedMilestones,
+      };
+    } finally {
+      await redis.del(lockKey);
     }
-
-    // Get current watch count from first task
-    const firstProgress = await this.prisma.userDailyTaskProgress.findFirst({
-      where: {
-        userId,
-        date: today,
-        task: { taskType: 'WATCH_VIDEO' },
-      },
-    });
-
-    return {
-      watchCount: firstProgress?.currentCount || 1,
-      goldEarned: totalGoldEarned,
-      milestones,
-      claimedMilestones,
-    };
   }
 
   async getDailyTasks(userId: string) {

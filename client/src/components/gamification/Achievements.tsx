@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, Lock, CheckCircle, Star, Coins } from 'lucide-react';
+import { Trophy, Lock, CheckCircle, Star, Coins, LayoutGrid, List } from 'lucide-react';
 import { achievementsApi } from '@/lib/api';
 import type { Achievement } from '@/types/gamification';
 import { ACHIEVEMENT_UI, DEFAULT_ACHIEVEMENT_UI } from '@/types/gamification';
+import { GamificationIcon } from './icons';
 import { cn } from '@/lib/utils';
 
 // ─── Achievement Badge ──────────────────────────────────────
@@ -17,39 +18,40 @@ export function AchievementBadge({ achievement, size = 'md' }: AchievementBadgeP
   const ui = ACHIEVEMENT_UI[achievement.id] || DEFAULT_ACHIEVEMENT_UI;
 
   const sizes = {
-    sm: 'w-14 h-14',
-    md: 'w-20 h-20',
-    lg: 'w-24 h-24',
+    sm: 'w-12 h-12 sm:w-14 h-14',
+    md: 'w-16 h-16 sm:w-18 h-18 lg:w-20 lg:h-20',
+    lg: 'w-20 h-20 sm:w-22 h-22 lg:w-24 lg:h-24',
   };
-  const iconSizes = { sm: 'text-xl', md: 'text-3xl', lg: 'text-4xl' };
-  const textSizes = { sm: 'text-xs', md: 'text-sm', lg: 'text-base' };
+  const iconSizes = { sm: 'w-4 h-4 sm:w-5 sm:h-5', md: 'w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8', lg: 'w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10' };
+  const textSizes = { sm: 'text-[10px] sm:text-xs', md: 'text-xs sm:text-sm', lg: 'text-sm sm:text-base' };
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-1 sm:gap-1.5">
       <div
         className={cn(
-          'relative rounded-2xl flex items-center justify-center border-2 transition-all',
+          'relative rounded-xl sm:rounded-2xl flex items-center justify-center border-2 transition-all',
           sizes[size],
           achievement.claimed
             ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/50 shadow-lg shadow-amber-500/10'
             : 'bg-gray-800/50 border-white/10 opacity-50 grayscale',
         )}
       >
-        <span className={cn(iconSizes[size], !achievement.claimed && 'opacity-40')}>
-          {ui.icon}
-        </span>
+        <GamificationIcon
+          name={ui.icon}
+          className={cn(iconSizes[size], achievement.claimed ? 'text-amber-400' : 'text-gray-500 opacity-40')}
+        />
         {achievement.claimed && (
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-black">
-            <CheckCircle className="w-3 h-3 text-white" />
+          <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3.5 h-3.5 sm:w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-black">
+            <CheckCircle className="w-2 h-2 sm:w-3 h-3 text-white" />
           </div>
         )}
         {!achievement.claimed && (
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-700 rounded-full flex items-center justify-center border-2 border-black">
-            <Lock className="w-2.5 h-2.5 text-gray-400" />
+          <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3.5 h-3.5 sm:w-4 h-4 bg-gray-700 rounded-full flex items-center justify-center border-2 border-black">
+            <Lock className="w-2 h-2 sm:w-2.5 h-2.5 text-gray-400" />
           </div>
         )}
       </div>
-      <span className={cn(textSizes[size], 'text-center font-medium text-gray-400 max-w-[80px] line-clamp-2')}>
+      <span className={cn(textSizes[size], 'text-center font-medium text-gray-400 max-w-[60px] sm:max-w-[80px] line-clamp-2')}>
         {achievement.name}
       </span>
     </div>
@@ -67,7 +69,7 @@ function AchievementCard({ achievement }: AchievementCardProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-4 p-4 rounded-xl border transition-all',
+        'flex items-center gap-2.5 sm:gap-3 lg:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl border transition-all',
         achievement.claimed
           ? 'bg-gradient-to-r from-amber-500/5 to-orange-500/5 border-amber-500/20'
           : 'bg-gray-800/30 border-white/10',
@@ -76,37 +78,40 @@ function AchievementCard({ achievement }: AchievementCardProps) {
       {/* Badge icon */}
       <div
         className={cn(
-          'w-16 h-16 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 border',
+          'w-12 h-12 sm:w-14 h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 border',
           achievement.claimed
             ? 'bg-amber-500/20 border-amber-500/40'
             : 'bg-gray-800/80 border-white/10 grayscale opacity-60',
         )}
       >
-        {ui.icon}
+        <GamificationIcon
+          name={ui.icon}
+          className={cn('w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8', achievement.claimed ? 'text-amber-400' : 'text-gray-500')}
+        />
       </div>
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <h4 className={cn('text-lg font-semibold', achievement.claimed ? 'text-white' : 'text-gray-400')}>
+        <h4 className={cn('text-sm sm:text-base lg:text-lg font-semibold truncate', achievement.claimed ? 'text-white' : 'text-gray-400')}>
           {achievement.name}
         </h4>
         {achievement.description && (
-          <p className="text-sm text-gray-500 mt-1 line-clamp-1">{achievement.description}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-1">{achievement.description}</p>
         )}
       </div>
 
       {/* Reward */}
-      <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-        <div className="flex items-center gap-1.5">
-          <Coins className={cn('w-4 h-4', achievement.claimed ? 'text-amber-400' : 'text-gray-600')} />
-          <span className={cn('text-base font-bold', achievement.claimed ? 'text-amber-400' : 'text-gray-600')}>
+      <div className="flex-shrink-0 flex flex-col items-end gap-1 sm:gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <Coins className={cn('w-3.5 h-3.5 sm:w-4 h-4', achievement.claimed ? 'text-amber-400' : 'text-gray-600')} />
+          <span className={cn('text-sm sm:text-base font-bold', achievement.claimed ? 'text-amber-400' : 'text-gray-600')}>
             {achievement.reward}
           </span>
         </div>
         {achievement.claimed ? (
-          <span className="text-sm text-green-400 font-medium">Đã nhận</span>
+          <span className="text-[10px] sm:text-xs lg:text-sm text-green-400 font-medium">Đã nhận</span>
         ) : (
-          <span className="text-sm text-gray-500">Chưa mở khóa</span>
+          <span className="text-[10px] sm:text-xs lg:text-sm text-gray-500">Chưa mở khóa</span>
         )}
       </div>
     </div>
@@ -134,11 +139,11 @@ export function AchievementsPanel() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex flex-col items-center gap-1.5">
-            <div className="w-16 h-16 bg-gray-800/50 rounded-2xl animate-pulse" />
-            <div className="w-12 h-3 bg-gray-800/50 rounded animate-pulse" />
+          <div key={i} className="flex flex-col items-center gap-1 sm:gap-1.5">
+            <div className="w-12 h-12 sm:w-14 h-14 lg:w-16 lg:h-16 bg-gray-800/50 rounded-xl sm:rounded-2xl animate-pulse" />
+            <div className="w-10 sm:w-12 h-2.5 sm:h-3 bg-gray-800/50 rounded animate-pulse" />
           </div>
         ))}
       </div>
@@ -147,9 +152,9 @@ export function AchievementsPanel() {
 
   if (achievements.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <Trophy className="w-10 h-10 mx-auto mb-3 opacity-50" />
-        <p className="text-base">Chưa có thành tích nào</p>
+      <div className="text-center py-6 sm:py-8 text-gray-500">
+        <Trophy className="w-8 h-8 sm:w-10 h-10 mx-auto mb-2 sm:mb-3 opacity-50" />
+        <p className="text-sm sm:text-base">Chưa có thành tích nào</p>
       </div>
     );
   }
@@ -157,16 +162,16 @@ export function AchievementsPanel() {
   return (
     <div>
       {/* Summary */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-amber-400" />
-          <span className="text-base text-gray-300">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Trophy className="w-4 h-4 sm:w-5 h-5 text-amber-400" />
+          <span className="text-xs sm:text-sm lg:text-base text-gray-300">
             <span className="text-white font-bold">{claimed.length}</span>/{achievements.length} thành tích
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-sm text-amber-400">
-            <Coins className="w-4 h-4" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-amber-400">
+            <Coins className="w-3.5 h-3.5 sm:w-4 h-4" />
             <span className="font-bold">{earnedReward}</span>
             <span className="text-gray-500">/ {totalReward}</span>
           </div>
@@ -174,22 +179,22 @@ export function AchievementsPanel() {
           <div className="flex bg-gray-800/50 rounded-lg p-0.5">
             <button
               onClick={() => setView('grid')}
-              className={cn('px-2 py-1 rounded text-xs transition-colors', view === 'grid' ? 'bg-gray-700 text-white' : 'text-gray-500')}
+              className={cn('px-1.5 py-0.5 sm:px-2 py-1 rounded text-xs transition-colors', view === 'grid' ? 'bg-gray-700 text-white' : 'text-gray-500')}
             >
-              ⬡
+              <LayoutGrid className="w-3 h-3" />
             </button>
             <button
               onClick={() => setView('list')}
-              className={cn('px-2 py-1 rounded text-xs transition-colors', view === 'list' ? 'bg-gray-700 text-white' : 'text-gray-500')}
+              className={cn('px-1.5 py-0.5 sm:px-2 py-1 rounded text-xs transition-colors', view === 'list' ? 'bg-gray-700 text-white' : 'text-gray-500')}
             >
-              ☰
+              <List className="w-3 h-3" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Progress */}
-      <div className="h-2 bg-gray-800 rounded-full mb-5 overflow-hidden">
+      <div className="h-1.5 sm:h-2 bg-gray-800 rounded-full mb-4 sm:mb-5 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-700"
           style={{ width: `${achievements.length > 0 ? (claimed.length / achievements.length) * 100 : 0}%` }}
@@ -197,17 +202,17 @@ export function AchievementsPanel() {
       </div>
 
       {view === 'grid' ? (
-        <div className="grid grid-cols-4 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
           {/* Claimed first, then unclaimed */}
           {[...claimed, ...unclaimed].map((a) => (
             <AchievementBadge key={a.id} achievement={a} />
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {claimed.length > 0 && (
             <>
-              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Đã đạt được</h4>
+              <h4 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 sm:mb-3">Đã đạt được</h4>
               {claimed.map((a) => (
                 <AchievementCard key={a.id} achievement={a} />
               ))}
@@ -215,7 +220,7 @@ export function AchievementsPanel() {
           )}
           {unclaimed.length > 0 && (
             <>
-              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-5">Chưa mở khóa</h4>
+              <h4 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 sm:mb-3 mt-4 sm:mt-5">Chưa mở khóa</h4>
               {unclaimed.map((a) => (
                 <AchievementCard key={a.id} achievement={a} />
               ))}

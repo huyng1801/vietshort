@@ -26,7 +26,7 @@ export class RegisterDto {
 
 export class LoginDto {
   @ApiProperty() @IsString() @IsNotEmpty() login!: string; // Can be email or nickname
-  @ApiProperty() @IsString() password!: string;
+  @ApiProperty() @IsString() @IsNotEmpty() password!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() deviceId?: string;
 }
 
@@ -55,7 +55,7 @@ export class GuestLoginDto {
 
 export class LinkAccountDto {
   @ApiProperty() @IsEmail() email!: string;
-  @ApiProperty() @IsString() password!: string;
+  @ApiProperty() @IsString() @MinLength(8) password!: string;
   @ApiProperty() @IsString() deviceId!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() nickname?: string;
 }

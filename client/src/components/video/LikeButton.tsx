@@ -66,10 +66,10 @@ export function LikeButton({ videoId, initialLiked = false, likeCount = 0, varia
       <button
         onClick={toggle}
         disabled={loading}
-        className={`relative p-2 rounded-full transition-colors ${liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'} ${className}`}
+        className={`relative p-1.5 sm:p-2 rounded-full transition-colors ${liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'} ${className}`}
         aria-label={liked ? 'Bỏ thích' : 'Yêu thích'}
       >
-        <Heart className={`w-6 h-6 transition-transform ${liked ? 'fill-red-500' : ''} ${isAnimating ? 'animate-like-bounce' : ''}`} />
+        <Heart className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 transition-transform ${liked ? 'fill-red-500' : ''} ${isAnimating ? 'animate-like-bounce' : ''}`} />
       </button>
     );
   }
@@ -78,11 +78,11 @@ export function LikeButton({ videoId, initialLiked = false, likeCount = 0, varia
     <button
       onClick={toggle}
       disabled={loading}
-      className={`flex flex-col items-center gap-2 group cursor-pointer ${className}`}
+      className={`flex flex-col items-center gap-1 sm:gap-1.5 lg:gap-2 group cursor-pointer ${className}`}
       aria-label={liked ? 'Bỏ thích' : 'Yêu thích'}
     >
-      <div className={`relative p-4 rounded-full transition-colors ${liked ? 'bg-red-500/10' : 'bg-white/5 group-hover:bg-red-500/10'}`}>
-        <Heart className={`w-8 h-8 transition-all ${liked ? 'text-red-500 fill-red-500' : 'text-gray-400 group-hover:text-red-500'} ${isAnimating ? 'animate-like-bounce' : ''}`} />
+      <div className={`relative p-2 sm:p-3 lg:p-4 rounded-full transition-colors ${liked ? 'bg-red-500/10' : 'bg-white/5 group-hover:bg-red-500/10'}`}>
+        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 transition-all ${liked ? 'text-red-500 fill-red-500' : 'text-gray-400 group-hover:text-red-500'} ${isAnimating ? 'animate-like-bounce' : ''}`} />
         {/* Particle burst effect */}
         {isAnimating && liked && (
           <div className="absolute inset-0 pointer-events-none">
@@ -99,7 +99,7 @@ export function LikeButton({ videoId, initialLiked = false, likeCount = 0, varia
           </div>
         )}
       </div>
-      <span className={`text-lg font-bold transition-colors ${liked ? 'text-red-500' : 'text-gray-500'}`}>
+      <span className={`text-[10px] sm:text-xs lg:text-sm font-bold transition-colors ${liked ? 'text-red-500' : 'text-gray-500'}`}>
         {count > 0 ? formatCount(count) : 'Thích'}
       </span>
     </button>
@@ -140,10 +140,10 @@ export function BookmarkButton({ videoId, initialBookmarked = false, variant = '
     return (
       <button
         onClick={toggle}
-        className={`p-2 rounded-full transition-colors ${bookmarked ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'} ${className}`}
+        className={`p-1.5 sm:p-2 rounded-full transition-colors ${bookmarked ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'} ${className}`}
         aria-label={bookmarked ? 'Bỏ lưu' : 'Lưu phim'}
       >
-        {bookmarked ? <BookmarkCheck className="w-6 h-6 fill-yellow-500" /> : <Bookmark className="w-6 h-6" />}
+        {bookmarked ? <BookmarkCheck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 fill-yellow-500" /> : <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />}
       </button>
     );
   }
@@ -151,16 +151,16 @@ export function BookmarkButton({ videoId, initialBookmarked = false, variant = '
   return (
     <button
       onClick={toggle}
-      className={`flex flex-col items-center gap-2 group cursor-pointer ${className}`}
+      className={`flex flex-col items-center gap-1 sm:gap-1.5 lg:gap-2 group cursor-pointer ${className}`}
       aria-label={bookmarked ? 'Bỏ lưu' : 'Lưu phim'}
     >
-      <div className={`p-4 rounded-full transition-colors ${bookmarked ? 'bg-yellow-500/10' : 'bg-white/5 group-hover:bg-yellow-500/10'}`}>
+      <div className={`p-2 sm:p-3 lg:p-4 rounded-full transition-colors ${bookmarked ? 'bg-yellow-500/10' : 'bg-white/5 group-hover:bg-yellow-500/10'}`}>
         {bookmarked
-          ? <BookmarkCheck className="w-8 h-8 text-yellow-500 fill-yellow-500" />
-          : <Bookmark className="w-8 h-8 text-gray-400 group-hover:text-yellow-500" />
+          ? <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-500 fill-yellow-500" />
+          : <Bookmark className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-gray-400 group-hover:text-yellow-500" />
         }
       </div>
-      <span className={`text-lg font-bold transition-colors ${bookmarked ? 'text-yellow-500' : 'text-gray-500'}`}>
+      <span className={`text-[10px] sm:text-xs lg:text-sm font-bold transition-colors ${bookmarked ? 'text-yellow-500' : 'text-gray-500'}`}>
         {bookmarked ? 'Đã lưu' : 'Lưu'}
       </span>
     </button>

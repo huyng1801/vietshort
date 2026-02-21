@@ -1,5 +1,6 @@
-import { Controller, Get, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Put, Post, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateProfileDto, UserQueryDto } from './dto/user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
@@ -22,6 +23,41 @@ export class UsersController {
   @ApiOperation({ summary: 'Cập nhật profile' })
   async updateProfile(@CurrentUser('id') userId: string, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(userId, dto);
+  }
+
+  @Post('avatar-upload')
+  @ApiOperation({ summary: 'Upload avatar tới R2 storage' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Avatar image file (JPG, PNG, GIF, WebP)',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadAvatar(
+    @CurrentUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Vui lòng chọn một tệp hình ảnh');
+    }
+
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('Vui lòng tải lên một tệp hình ảnh hợp lệ');
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw new BadRequestException('Kích thước hình ảnh không được vượt quá 5MB');
+    }
+
+    return this.usersService.uploadAvatar(userId, file);
   }
 
   @Get('stats')

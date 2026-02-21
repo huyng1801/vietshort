@@ -12,7 +12,7 @@ import { SubtitleTrack, QualityLevel, VideoPlayerProps } from './VideoPlayerType
 import { SubtitleMenu } from './SubtitleMenu';
 import { SpeedMenu } from './SpeedMenu';
 import { QualityMenu } from './QualityMenu';
-import { formatTime, getSubtitleSizeClass } from './VideoPlayerUtils';
+import { formatTime, getSubtitleSizeClass, parseSrt, findActiveCue, SubtitleCue } from './VideoPlayerUtils';
 
 // Re-export types for backward compatibility
 export type { SubtitleTrack, QualityLevel } from './VideoPlayerTypes';
@@ -43,6 +43,7 @@ export function VideoPlayer({
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const doubleTapTimerRef = useRef<NodeJS.Timeout | null>(null);
   const tapCountRef = useRef(0);
+  const subtitleCuesRef = useRef<SubtitleCue[]>([]);
 
   // State
   const [isPlaying, setIsPlaying] = useState(false);
@@ -59,6 +60,7 @@ export function VideoPlayer({
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showVolumePopup, setShowVolumePopup] = useState(false);
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQuality, setCurrentQuality] = useState(-1); // -1 = auto
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
@@ -137,7 +139,15 @@ export function VideoPlayer({
     }
 
     return () => {
+      // Full cleanup to prevent ghost audio
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
       if (hlsRef.current) {
+        hlsRef.current.stopLoad();
+        hlsRef.current.detachMedia();
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
@@ -162,8 +172,20 @@ export function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
+    const onPlay = () => {
+      setIsPlaying(true);
+      // Resume HLS buffering when video plays (in case it was stopped)
+      if (hlsRef.current) {
+        hlsRef.current.startLoad();
+      }
+    };
+    const onPause = () => {
+      setIsPlaying(false);
+      // Stop HLS from continuing to buffer/play audio segments
+      if (hlsRef.current) {
+        hlsRef.current.stopLoad();
+      }
+    };
     const onWaiting = () => setIsLoading(true);
     const onCanPlay = () => setIsLoading(false);
     const onTimeUpdate = () => {
@@ -200,6 +222,8 @@ export function VideoPlayer({
       video.removeEventListener('durationchange', onDurationChange);
       video.removeEventListener('ended', onEnd);
       video.removeEventListener('volumechange', onVolumeChange);
+      // Pause video on cleanup
+      video.pause();
     };
   }, [onEnded]);
 
@@ -216,16 +240,95 @@ export function VideoPlayer({
     };
   }, [onProgress, isPlaying]);
 
+  // ─── Subtitle Loading ─────────────────────────────────────
+  // Auto-select default subtitle on mount if available
+  useEffect(() => {
+    console.log('[Subtitle] subtitles prop received:', subtitles.length, subtitles.map(s => ({ id: s.id, label: s.label, hasContent: !!s.content?.trim(), hasUrl: !!s.url })));
+    if (subtitles.length > 0 && !activeSubtitle) {
+      const defaultSub = subtitles.find(s => s.isDefault) ?? subtitles[0];
+      console.log('[Subtitle] Auto-selecting subtitle:', defaultSub.id, defaultSub.label);
+      setActiveSubtitle(defaultSub.id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtitles]);
+
+  // Load and parse subtitle cues when activeSubtitle changes
+  useEffect(() => {
+    subtitleCuesRef.current = [];
+    setCurrentSubtitleText('');
+
+    if (!activeSubtitle) {
+      console.log('[Subtitle] No active subtitle selected');
+      return;
+    }
+
+    const activeSub = subtitles.find(s => s.id === activeSubtitle);
+    if (!activeSub) {
+      console.warn('[Subtitle] Active subtitle id not found in list:', activeSubtitle);
+      return;
+    }
+
+    console.log('[Subtitle] Loading subtitle:', activeSub.label, '| content length:', activeSub.content?.length ?? 0, '| url:', activeSub.url || '(none)');
+
+    // Priority 1: inline SRT content
+    const inlineContent = activeSub.content?.trim();
+    if (inlineContent) {
+      const cues = parseSrt(inlineContent);
+      console.log('[Subtitle] Parsed', cues.length, 'cues from inline content');
+      if (cues.length > 0) {
+        subtitleCuesRef.current = cues;
+        return;
+      }
+      console.warn('[Subtitle] Inline content present but no cues parsed. First 200 chars:', inlineContent.slice(0, 200));
+    }
+
+    // Priority 2: fetch from URL
+    const url = activeSub.url?.trim();
+    if (url) {
+      console.log('[Subtitle] Fetching subtitle from URL:', url);
+      let cancelled = false;
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.text();
+        })
+        .then(srtText => {
+          if (cancelled) return;
+          const cues = parseSrt(srtText);
+          console.log('[Subtitle] Fetched and parsed', cues.length, 'cues from URL');
+          subtitleCuesRef.current = cues;
+        })
+        .catch(err => {
+          console.error('[Subtitle] Failed to fetch from URL:', url, err);
+        });
+      return () => { cancelled = true; };
+    }
+
+    console.warn('[Subtitle] No content or url found for subtitle:', activeSub.id);
+  }, [activeSubtitle, subtitles]);
+
+  // Update currentSubtitleText on time update
+  useEffect(() => {
+    if (!activeSubtitle || subtitleCuesRef.current.length === 0) {
+      if (currentSubtitleText) setCurrentSubtitleText('');
+      return;
+    }
+    const text = findActiveCue(subtitleCuesRef.current, currentTime);
+    if (text !== currentSubtitleText) {
+      setCurrentSubtitleText(text);
+    }
+  }, [currentTime, activeSubtitle]);
+
   // ─── Controls Visibility ──────────────────────────────────
   const showControlsTemporarily = useCallback(() => {
     setShowControls(true);
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
     controlsTimerRef.current = setTimeout(() => {
-      if (isPlaying && !showSpeedMenu && !showQualityMenu && !showSubtitleMenu && !showSettingsMenu) {
+      if (isPlaying && !showSpeedMenu && !showQualityMenu && !showSubtitleMenu && !showSettingsMenu && !showVolumePopup) {
         setShowControls(false);
       }
     }, 3000);
-  }, [isPlaying, showSpeedMenu, showQualityMenu, showSubtitleMenu, showSettingsMenu]);
+  }, [isPlaying, showSpeedMenu, showQualityMenu, showSubtitleMenu, showSettingsMenu, showVolumePopup]);
 
   useEffect(() => {
     if (isPlaying) showControlsTemporarily();
@@ -236,8 +339,21 @@ export function VideoPlayer({
   const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) video.play().catch(() => {});
-    else video.pause();
+    if (video.paused) {
+      // Resume HLS buffering before play
+      if (hlsRef.current) {
+        hlsRef.current.startLoad();
+      }
+      video.play().catch((err) => {
+        console.error('[Player] play() failed:', err);
+      });
+    } else {
+      // Stop HLS buffering immediately to cut audio
+      if (hlsRef.current) {
+        hlsRef.current.stopLoad();
+      }
+      video.pause();
+    }
     showControlsTemporarily();
   }, [showControlsTemporarily]);
 
@@ -511,31 +627,19 @@ export function VideoPlayer({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-      >
-        {/* Subtitle tracks */}
-        {subtitles.map((sub) => (
-          <track
-            key={sub.id}
-            kind="subtitles"
-            label={sub.label}
-            srcLang={sub.language}
-            src={sub.url}
-            default={sub.isDefault}
-          />
-        ))}
-      </video>
+      />
 
       {/* Loading Spinner */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-20">
-          <Loader2 className="w-12 h-12 text-white animate-spin" />
+          <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 lg:w-12 lg:h-12 text-white animate-spin" />
         </div>
       )}
 
       {/* Long Press 2x Indicator */}
       {isLongPress && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs font-bold flex items-center gap-1.5">
-          <FastForward className="w-3.5 h-3.5" />
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm lg:text-base font-bold flex items-center gap-1.5">
+          <FastForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-4 lg:h-4" />
           2x
         </div>
       )}
@@ -543,8 +647,8 @@ export function VideoPlayer({
       {/* Double Tap Ripple (left/right) */}
       {doubleTapSide && (
         <div className={`absolute top-0 bottom-0 ${doubleTapSide === 'left' ? 'left-0 right-1/2' : 'left-1/2 right-0'} z-30 flex items-center justify-center pointer-events-none`}>
-          <div className="flex items-center gap-1 text-white text-sm font-bold animate-scale-in">
-            {doubleTapSide === 'left' ? <SkipBack className="w-6 h-6" /> : <SkipForward className="w-6 h-6" />}
+          <div className="flex items-center gap-1 text-white text-base sm:text-lg lg:text-xl font-bold animate-scale-in">
+            {doubleTapSide === 'left' ? <SkipBack className="w-6 h-6 sm:w-7 sm:h-7 lg:w-7 lg:h-7" /> : <SkipForward className="w-6 h-6 sm:w-7 sm:h-7 lg:w-7 lg:h-7" />}
             <span>10s</span>
           </div>
         </div>
@@ -552,7 +656,7 @@ export function VideoPlayer({
 
       {/* Subtitle Overlay */}
       {currentSubtitleText && (
-        <div className="absolute bottom-24 sm:bottom-28 left-4 right-4 z-25 flex justify-center pointer-events-none">
+        <div className={`absolute left-4 right-4 z-40 flex justify-center pointer-events-none transition-all duration-300 ${showControls ? 'bottom-24 sm:bottom-28' : 'bottom-6 sm:bottom-8'}`}>
           <span className={`${subtitleSizeClass} font-medium text-white text-center px-3 py-1.5 rounded-md max-w-[80%] leading-relaxed ${subtitleBg ? 'bg-black/60 backdrop-blur-sm' : 'drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'}`}>
             {currentSubtitleText}
           </span>
@@ -561,8 +665,10 @@ export function VideoPlayer({
 
       {/* Controls Overlay */}
       <div
-        className={`absolute inset-0 z-30 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`absolute inset-0 z-[45] transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => {
+          // Close volume popup on any click on the overlay area
+          if (showVolumePopup) { setShowVolumePopup(false); return; }
           // Only toggle play on direct click (not on controls)
           if (e.target === e.currentTarget) togglePlay();
         }}
@@ -572,7 +678,7 @@ export function VideoPlayer({
           {/* Playback speed badge */}
           <div className="flex items-center gap-2 shrink-0">
             {playbackSpeed !== 1 && (
-              <span className="px-2 py-0.5 bg-red-600/20 rounded text-xs text-red-400 font-bold">
+              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-red-600/20 rounded text-xs sm:text-sm lg:text-base text-red-400 font-bold">
                 {playbackSpeed}x
               </span>
             )}
@@ -585,8 +691,8 @@ export function VideoPlayer({
             className="absolute inset-0 flex items-center justify-center cursor-pointer"
             onClick={togglePlay}
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/70 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
-              <Play className="w-8 h-8 sm:w-10 sm:h-10 text-white fill-white ml-1" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-20 lg:h-20 bg-black/70 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+              <Play className="w-8 h-8 sm:w-10 sm:h-10 lg:w-10 lg:h-10 text-white fill-white ml-1" />
             </div>
           </div>
         )}
@@ -623,7 +729,7 @@ export function VideoPlayer({
             {/* Seek preview tooltip */}
             {seekPreview && (
               <div
-                className="absolute bottom-6 -translate-x-1/2 px-2 py-0.5 bg-black/80 rounded text-sm text-white font-medium"
+                className="absolute bottom-6 -translate-x-1/2 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-black/80 rounded text-xs sm:text-sm lg:text-base text-white font-medium"
                 style={{ left: seekPreview.x }}
               >
                 {formatTime(seekPreview.time)}
@@ -633,60 +739,88 @@ export function VideoPlayer({
 
           {/* Controls row */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 lg:gap-2">
               {/* Play/Pause */}
               <button onClick={togglePlay} className="text-white hover:scale-110 transition-transform p-1">
-                {isPlaying ? <Pause className="w-6 h-6 sm:w-7 sm:h-7" /> : <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white" />}
+                {isPlaying ? <Pause className="w-6 h-6 sm:w-7 sm:h-7 lg:w-6 lg:h-6" /> : <Play className="w-6 h-6 sm:w-7 sm:h-7 lg:w-6 lg:h-6 fill-white" />}
               </button>
 
               {/* Prev/Next episode */}
               {hasPrev && onPrevEpisode && (
                 <button onClick={onPrevEpisode} className="text-white hover:scale-110 transition-transform p-1 hidden sm:block">
-                  <SkipBack className="w-6 h-6" />
+                  <SkipBack className="w-5 h-5 sm:w-6 sm:h-6 lg:w-5 lg:h-5" />
                 </button>
               )}
               {hasNext && onNextEpisode && (
                 <button onClick={onNextEpisode} className="text-white hover:scale-110 transition-transform p-1 hidden sm:block">
-                  <SkipForward className="w-6 h-6" />
+                  <SkipForward className="w-5 h-5 sm:w-6 sm:h-6 lg:w-5 lg:h-5" />
                 </button>
               )}
 
-              {/* Volume */}
-              <div className="hidden sm:flex items-center gap-2 group/vol">
-                <button onClick={toggleMute} className="text-white hover:scale-110 transition-transform p-1">
-                  {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+              {/* Volume — button + popup */}
+              <div className="hidden sm:block relative">
+                <button
+                  onClick={() => { setShowVolumePopup(v => !v); setShowSpeedMenu(false); setShowQualityMenu(false); setShowSubtitleMenu(false); setShowSettingsMenu(false); }}
+                  onDoubleClick={toggleMute}
+                  title="Âm lượng (double-click để tắt tiếng)"
+                  className="text-white hover:scale-110 transition-transform p-1"
+                >
+                  {isMuted || volume === 0
+                    ? <VolumeX className="w-5 h-5 sm:w-5 sm:h-5 lg:w-5 lg:h-5" />
+                    : <Volume2 className="w-5 h-5 sm:w-5 sm:h-5 lg:w-5 lg:h-5" />}
                 </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={isMuted ? 0 : volume}
-                  onChange={(e) => changeVolume(parseFloat(e.target.value))}
-                  className="w-16 h-1 bg-white/20 rounded-full cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
-                  style={{
-                    background: `linear-gradient(to right, #fff 0%, #fff ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.2) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.2) 100%)`
-                  }}
-                />
+                {showVolumePopup && (
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl px-3 pt-3 pb-2 flex flex-col items-center gap-1.5 shadow-2xl z-50 select-none">
+                    <span className="text-white text-[10px] font-semibold tabular-nums">{Math.round((isMuted ? 0 : volume) * 100)}%</span>
+                    {/* Vertical slider via rotate */}
+                    <div className="h-24 w-6 flex items-center justify-center overflow-visible">
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.02"
+                        value={isMuted ? 0 : volume}
+                        onChange={(e) => changeVolume(parseFloat(e.target.value))}
+                        className="w-20 cursor-pointer appearance-none
+                          [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-1
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
+                          [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-grab"
+                        style={{
+                          transform: 'rotate(-90deg)',
+                          background: `linear-gradient(to right, #fff 0%, #fff ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.2) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.2) 100%)`,
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={toggleMute}
+                      className="text-gray-400 hover:text-white transition-colors mt-0.5"
+                      title={isMuted ? 'Bật tiếng' : 'Tắt tiếng'}
+                    >
+                      {isMuted || volume === 0
+                        ? <VolumeX className="w-3.5 h-3.5" />
+                        : <Volume2 className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Time */}
-              <span className="text-white text-base sm:text-lg tabular-nums">
+              <span className="text-white text-xs sm:text-sm lg:text-[13px] tabular-nums">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-3 lg:gap-1.5">
               {/* Mobile episode navigation */}
               <div className="flex items-center gap-1 sm:hidden">
                 {hasPrev && onPrevEpisode && (
                   <button onClick={onPrevEpisode} className="text-white p-1">
-                    <ChevronLeft className="w-6 h-6" />
+                    <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
                   </button>
                 )}
                 {hasNext && onNextEpisode && (
                   <button onClick={onNextEpisode} className="text-white p-1">
-                    <ChevronRight className="w-6 h-6" />
+                    <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />
                   </button>
                 )}
               </div>
@@ -695,10 +829,10 @@ export function VideoPlayer({
               {subtitles.length > 0 && (
                 <div className="relative">
                   <button
-                    onClick={() => { setShowSubtitleMenu(!showSubtitleMenu); setShowSpeedMenu(false); setShowQualityMenu(false); setShowSettingsMenu(false); }}
+                    onClick={() => { setShowSubtitleMenu(!showSubtitleMenu); setShowSpeedMenu(false); setShowQualityMenu(false); setShowSettingsMenu(false); setShowVolumePopup(false); }}
                     className={`text-white p-1 hover:scale-110 transition-transform ${activeSubtitle ? 'text-red-400' : ''}`}
                   >
-                    <Subtitles className="w-6 h-6" />
+                    <Subtitles className="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6" />
                   </button>
                   {showSubtitleMenu && (
                     <SubtitleMenu
@@ -717,8 +851,8 @@ export function VideoPlayer({
               {/* Speed */}
               <div className="relative">
                 <button
-                  onClick={() => { setShowSpeedMenu(!showSpeedMenu); setShowSubtitleMenu(false); setShowQualityMenu(false); setShowSettingsMenu(false); }}
-                  className="px-5 py-2.5 text-white text-base sm:text-lg rounded-md hover:bg-white/10 transition-colors"
+                  onClick={() => { setShowSpeedMenu(!showSpeedMenu); setShowSubtitleMenu(false); setShowQualityMenu(false); setShowSettingsMenu(false); setShowVolumePopup(false); }}
+                  className="px-2 py-1 sm:px-3 sm:py-1.5 lg:px-2 lg:py-1 text-white text-xs sm:text-sm lg:text-[13px] rounded-md hover:bg-white/10 transition-colors font-medium"
                 >
                   {playbackSpeed}x
                 </button>
@@ -732,10 +866,10 @@ export function VideoPlayer({
 
               {/* Quality selection */}
               {qualityLevels.length > 0 && (
-                <div className="relative hidden sm:block">
+                <div className="relative">
                   <button
-                    onClick={() => { setShowSettingsMenu(!showSettingsMenu); setShowSubtitleMenu(false); setShowSpeedMenu(false); }}
-                    className="px-5 py-2.5 text-white text-base sm:text-lg rounded-md hover:bg-white/10 transition-colors"
+                    onClick={() => { setShowSettingsMenu(!showSettingsMenu); setShowSubtitleMenu(false); setShowSpeedMenu(false); setShowVolumePopup(false); }}
+                    className="px-2 py-1 sm:px-3 sm:py-1.5 lg:px-2 lg:py-1 text-white text-xs sm:text-sm lg:text-[13px] rounded-md hover:bg-white/10 transition-colors font-medium"
                   >
                     {currentQualityLabel}
                   </button>
@@ -751,8 +885,9 @@ export function VideoPlayer({
 
               {/* Fullscreen */}
               <button onClick={toggleFullscreen} className="text-white p-1 hover:scale-110 transition-transform">
-                {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+                {isFullscreen ? <Minimize className="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6" /> : <Maximize className="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6" />}
               </button>
+
             </div>
           </div>
         </div>

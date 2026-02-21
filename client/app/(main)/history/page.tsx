@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { History, Clock, Play, Calendar, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { watchHistoryApi } from '@/lib/api';
 import { Loading } from '@/components/common/Loading';
 import { VideoCard } from '@/components/video/VideoCard';
@@ -48,6 +48,7 @@ interface PaginatedHistory {
 export default function HistoryPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const _hasHydrated = useHasHydrated();
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -55,6 +56,7 @@ export default function HistoryPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -76,7 +78,7 @@ export default function HistoryPage() {
     };
 
     fetchHistory();
-  }, [isAuthenticated, router, page]);
+  }, [_hasHydrated, isAuthenticated, router, page]);
 
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -113,15 +115,8 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen pb-20 lg:pb-8 bg-[#0a0a0a]">
       {/* Header */}
-      <div className="mx-auto px-2 lg:px-32 pt-20 lg:pt-24">
+      <div className="mx-auto px-2 lg:px-32 pt-20 lg:pt-24 mb-8">
         <Breadcrumb items={[{ label: 'L\u1ecbch s\u1eed xem' }]} />
-        <div className="flex items-center gap-4 mb-8">
-         
-          <div>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2">Lịch sử xem</h1>
-           
-          </div>
-        </div>
       </div>
 
       {/* Content */}

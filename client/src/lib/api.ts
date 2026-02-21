@@ -20,59 +20,93 @@ class ApiClient {
     return headers;
   }
 
-  private async handle<T>(res: Response): Promise<T> {
+  private async handleWithRetry<T>(
+    res: Response,
+    retryFn?: () => Promise<Response>,
+  ): Promise<T> {
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      if (res.status === 401) {
+      // On 401, try to refresh token and retry once
+      if (res.status === 401 && retryFn) {
         try {
           await useAuthStore.getState().refreshAccessToken();
-        } catch {
-          /* ignore */
+          // Check if we got a new token (refresh succeeded)
+          const { accessToken } = useAuthStore.getState();
+          if (accessToken) {
+            const retryRes = await retryFn();
+            if (retryRes.ok) {
+              return retryRes.json() as Promise<T>;
+            }
+            const retryBody = await retryRes.json().catch(() => ({}));
+            throw new Error(retryBody.message || `HTTP ${retryRes.status}`);
+          }
+        } catch (refreshErr) {
+          // Refresh failed — fall through to throw original error
         }
       }
+      const body = await res.json().catch(() => ({}));
       throw new Error(body.message || `HTTP ${res.status}`);
     }
     return res.json() as Promise<T>;
   }
 
   async get<T>(path: string, auth = false): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, { headers: this.getHeaders(auth) });
-    return this.handle<T>(res);
+    const url = `${this.baseUrl}${path}`;
+    const res = await fetch(url, { headers: this.getHeaders(auth) });
+    return this.handleWithRetry<T>(
+      res,
+      auth ? () => fetch(url, { headers: this.getHeaders(true) }) : undefined,
+    );
   }
 
   async post<T>(path: string, data?: unknown, auth = false): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
+    const url = `${this.baseUrl}${path}`;
+    const opts = () => ({
       method: 'POST',
       headers: this.getHeaders(auth),
       body: data ? JSON.stringify(data) : undefined,
     });
-    return this.handle<T>(res);
+    const res = await fetch(url, opts());
+    return this.handleWithRetry<T>(
+      res,
+      auth ? () => fetch(url, { ...opts(), headers: this.getHeaders(true) }) : undefined,
+    );
   }
 
   async put<T>(path: string, data?: unknown, auth = false): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
+    const url = `${this.baseUrl}${path}`;
+    const opts = () => ({
       method: 'PUT',
       headers: this.getHeaders(auth),
       body: data ? JSON.stringify(data) : undefined,
     });
-    return this.handle<T>(res);
+    const res = await fetch(url, opts());
+    return this.handleWithRetry<T>(
+      res,
+      auth ? () => fetch(url, { ...opts(), headers: this.getHeaders(true) }) : undefined,
+    );
   }
 
   async patch<T>(path: string, data?: unknown, auth = false): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
+    const url = `${this.baseUrl}${path}`;
+    const opts = () => ({
       method: 'PATCH',
       headers: this.getHeaders(auth),
       body: data ? JSON.stringify(data) : undefined,
     });
-    return this.handle<T>(res);
+    const res = await fetch(url, opts());
+    return this.handleWithRetry<T>(
+      res,
+      auth ? () => fetch(url, { ...opts(), headers: this.getHeaders(true) }) : undefined,
+    );
   }
 
   async delete<T>(path: string, auth = false): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method: 'DELETE',
-      headers: this.getHeaders(auth),
-    });
-    return this.handle<T>(res);
+    const url = `${this.baseUrl}${path}`;
+    const res = await fetch(url, { method: 'DELETE', headers: this.getHeaders(auth) });
+    return this.handleWithRetry<T>(
+      res,
+      auth ? () => fetch(url, { method: 'DELETE', headers: this.getHeaders(true) }) : undefined,
+    );
   }
 }
 
@@ -132,6 +166,13 @@ export const videoApi = {
     api.post(`/videos/${videoId}/watch-progress`, data, true),
 };
 
+// ─── Subtitle API helpers ──────────────────────────────────
+
+export const subtitleApi = {
+  /** Lấy phụ đề theo tập phim */
+  byEpisode: (episodeId: string) => api.get<any[]>(`/subtitles/episode/${episodeId}`),
+};
+
 // ─── Watch History API helpers ────────────────────────────
 
 export const watchHistoryApi = {
@@ -142,10 +183,29 @@ export const watchHistoryApi = {
 
 // ─── Search API helpers ──────────────────────────────────────
 
+export interface SearchParams {
+  q?: string;
+  genre?: string;
+  sort?: 'relevance' | 'newest' | 'views' | 'rating';
+  year?: string;
+  quality?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const searchApi = {
-  /** Tìm kiếm video */
-  search: (q: string, page = 1, limit = 20) =>
-    api.get<any>(`/search?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`),
+  /** Tìm kiếm video (hỗ trợ cả browse theo thể loại) */
+  search: (params: SearchParams) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set('q', params.q);
+    if (params.genre) qs.set('genre', params.genre);
+    if (params.sort) qs.set('sort', params.sort);
+    if (params.year) qs.set('year', params.year);
+    if (params.quality) qs.set('quality', params.quality);
+    qs.set('page', String(params.page ?? 1));
+    qs.set('limit', String(params.limit ?? 20));
+    return api.get<any>(`/search?${qs.toString()}`);
+  },
 
   /** Gợi ý tìm kiếm (autocomplete) */
   suggest: (q: string, limit = 8) =>

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Coins, History, Plus, Crown } from 'lucide-react';
+import { Coins, History, Plus, Crown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { walletApi } from '@/lib/api';
 import { GoldBalanceCard, TransactionHistory } from '@/components/payment/WalletComponents';
 import { GoldTopUp } from '@/components/payment/GoldTopUp';
@@ -16,26 +16,35 @@ type Tab = 'topup' | 'history';
 export default function WalletPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const _hasHydrated = useHasHydrated();
   const [activeTab, setActiveTab] = useState<Tab>('topup');
   const [balance, setBalance] = useState<number>(user?.goldBalance ?? 0);
   const [vipTier, setVipTier] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!_hasHydrated || !isAuthenticated) return;
     walletApi.getBalance().then((res) => {
       setBalance(res.goldBalance);
       setVipTier(res.vipTier);
     }).catch(() => {});
-  }, [isAuthenticated]);
+  }, [_hasHydrated, isAuthenticated]);
+
+  if (!_hasHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-white animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 lg:px-6">
         <div className="text-center">
-          <Coins className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3">Đăng nhập để xem ví</h2>
-          <p className="text-gray-400 text-xs sm:text-sm lg:text-base mb-8">Quản lý Gold và lịch sử giao dịch</p>
-          <Link href="/login" className="px-8 py-4 bg-red-500 hover:bg-red-600 rounded-xl text-base font-semibold transition-colors">
+          <Coins className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-amber-500 mx-auto mb-4 sm:mb-5 lg:mb-6" />
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3">Đăng nhập để xem ví</h2>
+          <p className="text-gray-400 text-xs sm:text-sm lg:text-base mb-5 sm:mb-6 lg:mb-8">Quản lý Gold và lịch sử giao dịch</p>
+          <Link href="/login" className="px-6 sm:px-8 py-3 sm:py-4 bg-red-500 hover:bg-red-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-colors">
             Đăng nhập
           </Link>
         </div>
@@ -51,9 +60,9 @@ export default function WalletPage() {
   return (
     <div className="min-h-screen pb-20 lg:pb-8 bg-[#0a0a0a]">
       {/* Header */}
-      <div className="max-w-4xl mx-auto px-4 pt-20 lg:pt-24">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 pt-16 sm:pt-20 lg:pt-24">
         <Breadcrumb items={[{ label: 'V\u00ed c\u1ee7a t\u00f4i' }]} />
-        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-6">Ví của tôi</h1>
+        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-4 sm:mb-5 lg:mb-6">Ví của tôi</h1>
 
         {/* Balance Card */}
         <GoldBalanceCard
@@ -73,7 +82,7 @@ export default function WalletPage() {
         </div>
 
         {/* Tab navigation */}
-        <div className="flex gap-2 mt-8 bg-gray-800/50 rounded-xl p-1.5">
+        <div className="flex gap-1.5 sm:gap-2 mt-5 sm:mt-6 lg:mt-8 bg-gray-800/50 rounded-lg sm:rounded-xl p-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -82,11 +91,11 @@ export default function WalletPage() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  'flex-1 flex items-center justify-center gap-2 py-4 rounded-lg text-base font-medium transition-all',
+                  'flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 lg:py-4 rounded-md sm:rounded-lg text-xs sm:text-sm lg:text-base font-medium transition-all',
                   isActive ? 'bg-gray-700 text-white shadow-lg' : 'text-gray-400 hover:text-white',
                 )}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 {tab.label}
               </button>
             );
@@ -94,7 +103,7 @@ export default function WalletPage() {
         </div>
 
         {/* Tab content */}
-        <div className="mt-8">
+        <div className="mt-5 sm:mt-6 lg:mt-8">
           {activeTab === 'topup' && <GoldTopUp />}
           {activeTab === 'history' && <TransactionHistory />}
         </div>

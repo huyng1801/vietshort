@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Coins, CheckCircle, Gift, Sparkles, Calendar } from 'lucide-react';
+import { Coins, CheckCircle, Gift, Sparkles, Calendar, PartyPopper } from 'lucide-react';
 import { checkInApi } from '@/lib/api';
 import type { CheckInStatus, CheckInRecord } from '@/types/gamification';
 import { cn } from '@/lib/utils';
@@ -75,14 +75,14 @@ export function DailyCheckIn({ onGoldEarned }: DailyCheckInProps) {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-amber-500/20 rounded-full animate-pulse" />
-          <div className="h-5 w-32 bg-gray-700 rounded animate-pulse" />
+      <div className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+        <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 mb-3 sm:mb-4">
+          <div className="w-8 h-8 sm:w-9 h-9 lg:w-10 lg:h-10 bg-amber-500/20 rounded-full animate-pulse" />
+          <div className="h-4 sm:h-5 w-24 sm:w-32 bg-gray-700 rounded animate-pulse" />
         </div>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 lg:gap-2.5">
           {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-xl bg-gray-800/50 animate-pulse" />
+            <div key={i} className="aspect-square rounded-lg sm:rounded-xl bg-gray-800/50 animate-pulse" />
           ))}
         </div>
       </div>
@@ -96,52 +96,54 @@ export function DailyCheckIn({ onGoldEarned }: DailyCheckInProps) {
   const checkedDaysSet = new Set(history.map((h) => h.day));
 
   return (
-    <div className="relative bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-2xl p-8 lg:p-10 overflow-hidden">
+    <div className="relative bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 overflow-hidden">
       {/* Success animation overlay */}
       {justCheckedIn && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="text-center animate-in zoom-in-75 duration-500">
-            <div className="text-6xl mb-4 animate-bounce">🎉</div>
-            <p className="text-3xl font-bold text-amber-400 mb-2">+{earnedGold} Gold!</p>
-            <p className="text-lg text-gray-300">Điểm danh ngày {currentStreak} thành công!</p>
+            <div className="mb-3 sm:mb-4 animate-bounce flex justify-center">
+              <PartyPopper className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-amber-400" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-amber-400 mb-1.5 sm:mb-2">+{earnedGold} Gold!</p>
+            <p className="text-base sm:text-lg text-gray-300">Điểm danh ngày {currentStreak} thành công!</p>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center">
-            <Calendar className="w-7 h-7 text-white" />
+      <div className="flex items-center justify-between mb-4 sm:mb-5 gap-2">
+        <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3">
+          <div className="w-10 h-10 sm:w-11 h-11 lg:w-12 lg:h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <Calendar className="w-5 h-5 sm:w-6 h-6 lg:w-7 lg:h-7 text-white" />
           </div>
           <div>
-            <h3 className="text-white font-bold text-lg">Điểm danh hàng ngày</h3>
-            <p className="text-base text-gray-400">Chuỗi: <span className="text-amber-400 font-bold">{currentStreak}/7</span> ngày</p>
+            <h3 className="text-white font-bold text-base sm:text-lg">Điểm danh hàng ngày</h3>
+            <p className="text-xs sm:text-sm lg:text-base text-gray-400">Chuỗi: <span className="text-amber-400 font-bold">{currentStreak}/7</span> ngày</p>
           </div>
         </div>
         {!checkedToday && (
           <button
             onClick={handleCheckIn}
             disabled={checking}
-            className="px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold text-base rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-3 py-2 sm:px-4 py-2.5 lg:px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold text-sm sm:text-base rounded-lg sm:rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 sm:gap-2 flex-shrink-0"
           >
             {checking ? (
-              <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin" />
+              <div className="w-4 h-4 sm:w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin" />
             ) : (
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="w-4 h-4 sm:w-5 h-5" />
             )}
-            Điểm danh
+            <span className="hidden xs:inline">Điểm danh</span>
           </button>
         )}
         {checkedToday && (
-          <span className="flex items-center gap-2 text-green-400 text-base font-semibold">
-            <CheckCircle className="w-5 h-5" /> Đã điểm danh
+          <span className="flex items-center gap-1.5 sm:gap-2 text-green-400 text-xs sm:text-sm lg:text-base font-semibold flex-shrink-0">
+            <CheckCircle className="w-4 h-4 sm:w-5 h-5" /> <span className="hidden xs:inline">Đã điểm danh</span>
           </span>
         )}
       </div>
 
       {/* 7-day reward grid */}
-      <div className="grid grid-cols-7 gap-3 lg:gap-4">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5 lg:gap-3">
         {rewards.map((reward) => {
           const isChecked = reward.day < currentStreak || (reward.day === currentStreak && checkedToday);
           const isCurrent = reward.day === currentStreak + 1 && !checkedToday;
@@ -152,7 +154,7 @@ export function DailyCheckIn({ onGoldEarned }: DailyCheckInProps) {
             <div
               key={reward.id}
               className={cn(
-                'relative aspect-square py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 border transition-all',
+                'relative aspect-square py-1 rounded-lg sm:rounded-xl flex flex-col items-center justify-center gap-0.5 border transition-all',
                 isChecked || isToday
                   ? 'bg-amber-500/20 border-amber-500/50'
                   : isCurrent
@@ -162,14 +164,14 @@ export function DailyCheckIn({ onGoldEarned }: DailyCheckInProps) {
             >
               {/* Check mark for completed */}
               {(isChecked || isToday) && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3.5 h-3.5 text-white" />
+                <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-4 h-4 sm:w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-2.5 h-2.5 sm:w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <span className="text-sm text-gray-400 font-medium">Ngày {reward.day}</span>
-              <div className="flex items-center gap-1">
-                <Coins className={cn('w-5 h-5', isChecked || isToday ? 'text-amber-400' : 'text-gray-500')} />
-                <span className={cn('text-base font-bold', isChecked || isToday ? 'text-amber-400' : 'text-gray-500')}>
+              <span className="text-[10px] sm:text-xs lg:text-sm text-gray-400 font-medium">Ngày {reward.day}</span>
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <Coins className={cn('w-3.5 h-3.5 sm:w-4 h-4 lg:w-5 lg:h-5', isChecked || isToday ? 'text-amber-400' : 'text-gray-500')} />
+                <span className={cn('text-xs sm:text-sm lg:text-base font-bold', isChecked || isToday ? 'text-amber-400' : 'text-gray-500')}>
                   {reward.rewardGold}
                 </span>
               </div>
@@ -180,9 +182,9 @@ export function DailyCheckIn({ onGoldEarned }: DailyCheckInProps) {
       </div>
 
       {/* Total rewards info */}
-      <div className="mt-5 flex items-center justify-between text-base text-gray-500">
+      <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-2 text-xs sm:text-sm lg:text-base text-gray-500">
         <span>Tổng 7 ngày: <span className="text-amber-400 font-bold">{rewards.reduce((s, r) => s + r.rewardGold, 0)} Gold</span></span>
-        <span>Hết chu kỳ sẽ bắt đầu lại</span>
+        <span className="text-[10px] sm:text-xs lg:text-sm">Hết chu kỳ sẽ bắt đầu lại</span>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import { Public } from '../../common/decorators/user.decorator';
 
@@ -10,9 +10,24 @@ export class SearchController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'Tìm kiếm video' })
-  async search(@Query('q') query: string, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.searchService.search(query, page, limit);
+  @ApiOperation({ summary: 'Tìm kiếm video (hỗ trợ browse theo thể loại không cần từ khoá)' })
+  @ApiQuery({ name: 'q', required: false })
+  @ApiQuery({ name: 'genre', required: false })
+  @ApiQuery({ name: 'sort', required: false, enum: ['relevance', 'newest', 'views', 'rating'] })
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'quality', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  async search(
+    @Query('q') query = '',
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('genre') genre?: string,
+    @Query('sort') sort?: string,
+    @Query('year') year?: string,
+    @Query('quality') quality?: string,
+  ) {
+    return this.searchService.search(query, page, limit, { genre, sort: sort as any, year, quality });
   }
 
   @Public()

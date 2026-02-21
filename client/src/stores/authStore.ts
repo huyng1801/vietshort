@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { useState, useEffect } from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
+// ─── Refresh token mutex ────────────────────────────────
+// Prevents concurrent refresh calls that cause token race conditions (P2025)
+let refreshPromise: Promise<void> | null = null;
 
 export type VipType = 'VIP_FREEADS' | 'VIP_GOLD';
 
@@ -36,8 +41,8 @@ interface AuthActions {
   resetPassword: (token: string, password: string) => Promise<void>;
   
   // OAuth
-  loginWithOAuth: (provider: 'google' | 'facebook' | 'apple' | 'tiktok') => Promise<void>;
-  handleOAuthCallback: (provider: string, code: string) => Promise<void>;
+  loginWithOAuth: (provider: 'google' | 'facebook' | 'apple' | 'tiktok') => void;
+  handleOAuthCallback: (accessToken: string, refreshToken: string) => Promise<void>;
   
   // Token management
   refreshAccessToken: () => Promise<void>;
@@ -186,7 +191,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       logout: async () => {
         set({ isLoading: true });
         try {
-          const { accessToken } = get();
+          const { accessToken, refreshToken } = get();
           if (accessToken) {
             await fetch(`${API_BASE_URL}/auth/logout`, {
               method: 'POST',
@@ -194,10 +199,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
               },
+              body: JSON.stringify({ refreshToken }),
             });
           }
         } catch (error) {
-          console.error('Logout error:', error);
+          console.warn('Logout error:', error);
         } finally {
           set({ ...initialState });
         }
@@ -254,35 +260,33 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       // OAuth Login (redirect to provider)
-      loginWithOAuth: async (provider: 'google' | 'facebook' | 'apple' | 'tiktok') => {
-        // Redirect to OAuth provider
-        window.location.href = `${API_BASE_URL}/auth/oauth/${provider}`;
+      // Backend routes: /auth/google, /auth/facebook, /auth/apple, /auth/tiktok
+      loginWithOAuth: (provider: 'google' | 'facebook' | 'apple' | 'tiktok') => {
+        window.location.href = `${API_BASE_URL}/auth/${provider}`;
       },
 
-      // Handle OAuth callback
-      handleOAuthCallback: async (provider: string, code: string) => {
+      // Handle OAuth callback — backend redirects with tokens in URL params
+      handleOAuthCallback: async (accessToken: string, refreshToken: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE_URL}/auth/oauth/${provider}/callback`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'OAuth authentication failed');
-          }
-
-          const { user, accessToken, refreshToken } = await response.json();
-          
+          // Store tokens — they come directly from the backend redirect URL
           set({
-            user,
             accessToken,
             refreshToken,
             isAuthenticated: true,
-            isLoading: false,
           });
+
+          // Fetch user profile with the new token
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch user profile');
+          }
+
+          const { user } = await response.json();
+          set({ user, isLoading: false });
         } catch (error) {
           set({ 
             isLoading: false, 
@@ -292,35 +296,48 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         }
       },
 
-      // Refresh access token
+      // Refresh access token (with mutex to prevent concurrent calls)
       refreshAccessToken: async () => {
-        const { refreshToken } = get();
-        if (!refreshToken) {
-          set({ ...initialState });
-          return;
+        // If a refresh is already in flight, piggyback on it
+        if (refreshPromise) {
+          return refreshPromise;
         }
 
-        try {
-          const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Token refresh failed');
+        const doRefresh = async () => {
+          const { refreshToken } = get();
+          if (!refreshToken) {
+            set({ ...initialState });
+            return;
           }
 
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await response.json();
-          
-          set({
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-          });
-        } catch (error) {
-          console.error('Token refresh error:', error);
-          set({ ...initialState });
-        }
+          try {
+            const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Token refresh failed');
+            }
+
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await response.json();
+            
+            set({
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+            });
+          } catch (error) {
+            console.warn('Token refresh failed, clearing auth state');
+            set({ ...initialState });
+          }
+        };
+
+        refreshPromise = doRefresh().finally(() => {
+          refreshPromise = null;
+        });
+
+        return refreshPromise;
       },
 
       // Set tokens manually
@@ -363,3 +380,29 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     }
   )
 );
+
+/**
+ * Hook that returns true once the zustand persist store has finished
+ * rehydrating from localStorage. Use this to prevent redirecting to /login
+ * before the tokens are restored on page refresh.
+ */
+export function useHasHydrated() {
+  const [hydrated, setHydrated] = useState(() =>
+    useAuthStore.persist.hasHydrated()
+  );
+
+  useEffect(() => {
+    // Already hydrated (e.g. navigating between pages after first load)
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    // Subscribe to finish event
+    const unsub = useAuthStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+    return unsub;
+  }, []);
+
+  return hydrated;
+}

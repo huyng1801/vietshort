@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, QrCode, Wallet, ChevronRight, Shield, Lock } from 'lucide-react';
+import { CreditCard, QrCode, Wallet, ChevronRight, Shield, Lock, Landmark, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type PaymentMethod = 'VNPAY' | 'MOMO';
@@ -16,7 +16,7 @@ const METHODS = [
     id: 'VNPAY' as PaymentMethod,
     name: 'VNPay',
     description: 'Thẻ nội địa, QR code, Internet Banking',
-    icon: '🏦',
+    icon: <Landmark className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
     color: 'from-blue-600 to-blue-800',
     border: 'border-blue-500/50',
     features: ['Thẻ ATM / Internet Banking', 'QR Code', 'Ví VNPay'],
@@ -25,7 +25,7 @@ const METHODS = [
     id: 'MOMO' as PaymentMethod,
     name: 'MoMo',
     description: 'Ví điện tử MoMo, QR code',
-    icon: '💜',
+    icon: <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
     color: 'from-pink-600 to-purple-700',
     border: 'border-pink-500/50',
     features: ['Ví MoMo', 'QR Code', 'Liên kết ngân hàng'],
@@ -42,21 +42,21 @@ export function PaymentMethodSelector({ selected, onSelect }: PaymentMethodSelec
             key={m.id}
             onClick={() => onSelect(m.id)}
             className={cn(
-              'w-full flex items-center gap-4 rounded-xl border-2 p-5 transition-all text-left',
+              'w-full flex items-center gap-3 sm:gap-4 rounded-lg sm:rounded-xl border-2 p-3.5 sm:p-4 lg:p-5 transition-all text-left',
               isSelected
                 ? `${m.border} bg-gray-800/80 shadow-lg`
                 : 'border-white/10 hover:border-gray-500 bg-gray-800/30',
             )}
           >
             <div className={cn(
-              'w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br',
+              'w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center bg-gradient-to-br',
               m.color,
             )}>
               {m.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-white text-base">{m.name}</div>
-              <div className="text-sm text-gray-400 mt-0.5">{m.description}</div>
+              <div className="font-semibold text-white text-sm sm:text-base">{m.name}</div>
+              <div className="text-xs sm:text-sm text-gray-400 mt-0.5">{m.description}</div>
               {isSelected && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {m.features.map((f) => (
@@ -76,8 +76,8 @@ export function PaymentMethodSelector({ selected, onSelect }: PaymentMethodSelec
           </button>
         );
       })}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-        <Lock className="w-4 h-4" />
+      <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 mt-2">
+        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         <span>Thanh toán được bảo mật bởi SSL 256-bit encryption</span>
       </div>
     </div>

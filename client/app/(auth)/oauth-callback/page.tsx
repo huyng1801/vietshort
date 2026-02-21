@@ -12,24 +12,25 @@ function OAuthCallbackContent() {
 
   useEffect(() => {
     const processCallback = async () => {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
       const error = searchParams.get('error');
-
       if (error) {
         router.push(`/login?error=${encodeURIComponent(error)}`);
         return;
       }
 
-      if (code) {
+      // Backend redirects with tokens in URL params
+      const accessToken = searchParams.get('accessToken');
+      const refreshToken = searchParams.get('refreshToken');
+
+      if (accessToken && refreshToken) {
         try {
-          await handleOAuthCallback(code, state);
+          await handleOAuthCallback(accessToken, refreshToken);
           router.push('/home');
         } catch (err) {
           router.push('/login?error=oauth_failed');
         }
       } else {
-        router.push('/login');
+        router.push('/login?error=missing_tokens');
       }
     };
 

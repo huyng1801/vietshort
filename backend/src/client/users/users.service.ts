@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../config/database.config';
 import { RedisService } from '../../config/redis.config';
+import { R2StorageService } from '../../admin/videos/services/r2-storage.service';
 import { UpdateProfileDto, UserQueryDto } from './dto/user.dto';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private redisService: RedisService,
+    private r2StorageService: R2StorageService,
   ) {}
 
   async findById(id: string) {
@@ -116,5 +118,37 @@ export class UsersService {
       this.prisma.transaction.count({ where: { userId } }),
     ]);
     return { watchCount, favoriteCount, commentCount, transactionCount };
+  }
+
+  /**
+   * Upload avatar to R2 storage and return the public URL
+   */
+  async uploadAvatar(userId: string, file: Express.Multer.File): Promise<{ url: string }> {
+    try {
+      const ext = this.getExtFromContentType(file.mimetype);
+      const avatarKey = `cdn/avatars/${userId}/avatar.${ext}`;
+
+      // Upload buffer to R2 storage
+      const url = await this.r2StorageService.uploadBuffer(
+        avatarKey,
+        file.buffer,
+        file.mimetype,
+      );
+
+      return { url };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private getExtFromContentType(contentType: string): string {
+    const map: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    return map[contentType] || 'jpg';
   }
 }

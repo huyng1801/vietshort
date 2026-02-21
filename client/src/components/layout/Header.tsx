@@ -170,14 +170,14 @@ export function Header() {
               <>
                 <Link
                   href="/rewards"
-                  className="p-2 sm:p-2 lg:p-2 text-gray-300 hover:text-white transition-colors hidden sm:block"
+                  className="p-2 sm:p-2 lg:p-2 text-gray-300 hover:text-white transition-colors hidden sm:inline-flex"
                   title="Phần thưởng"
                 >
                   <Gift className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/history"
-                  className="p-2 sm:p-2 lg:p-2 text-gray-300 hover:text-white transition-colors hidden sm:block"
+                  className="p-2 sm:p-2 lg:p-2 text-gray-300 hover:text-white transition-colors hidden sm:inline-flex"
                   title="Lịch sử xem"
                 >
                   <History className="w-5 h-5" />
@@ -189,7 +189,7 @@ export function Header() {
               <div className="w-8 h-8 bg-gray-800 rounded-full animate-pulse" />
             ) : isAuthenticated ? (
               <>
-                <button className="relative p-2 text-gray-300 hover:text-white hidden sm:block">
+                <button className="relative p-2 text-gray-300 hover:text-white">
                   <Bell className="w-5 h-5 lg:w-5 lg:h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 lg:w-2 lg:h-2 bg-red-500 rounded-full" />
                 </button>
@@ -197,7 +197,7 @@ export function Header() {
                 {!user?.vipTier ? (
                   <Link
                     href="/vip"
-                    className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-sm font-bold rounded-full transition-all shadow-lg shadow-orange-500/50 hover:shadow-orange-500/75"
+                    className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-sm rounded-full transition-all shadow-lg shadow-orange-500/50 hover:shadow-orange-500/75"
                   >
                     Mua gói
                   </Link>
@@ -224,6 +224,15 @@ export function Header() {
                         </div>
                       </div>
                       <div className="py-1">
+                        {/* Mobile-only: Rewards & History */}
+                        <div className="block sm:hidden">
+                          <Link href="/rewards" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5 hover:text-white text-sm">
+                            <Gift className="w-4 h-4" /> Điểm danh
+                          </Link>
+                          <Link href="/history" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5 hover:text-white text-sm">
+                            <History className="w-4 h-4" /> Lịch sử xem
+                          </Link>
+                        </div>
                         {[
                           { href: '/bookmarks', icon: Bookmark, label: 'Đã lưu' },
                           { href: '/wallet', icon: Wallet, label: 'Ví của tôi' },
