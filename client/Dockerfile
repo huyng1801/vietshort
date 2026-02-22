@@ -24,6 +24,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public directory exists (Docker doesn't copy empty dirs)
+RUN mkdir -p /app/public
+
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
@@ -39,6 +42,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+RUN mkdir -p ./public
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 
