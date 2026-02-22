@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
+
   experimental: {
     // Enable React Compiler when available
     reactCompiler: false,

@@ -782,8 +782,4 @@ vietshort/
 - Retry mechanisms với exponential backoff
 - Graceful degradation strategies
 
-Role	Email	Password	Permissions
-SUPER_ADMIN	superadmin@vietshort.com	superadmin123	Tất cả quyền
-ADMIN	admin@vietshort.com	admin123	User & Content management
-CONTENT_MANAGER	content@vietshort.com	content123	Content management
-MODERATOR	moderator@vietshort.com	mod123	User moderation
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build

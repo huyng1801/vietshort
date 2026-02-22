@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
+
   reactStrictMode: true,
   transpilePackages: ['antd', '@ant-design/icons', '@ant-design/nextjs-registry'],
   experimental: {
