@@ -49,6 +49,7 @@ export class R2StorageService {
         accessKeyId: accessKey,
         secretAccessKey: secretKey,
       },
+      forcePathStyle: true,
       requestHandler: new NodeHttpHandler({
         httpsAgent,
         httpAgent,
