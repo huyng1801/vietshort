@@ -61,8 +61,8 @@ services:
       GOOGLE_CALLBACK_URL: http://${APP_HOST:-localhost}/api/v1/auth/google/callback
       FACEBOOK_CALLBACK_URL: http://${APP_HOST:-localhost}/api/v1/auth/facebook/callback
       APPLE_CALLBACK_URL: http://${APP_HOST:-localhost}/api/v1/auth/apple/callback
-      TIKTOK_CALLBACK_URL: http://${APP_HOST:-localhost}/api/v1/auth/tiktok/callback    
-      volumes: []  # No source mounting in production
+      TIKTOK_CALLBACK_URL: http://${APP_HOST:-localhost}/api/v1/auth/tiktok/callback
+    volumes: []  # No source mounting in production
     deploy:
       resources:
         limits:
