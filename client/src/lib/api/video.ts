@@ -1,5 +1,6 @@
 import { api } from './client';
 import type { VideoCardData } from '@/types/video';
+import type { WatchHistoryItem } from '@/components/history/types';
 
 export interface PaginatedVideos {
   data: VideoCardData[];
@@ -45,7 +46,17 @@ export const subtitleApi = {
   byEpisode: (episodeId: string) => api.get<SubtitleRaw[]>(`/subtitles/episode/${episodeId}`),
 };
 
+export interface PaginatedWatchHistory {
+  data: WatchHistoryItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export const watchHistoryApi = {
   list: (page = 1, limit = 12) =>
-    api.get<PaginatedVideos>(`/users/watch-history?page=${page}&limit=${limit}`, true),
+    api.get<PaginatedWatchHistory>(`/users/watch-history?page=${page}&limit=${limit}`, true),
 };

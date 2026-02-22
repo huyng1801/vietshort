@@ -4,7 +4,7 @@
 export { api } from './client';
 
 export { videoApi, subtitleApi, watchHistoryApi } from './video';
-export type { PaginatedVideos } from './video';
+export type { PaginatedVideos, PaginatedWatchHistory } from './video';
 
 export { searchApi } from './search';
 export type { SearchParams } from './search';

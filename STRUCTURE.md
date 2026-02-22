@@ -782,4 +782,4 @@ vietshort/
 - Retry mechanisms với exponential backoff
 - Graceful degradation strategies
 
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+sudo docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build

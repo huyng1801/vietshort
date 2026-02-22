@@ -8,16 +8,6 @@ import { Loading, Breadcrumb, Pagination } from '@/components/common';
 import { HistoryCard, HistoryEmptyState } from '@/components/history';
 import type { WatchHistoryItem } from '@/components/history';
 
-interface PaginatedHistory {
-  data: WatchHistoryItem[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
 export default function HistoryPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
@@ -39,7 +29,7 @@ export default function HistoryPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await watchHistoryApi.list(page, 20) as PaginatedHistory;
+        const response = await watchHistoryApi.list(page, 20);
         setHistory(response.data || []);
         setTotalPages(response.pagination?.totalPages || 1);
       } catch (err) {
