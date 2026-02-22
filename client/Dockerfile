@@ -42,13 +42,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-RUN mkdir -p ./public
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+# Copy package files for dependency installation
+COPY --from=builder /app/package.json /app/package-lock.json* ./
 
-# Leverage Next.js standalone output
+# Install production dependencies
+RUN npm ci --production
+
+# Copy Next.js standalone build (includes server.js)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
@@ -60,7 +63,7 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:3001 || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", ".next/standalone/server.js"]
 
 # --- Stage: Development ---
 FROM node:20-alpine AS development
