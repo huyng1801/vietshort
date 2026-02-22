@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as https from 'https';
+import * as http from 'http';
 
 @Injectable()
 export class R2StorageService {
@@ -28,6 +30,17 @@ export class R2StorageService {
       throw new Error('R2 Storage configuration is incomplete');
     }
 
+    // Create HTTPS agent with proper TLS configuration for R2
+    const httpsAgent = new https.Agent({
+      keepAlive: true,
+      minVersion: 'TLSv1.2',
+      maxVersion: 'TLSv1.3',
+    });
+
+    const httpAgent = new http.Agent({
+      keepAlive: true,
+    });
+
     this.s3Client = new S3Client({
       region: 'auto',
       endpoint: endpoint,
@@ -35,6 +48,9 @@ export class R2StorageService {
         accessKeyId: accessKey,
         secretAccessKey: secretKey,
       },
+      httpAgent: httpAgent,
+      httpsAgent: httpsAgent,
+      tls: true,
     });
 
     this.logger.log('R2StorageService initialized successfully');
