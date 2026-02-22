@@ -28,6 +28,7 @@ interface SubtitleJob {
 export class SubtitleWorkerService implements OnModuleInit {
   private readonly logger = new Logger(SubtitleWorkerService.name);
   private isProcessing = false;
+  private whisperAvailable = false;
   private readonly tmpDir: string;
   private readonly whisperPath: string;
   private readonly ffmpegPath: string;
@@ -67,11 +68,12 @@ export class SubtitleWorkerService implements OnModuleInit {
 
     // Check Whisper
     try {
-      const { stdout } = await execAsync(`${this.whisperPath} --help`);
-      this.logger.log('✅ Whisper CLI available');
+      await execAsync(`${this.whisperPath} --help`);
+      this.whisperAvailable = true;
+      this.logger.log('✅ Whisper CLI available (local transcription enabled)');
     } catch {
-      this.logger.warn('⚠️ Whisper CLI not found — AI subtitle generation will be unavailable');
-      this.logger.warn('   Install: pip install openai-whisper   OR   use faster-whisper / whisper.cpp');
+      this.whisperAvailable = false;
+      this.logger.log('ℹ️ Whisper CLI not found — using Groq Whisper API for transcription (no local install needed)');
     }
   }
 
@@ -135,33 +137,30 @@ export class SubtitleWorkerService implements OnModuleInit {
 
       await this.subtitleService.updateSubtitleProgress(subtitleId, SubtitleStatus.EXTRACTING, 25);
 
-      // ─── Step 3: Transcribe with Whisper ───
+      // ─── Step 3: Transcribe (Whisper CLI or Groq API) ───
       await this.subtitleService.updateSubtitleProgress(subtitleId, SubtitleStatus.TRANSCRIBING, 30);
 
-      const whisperLang = sourceLanguage === 'auto' ? '' : `--language ${this.mapLanguageForWhisper(sourceLanguage)}`;
-      const srtOutputDir = jobDir;
+      let srtContent: string;
 
-      // Use tiny model with speed optimizations
-      const whisperCmd = `${this.whisperPath} "${audioFile}" ${whisperLang} --output_format srt --output_dir "${srtOutputDir}" --model tiny --beam_size 1 --best_of 1 --temperature 0`;
-      this.logger.log(`🤖 Running Whisper: ${whisperCmd}`);
+      if (this.whisperAvailable) {
+        // ── Local Whisper CLI ──
+        const whisperLang = sourceLanguage === 'auto' ? '' : `--language ${this.mapLanguageForWhisper(sourceLanguage)}`;
+        const srtOutputDir = jobDir;
+        const whisperCmd = `${this.whisperPath} "${audioFile}" ${whisperLang} --output_format srt --output_dir "${srtOutputDir}" --model tiny --beam_size 1 --best_of 1 --temperature 0`;
+        this.logger.log(`🤖 Running local Whisper: ${whisperCmd}`);
+        await execAsync(whisperCmd, { timeout: 300000 });
 
-      // Shorter timeout with faster-whisper + optimizations
-      await execAsync(whisperCmd, { timeout: 300000 }); // 5 min timeout
-
-      await this.subtitleService.updateSubtitleProgress(subtitleId, SubtitleStatus.TRANSCRIBING, 60);
-
-      // Read the generated SRT file
-      const srtFile = path.join(srtOutputDir, 'audio.srt');
-      if (!fs.existsSync(srtFile)) {
-        throw new Error('Whisper did not produce an SRT file');
+        const srtFile = path.join(srtOutputDir, 'audio.srt');
+        if (!fs.existsSync(srtFile)) throw new Error('Whisper did not produce an SRT file');
+        srtContent = fs.readFileSync(srtFile, 'utf-8');
+      } else {
+        // ── Groq Whisper API (cloud fallback) ──
+        this.logger.log('🤖 Transcribing via Groq Whisper API...');
+        srtContent = await this.transcribeWithGroqApi(audioFile, sourceLanguage);
       }
 
-      let srtContent = fs.readFileSync(srtFile, 'utf-8');
+      await this.subtitleService.updateSubtitleProgress(subtitleId, SubtitleStatus.TRANSCRIBING, 60);
       this.logger.log(`📄 SRT generated: ${srtContent.length} characters`);
-      
-      // Log first 1000 chars to debug structure
-      const preview = srtContent.substring(0, 1000);
-      this.logger.log(`📋 SRT STRUCTURE DEBUG (first 1000 chars):\n${preview}\n... [truncated]`);
 
       // ─── Step 4: Translate if needed ───
       // If sourceLanguage is 'auto', Whisper detected the language automatically
@@ -314,6 +313,55 @@ export class SubtitleWorkerService implements OnModuleInit {
       en: 'English',
     };
     return map[lang] || lang;
+  }
+
+  /**
+   * Transcribe audio using Groq Whisper API (cloud-based, no local install needed)
+   * Returns SRT-formatted subtitle content
+   */
+  private async transcribeWithGroqApi(audioFile: string, sourceLanguage: string): Promise<string> {
+    const lang = sourceLanguage === 'auto' ? undefined : sourceLanguage;
+
+    const transcription = await (this.groqClient.audio.transcriptions as any).create({
+      file: fs.createReadStream(audioFile),
+      model: 'whisper-large-v3',
+      response_format: 'verbose_json',
+      ...(lang ? { language: lang } : {}),
+      timestamp_granularities: ['segment'],
+    });
+
+    const segments: Array<{ start: number; end: number; text: string }> =
+      transcription?.segments ?? [];
+
+    if (segments.length === 0) {
+      this.logger.warn('⚠️ Groq transcription returned no segments');
+      return '';
+    }
+
+    this.logger.log(`📄 Groq transcription: ${segments.length} segments`);
+
+    return segments
+      .map((seg, idx) => {
+        const start = this.formatSrtTimestamp(seg.start);
+        const end = this.formatSrtTimestamp(seg.end);
+        return `${idx + 1}\n${start} --> ${end}\n${seg.text.trim()}`;
+      })
+      .join('\n\n');
+  }
+
+  /**
+   * Format seconds to SRT timestamp: HH:MM:SS,mmm
+   */
+  private formatSrtTimestamp(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    const ms = Math.round((seconds % 1) * 1000);
+    return [
+      String(h).padStart(2, '0'),
+      String(m).padStart(2, '0'),
+      String(s).padStart(2, '0'),
+    ].join(':') + ',' + String(ms).padStart(3, '0');
   }
 
   /**

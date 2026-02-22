@@ -30,10 +30,21 @@ else
 fi
 
 # ─── Run Prisma migrations ──────────────────
-echo "[entrypoint] Running database migrations..."
-npx prisma migrate deploy 2>&1 || {
-  echo "[entrypoint] WARNING: Migration failed (may already be up to date)"
-}
+echo "[entrypoint] Syncing database schema..."
+# Check if there are actual migration SQL files; if not, use db push
+MIGRATION_COUNT=$(find prisma/migrations -name "*.sql" 2>/dev/null | wc -l)
+if [ "$MIGRATION_COUNT" -gt 0 ]; then
+  echo "[entrypoint] Found $MIGRATION_COUNT migration file(s) - running migrate deploy..."
+  npx prisma migrate deploy 2>&1 || {
+    echo "[entrypoint] WARNING: Migration failed, falling back to db push..."
+    npx prisma db push --accept-data-loss 2>&1 || true
+  }
+else
+  echo "[entrypoint] No migration files found - using db push..."
+  npx prisma db push --accept-data-loss 2>&1 || {
+    echo "[entrypoint] WARNING: db push failed (schema may already be in sync)"
+  }
+fi
 
 # ─── Run seeds (only in development) ────────
 if [ "$NODE_ENV" != "production" ]; then
