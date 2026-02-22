@@ -110,21 +110,17 @@ export default function HomePage() {
         const items = res?.data || [];
         // Map watch history items to VideoCardData
         const mapped: VideoCardData[] = items
-          .filter((item: Record<string, unknown>) => item.video)
-          .map((item: Record<string, unknown>) => {
-            const video = item.video as VideoCardData;
-            return {
-              id: video.id,
-              title: video.title,
-              slug: video.slug,
-              poster: video.poster,
-              duration: video.duration,
-              viewCount: video.viewCount,
-              ratingAverage: video.ratingAverage,
-              isVipOnly: video.isVipOnly,
-              genres: video.genres,
-            };
-          });
+          .filter((item) => item.video)
+          .map((item) => ({
+            id: item.video.id,
+            title: item.video.title,
+            slug: item.video.slug,
+            poster: item.video.poster,
+            duration: item.video.duration,
+            viewCount: item.video.viewCount,
+            ratingAverage: item.video.ratingAverage,
+            genres: item.video.genres,
+          }));
         setContinueWatching(mapped);
       } catch {
         setContinueWatching([]);
