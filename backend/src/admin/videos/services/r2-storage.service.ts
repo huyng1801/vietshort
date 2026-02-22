@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 import * as https from 'https';
 import * as http from 'http';
 
@@ -48,9 +49,10 @@ export class R2StorageService {
         accessKeyId: accessKey,
         secretAccessKey: secretKey,
       },
-      httpAgent: httpAgent,
-      httpsAgent: httpsAgent,
-      tls: true,
+      requestHandler: new NodeHttpHandler({
+        httpsAgent,
+        httpAgent,
+      }),
     });
 
     this.logger.log('R2StorageService initialized successfully');
