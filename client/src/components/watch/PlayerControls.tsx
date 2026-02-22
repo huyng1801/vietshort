@@ -109,7 +109,7 @@ export function PlayerControls({
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-16 pb-4 sm:pb-6 px-4 sm:px-6">
         {/* Seek bar */}
         <div
-          ref={progressRef}
+          ref={progressRef as React.RefObject<HTMLDivElement>}
           className="relative h-6 flex items-center cursor-pointer group/seek mb-2"
           onMouseDown={handleSeekBarInteraction}
           onMouseMove={handleSeekBarHover}
@@ -321,7 +321,7 @@ function VolumeSliderPopup({
       </span>
       {/* Custom vertical slider */}
       <div
-        ref={volumeSliderRef}
+        ref={volumeSliderRef as React.RefObject<HTMLDivElement>}
         className="relative w-5 h-24 cursor-pointer flex items-end justify-center"
         onMouseDown={(e) => {
           e.preventDefault();

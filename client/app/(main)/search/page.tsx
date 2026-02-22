@@ -60,7 +60,7 @@ function SearchPageContent() {
         limit: 24,
       });
 
-      const items = res?.data || res?.items || res?.results || (Array.isArray(res) ? res : []);
+      const items = res?.data || (res as any)?.items || (res as any)?.results || (Array.isArray(res) ? res : []);
       const pagination = res?.pagination || {};
 
       setResults(pageNum === 1 ? items : (prev: VideoCardData[]) => [...prev, ...items]);

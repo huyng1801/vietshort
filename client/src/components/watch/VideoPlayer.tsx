@@ -55,7 +55,7 @@ export function VideoPlayer({
 
   return (
     <div
-      ref={containerRef}
+      ref={containerRef as React.RefObject<HTMLDivElement>}
       className="relative w-full h-full bg-black group select-none"
       onMouseMove={showControlsTemporarily}
       tabIndex={0}
@@ -64,7 +64,7 @@ export function VideoPlayer({
     >
       {/* Video Element */}
       <video
-        ref={videoRef}
+        ref={videoRef as React.RefObject<HTMLVideoElement>}
         className="w-full h-full object-contain"
         poster={poster}
         playsInline

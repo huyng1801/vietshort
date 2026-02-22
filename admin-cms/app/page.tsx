@@ -90,7 +90,7 @@ export default function HomePage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Lượt xem hôm nay"
-            value={stats?.todayViews || 0}
+            value={stats?.viewsToday || 0}
             icon={<EyeOutlined />}
             color="#faad14"
             growthRate={stats?.viewGrowthRate}
@@ -99,7 +99,7 @@ export default function HomePage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Doanh thu tháng"
-            value={stats?.monthlyRevenue || 0}
+            value={stats?.revenueToday || 0}
             icon={<DollarOutlined />}
             color="#f5222d"
             prefix="₫"

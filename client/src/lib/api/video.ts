@@ -1,6 +1,7 @@
 import { api } from './client';
 import type { VideoCardData } from '@/types/video';
 import type { WatchHistoryItem } from '@/components/history/types';
+import type { VideoData } from '@/components/watch';
 
 export interface PaginatedVideos {
   data: VideoCardData[];
@@ -25,7 +26,7 @@ export const videoApi = {
   byGenre: (genre: string, limit = 12) =>
     api.get<PaginatedVideos>(`/videos?genre=${encodeURIComponent(genre)}&limit=${limit}&status=PUBLISHED`),
   detail: (id: string) => api.get<Record<string, unknown>>(`/videos/${id}`),
-  bySlug: (slug: string) => api.get<Record<string, unknown>>(`/videos/slug/${slug}`),
+  bySlug: (slug: string) => api.get<VideoData>(`/videos/slug/${slug}`),
   incrementView: (id: string) => api.post(`/videos/${id}/view`),
   checkAccess: (episodeId: string) => api.get<{ hasAccess: boolean; unlockPrice?: number }>(`/videos/episodes/${episodeId}/access`, true),
   getStreamUrl: (episodeId: string) => api.get<{ url: string }>(`/videos/episodes/${episodeId}/stream`, true),

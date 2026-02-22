@@ -235,7 +235,7 @@ function mapBannerToBannerItem(banner: BannerApiResponse): BannerItem {
     id: banner.id,
     title: banner.title || 'Banner',
     imageUrl: banner.imageUrl || '/images/placeholder.jpg',
-    linkType: banner.linkType, // "video" | "external" | "promotion" | null
+    linkType: banner.linkType as 'video' | 'external' | 'promotion' | null | undefined, // "video" | "external" | "promotion" | null
     linkTarget: banner.linkTarget, // Video ID/slug hoặc external URL
     sortOrder: banner.sortOrder,
   };

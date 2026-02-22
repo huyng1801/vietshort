@@ -50,7 +50,10 @@ export default function RewardsPage() {
         <Breadcrumb items={[{ label: 'Ph\u1ea7n th\u01b0\u1edfng' }]} />
 
         {/* Header Card */}
-        <RewardsHeader user={user} goldEarned={goldEarned} />
+        <RewardsHeader
+          user={user ? { goldBalance: user.goldBalance ?? undefined, vipTier: user.vipTier ?? undefined } : null}
+          goldEarned={goldEarned}
+        />
 
         {/* Smart retention banners */}
         <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-5 lg:mb-6">

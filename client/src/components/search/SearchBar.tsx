@@ -55,7 +55,7 @@ export function SearchBar({ onClose, className = '' }: SearchBarProps) {
 
         if (!abortController.signal.aborted) {
           const data = searchRes;
-          const items = Array.isArray(data) ? data : data?.data || data?.items || [];
+          const items = Array.isArray(data) ? data : data?.data || (data as any)?.items || [];
           setResults(items);
         }
       } catch {

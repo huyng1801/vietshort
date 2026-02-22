@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Crown, Shield, Loader2 } from 'lucide-react';
+import { Crown, Shield, Loader2, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { paymentApi, vipApi, type VipPlan, type CreatePaymentParams } from '@/lib/api';
