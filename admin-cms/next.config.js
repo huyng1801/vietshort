@@ -1,7 +1,11 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable standalone output for Docker deployment
   output: 'standalone',
+  // Fix Next.js standalone tracing bug with parentheses route groups (e.g. (dashboard))
+  outputFileTracingRoot: path.join(__dirname, '../'),
 
   reactStrictMode: true,
   transpilePackages: ['antd', '@ant-design/icons', '@ant-design/nextjs-registry'],
