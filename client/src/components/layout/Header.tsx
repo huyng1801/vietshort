@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Search, Bell, Menu, X, Crown, Wallet, Settings,
-  LogOut, History, Bookmark, ChevronDown, Gift, Zap
+  LogOut, History, Bookmark, ChevronDown, Gift
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import { SearchBar } from '@/components/search/SearchBar';
-import { Logo } from '@/components/common/Logo';
-import { UserAvatar } from '@/components/common/UserAvatar';
+import { SearchBar } from '@/components/search';
+import { Logo, UserAvatar } from '@/components/common';
 import { videoApi } from '@/lib/api';
 
 
@@ -141,7 +140,7 @@ export function Header() {
                       {genres.map((genre) => (
                         <Link
                           key={genre.id}
-                          href={`/category/${genre.slug}`}
+                          href={`/search?category=${encodeURIComponent(genre.slug)}`}
                           className="px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white rounded-lg transition-colors"
                         >
                           {genre.name}
@@ -298,7 +297,7 @@ export function Header() {
                   {genres.map((genre) => (
                     <Link
                       key={genre.id}
-                      href={`/category/${genre.slug}`}
+                      href={`/search?category=${encodeURIComponent(genre.slug)}`}
                       className="py-2 px-4 sm:py-3 sm:px-6 text-sm sm:text-lg text-gray-400 hover:text-white"
                     >
                       {genre.name}

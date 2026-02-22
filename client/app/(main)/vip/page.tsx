@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Crown, Zap, Shield, ChevronLeft, Loader2 } from 'lucide-react';
+import { Crown, Shield, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { paymentApi, vipApi, type VipPlan, type CreatePaymentParams } from '@/lib/api';
 import {
   VipTierCard, PlanSelector, SavingsCalculator, FeatureComparisonTable,
-  formatVND, formatVNDFull, type PlanOption,
-} from '@/components/payment/VipPlans';
-import { PaymentMethodSelector, type PaymentMethod } from '@/components/payment/PaymentMethodSelector';
-import { VipBadge, DynamicPricingPopup } from '@/components/payment/PromotionBanner';
-import { Breadcrumb } from '@/components/common/Breadcrumb';
+  formatVNDFull, PaymentMethodSelector,
+  VipBadge, DynamicPricingPopup,
+} from '@/components/vip';
+import type { PlanOption, PaymentMethod } from '@/components/vip';
+import { Breadcrumb } from '@/components/common';
 
 export default function VipPage() {
   const router = useRouter();

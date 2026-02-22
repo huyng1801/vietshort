@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ShieldAlert, Mail, ChevronRight, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
+import { Breadcrumb } from '@/components/common/Breadcrumb';
 
 export const metadata: Metadata = {
   title: 'Chính sách DMCA – VietShort',
@@ -99,11 +100,7 @@ export default function DmcaPage() {
       {/* Hero */}
       <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-gray-800/50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-16">
-          <div className="flex items-center gap-3 text-sm text-gray-500 mb-5 sm:mb-6">
-            <Link href="/" className="hover:text-gray-300 transition-colors">Trang chủ</Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-300">Chính sách DMCA</span>
-          </div>
+          <Breadcrumb items={[{ label: 'Chính sách DMCA' }]} />
           <div className="flex items-start gap-4 sm:gap-5">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-red-600/20 flex items-center justify-center flex-shrink-0">
               <ShieldAlert className="w-6 h-6 sm:w-7 sm:h-7 text-red-500" />

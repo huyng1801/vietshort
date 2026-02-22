@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Play, Star, ChevronLeft, ChevronRight, Heart, Share2 } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface BannerItem {
   id: string;
   title: string;
   imageUrl: string;
-  linkType?: string | null; // "video" | "external" | "promotion"
+  linkType?: 'video' | 'external' | 'promotion' | null;
   linkTarget?: string | null; // Video ID/slug hoặc external URL
   sortOrder?: number;
 }
@@ -24,7 +24,6 @@ export function HeroBanner({ items }: HeroBannerProps) {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchDelta, setTouchDelta] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const progressRef = useRef<HTMLDivElement>(null);
 
   const goTo = useCallback((index: number) => {
     if (isTransitioning) return;

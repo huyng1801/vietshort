@@ -1,9 +1,6 @@
-'use client';
-
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
-import { ThemeProvider } from 'next-themes';
-import { Providers } from '@/components/providers/Providers';
+import { Providers } from '@/components/providers';
 import './globals.css';
 
 const inter = Inter({ 
@@ -17,6 +14,11 @@ const poppins = Poppins({
   variable: '--font-poppins',
 });
 
+export const metadata: Metadata = {
+  title: 'VietShort - Phim ngắn Việt Nam',
+  description: 'Nền tảng xem phim ngắn hàng đầu Việt Nam',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -25,16 +27,9 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning className="dark">
       <body className={`${inter.variable} ${poppins.variable} font-sans antialiased dark`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Providers>
-            {children}
-          </Providers>
-        </ThemeProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { VideoCard, VideoCardData } from '@/components/video/VideoCard';
+import { VideoCard } from '@/components/common';
+import type { VideoCardData } from '@/components/common';
 
 interface VideoGridProps {
   title: string;

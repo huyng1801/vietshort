@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clock, Play, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { videoApi, bannerApi, watchHistoryApi, recommendApi } from '@/lib/api';
-import { HeroBanner, BannerItem } from '@/components/home/HeroBanner';
-import { VideoGrid } from '@/components/home/VideoGrid';
-import { VideoCardData } from '@/components/video/VideoCard';
-import { Loading } from '@/components/common/Loading';
+import { HeroBanner, VideoGrid } from '@/components/home';
+import type { BannerItem } from '@/components/home';
+import { Loading } from '@/components/common';
+import type { VideoCardData } from '@/components/common';
 
 interface GenreData {
   id: string;
@@ -110,18 +110,21 @@ export default function HomePage() {
         const items = res?.data || [];
         // Map watch history items to VideoCardData
         const mapped: VideoCardData[] = items
-          .filter((item: any) => item.video)
-          .map((item: any) => ({
-            id: item.video.id,
-            title: item.video.title,
-            slug: item.video.slug,
-            poster: item.video.poster,
-            duration: item.video.duration,
-            viewCount: item.video.viewCount,
-            ratingAverage: item.video.ratingAverage,
-            isVipOnly: item.video.isVipOnly,
-            genres: item.video.genres,
-          }));
+          .filter((item: Record<string, unknown>) => item.video)
+          .map((item: Record<string, unknown>) => {
+            const video = item.video as VideoCardData;
+            return {
+              id: video.id,
+              title: video.title,
+              slug: video.slug,
+              poster: video.poster,
+              duration: video.duration,
+              viewCount: video.viewCount,
+              ratingAverage: video.ratingAverage,
+              isVipOnly: video.isVipOnly,
+              genres: video.genres,
+            };
+          });
         setContinueWatching(mapped);
       } catch {
         setContinueWatching([]);
@@ -180,7 +183,7 @@ export default function HomePage() {
               <VideoGrid
                 title="Mới cập nhật"
                 videos={newReleases}
-                href="/category/new"
+                href="/search?category=new"
                 maxItems={12}
               />
             )}
@@ -191,7 +194,7 @@ export default function HomePage() {
                 key={section.genre.id}
                 title={section.genre.name}
                 videos={section.videos}
-                href={`/category/${section.genre.slug}`}
+                href={`/search?category=${encodeURIComponent(section.genre.slug)}`}
                 maxItems={6}
               />
             ))}
@@ -222,9 +225,16 @@ export default function HomePage() {
   );
 }
 
-// Helper: map backend Banner object to HeroBanner's BannerItem
-// Backend trả về: { id, title, imageUrl, linkType, linkTarget, sortOrder }
-function mapBannerToBannerItem(banner: any): BannerItem {
+interface BannerApiResponse {
+  id: string;
+  title?: string;
+  imageUrl?: string;
+  linkType?: string;
+  linkTarget?: string;
+  sortOrder?: number;
+}
+
+function mapBannerToBannerItem(banner: BannerApiResponse): BannerItem {
   return {
     id: banner.id,
     title: banner.title || 'Banner',

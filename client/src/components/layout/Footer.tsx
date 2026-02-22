@@ -1,17 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Facebook, Youtube, Instagram, Mail, Phone, MapPin } from 'lucide-react';
-import { Logo } from '@/components/common/Logo';
+import { Facebook, Youtube, Instagram, Mail, Phone } from 'lucide-react';
+import { Logo } from '@/components/common';
 
 const footerSections = [
   {
     title: 'Nội dung',
     links: [
-      { label: 'Phim bộ', href: '/category/phim-bo' },
-      { label: 'Phim lẻ', href: '/category/phim-le' },
-      { label: 'Xu hướng', href: '/category/trending' },
-      { label: 'Mới cập nhật', href: '/category/new' },
+      { label: 'Phim bộ', href: '/search?category=phim-bo' },
+      { label: 'Phim lẻ', href: '/search?category=phim-le' },
+      { label: 'Xu hướng', href: '/search?category=trending' },
+      { label: 'Mới cập nhật', href: '/search?category=new' },
     ],
   },
   {

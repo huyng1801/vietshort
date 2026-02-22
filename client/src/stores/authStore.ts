@@ -370,7 +370,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     }),
     {
       name: 'vietshort-auth',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined' ? localStorage : undefined as unknown as Storage
+      ),
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
@@ -388,10 +390,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
  */
 export function useHasHydrated() {
   const [hydrated, setHydrated] = useState(() =>
-    useAuthStore.persist.hasHydrated()
+    useAuthStore.persist?.hasHydrated() ?? false
   );
 
   useEffect(() => {
+    if (!useAuthStore.persist) {
+      setHydrated(true);
+      return;
+    }
     // Already hydrated (e.g. navigating between pages after first load)
     if (useAuthStore.persist.hasHydrated()) {
       setHydrated(true);

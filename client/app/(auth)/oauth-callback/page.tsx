@@ -3,7 +3,7 @@
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
-import { Loading } from '@/components/common/Loading';
+import { Loading } from '@/components/common';
 
 function OAuthCallbackContent() {
   const router = useRouter();
@@ -25,8 +25,8 @@ function OAuthCallbackContent() {
       if (accessToken && refreshToken) {
         try {
           await handleOAuthCallback(accessToken, refreshToken);
-          router.push('/home');
-        } catch (err) {
+          router.push('/');
+        } catch {
           router.push('/login?error=oauth_failed');
         }
       } else {

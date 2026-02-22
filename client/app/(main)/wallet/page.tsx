@@ -6,10 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { walletApi } from '@/lib/api';
-import { GoldBalanceCard, TransactionHistory } from '@/components/payment/WalletComponents';
-import { GoldTopUp } from '@/components/payment/GoldTopUp';
+import { GoldBalanceCard, TransactionHistory, GoldTopUp } from '@/components/wallet';
 import { cn } from '@/lib/utils';
-import { Breadcrumb } from '@/components/common/Breadcrumb';
+import { Breadcrumb } from '@/components/common';
 
 type Tab = 'topup' | 'history';
 

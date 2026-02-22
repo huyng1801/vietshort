@@ -1,8 +1,6 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { MobileNavigation } from '@/components/layout/MobileNavigation';
+import { Header, Footer, MobileNavigation } from '@/components/layout';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

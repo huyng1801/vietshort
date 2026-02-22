@@ -1,6 +1,6 @@
 'use client';
 
-import { LoginForm } from '@/components/auth/LoginForm';
+import { LoginForm } from '@/components/auth';
 import { Film, Play, Star } from 'lucide-react';
 
 export default function LoginPage() {

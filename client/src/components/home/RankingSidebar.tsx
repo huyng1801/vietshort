@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Crown, Eye, Star, Play, TrendingUp } from 'lucide-react';
-import { VideoCardData } from '@/components/video/VideoCard';
+import { Eye, Star } from 'lucide-react';
+import type { VideoCardData } from '@/components/common';
 
 interface RankingSidebarProps {
   title?: string;

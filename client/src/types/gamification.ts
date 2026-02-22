@@ -20,24 +20,6 @@ export interface CheckInResult {
   message?: string;
 }
 
-/** Reward config for each day 1-7 */
-export interface CheckInDayReward {
-  day: number;
-  gold: number;
-  description: string;
-}
-
-/** Default 7-day reward cycle (matching backend hardcoded values) */
-export const CHECK_IN_REWARDS: CheckInDayReward[] = [
-  { day: 1, gold: 5, description: 'Ngày 1' },
-  { day: 2, gold: 5, description: 'Ngày 2' },
-  { day: 3, gold: 10, description: 'Ngày 3' },
-  { day: 4, gold: 10, description: 'Ngày 4' },
-  { day: 5, gold: 15, description: 'Ngày 5' },
-  { day: 6, gold: 15, description: 'Ngày 6' },
-  { day: 7, gold: 30, description: 'Tuần hoàn thành!' },
-];
-
 // ─── Daily Tasks / Quests ────────────────────────────────────
 export type DailyTaskType =
   | 'WATCH_VIDEO'

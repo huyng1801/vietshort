@@ -1,41 +1,13 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import {
-  Camera,
-  Save,
-  Loader2,
-  Check,
-  ArrowLeft,
-  Upload,
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useHasHydrated } from '@/stores/authStore';
 import { userApi } from '@/lib/api';
-import { Loading } from '@/components/common/Loading';
-import { Breadcrumb } from '@/components/common/Breadcrumb';
-import { UserAvatar } from '@/components/common/UserAvatar';
-
-interface UserProfile {
-  id: string;
-  email: string;
-  nickname: string;
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  country?: string;
-  language?: string;
-}
-
-const GENDER_OPTIONS = [
-  { value: '', label: 'Chưa xác định' },
-  { value: 'MALE', label: 'Nam' },
-  { value: 'FEMALE', label: 'Nữ' },
-  { value: 'OTHER', label: 'Khác' },
-];
+import { Loading, Breadcrumb } from '@/components/common';
+import { AvatarUploader, ProfileForm, SaveButton } from '@/components/settings';
+import type { UserProfile, ProfileFormState } from '@/components/settings';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -46,10 +18,9 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileFormState>({
     nickname: '',
     firstName: '',
     lastName: '',
@@ -231,170 +202,17 @@ export default function SettingsPage() {
 
         <div className="w-full">
           {/* Avatar Section */}
-          <div className="flex flex-col items-center gap-6 mb-10 sm:mb-12">
-            <div className="relative group">
-              <UserAvatar
-                user={displayUser}
-                size="xl"
-                showBadge
-                className="cursor-pointer"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer disabled:bg-black/40"
-              >
-                {uploading ? (
-                  <Loader2 className="w-8 h-8 text-white animate-spin" />
-                ) : (
-                  <Camera className="w-8 h-8 text-white" />
-                )}
-              </button>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-              className="hidden"
-              disabled={uploading}
-            />
-            <div className="text-center">
-              <p className="text-white font-medium text-sm sm:text-base mb-1">Ảnh đại diện</p>
-              <p className="text-gray-400 text-xs sm:text-sm flex items-center justify-center gap-1">
-                <Upload className="w-4 h-4" />
-                Nhấp vào avatar để tải ảnh
-              </p>
-              <p className="text-gray-500 text-xs mt-1">Tối đa 5MB, định dạng: JPG, PNG, GIF</p>
-            </div>
-          </div>
+          <AvatarUploader
+            user={displayUser}
+            uploading={uploading}
+            onFileSelect={handleFileSelect}
+          />
 
           {/* Profile Form */}
-          <div className="space-y-5 sm:space-y-6 max-w-2xl mx-auto">
-            {/* Nickname */}
-            <div>
-              <label className="block text-sm sm:text-base font-medium text-gray-300 mb-2">
-                Biệt danh <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={form.nickname}
-                onChange={(e) => handleChange('nickname', e.target.value)}
-                placeholder="Nhập biệt danh (3-30 ký tự)"
-                maxLength={30}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-              />
-            </div>
-
-            {/* First + Last Name */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-sm sm:text-base font-medium text-gray-300 mb-2">Họ</label>
-                <input
-                  type="text"
-                  value={form.firstName}
-                  onChange={(e) => handleChange('firstName', e.target.value)}
-                  placeholder="Nhập họ"
-                  maxLength={50}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm sm:text-base font-medium text-gray-300 mb-2">Tên</label>
-                <input
-                  type="text"
-                  value={form.lastName}
-                  onChange={(e) => handleChange('lastName', e.target.value)}
-                  placeholder="Nhập tên"
-                  maxLength={50}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm sm:text-base font-medium text-gray-300 mb-2">Số điện thoại</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="0912345678"
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-              />
-            </div>
-
-            {/* Date of Birth */}
-            <div>
-              <label className="block text-sm sm:text-base font-medium text-gray-300 mb-2">Ngày sinh</label>
-              <input
-                type="date"
-                value={form.dateOfBirth}
-                onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800/60 border border-gray-700/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all [color-scheme:dark]"
-              />
-            </div>
-
-            {/* Gender */}
-            <div>
-              <label className="block text-sm sm:text-base font-medium text-gray-300 mb-3">Giới tính</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {GENDER_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => handleChange('gender', opt.value)}
-                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-                      form.gender === opt.value
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-                        : 'bg-gray-800/60 text-gray-400 border border-gray-700/50 hover:border-gray-600'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Email (read-only) */}
-            {profile?.email && (
-              <div>
-                <label className="block text-sm sm:text-base font-medium text-gray-300 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  disabled
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-900/60 border border-gray-800/50 rounded-lg sm:rounded-xl text-xs sm:text-sm text-gray-500 cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-600 mt-1">Email không thể thay đổi</p>
-              </div>
-            )}
-          </div>
+          <ProfileForm form={form} profile={profile} onChange={handleChange} />
 
           {/* Save Button */}
-          <div className="mt-10 sm:mt-12 w-full flex justify-center pb-8">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-400 text-white font-semibold rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Đang lưu...
-                </>
-              ) : saveSuccess ? (
-                <>
-                  <Check className="w-5 h-5" />
-                  Đã lưu
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  Lưu thay đổi
-                </>
-              )}
-            </button>
-          </div>
+          <SaveButton saving={saving} saveSuccess={saveSuccess} onSave={handleSave} />
         </div>
       </div>
     </div>

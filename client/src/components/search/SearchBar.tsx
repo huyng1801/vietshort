@@ -3,23 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, X, Clock, Loader2, Film, Tv, Star } from 'lucide-react';
+import { Search, X, Clock, Loader2, Star } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { searchApi } from '@/lib/api';
-import { CATEGORIES } from '@/lib/constants';
-
-interface SearchResult {
-  id: string;
-  title: string;
-  slug?: string;
-  poster?: string;
-  thumbnail?: string;
-  genres?: string;
-  ratingAverage?: number;
-  isSerial?: boolean;
-  totalEpisodes?: number;
-  viewCount?: number;
-}
+import type { BaseVideo } from '@/types/video';
+ 
+type SearchResult = BaseVideo;
 
 interface SearchBarProps {
   onClose?: () => void;
